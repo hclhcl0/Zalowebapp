@@ -9,6 +9,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
 export async function PUT(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
