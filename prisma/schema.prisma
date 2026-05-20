@@ -1,0 +1,135 @@
+// This is your Prisma schema file
+// Kết nối database SQLite để dễ dùng trong giai đoạn phát triển
+// Có thể đổi sang PostgreSQL/MySQL khi deploy production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// PHẦN 1: QUẢN LÝ NGƯỜI DÙNG HỆ THỐNG
+// ============================================================
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String   // Lưu dạng hash (bcrypt)
+  fullName  String
+  role      String   @default("staff") // "admin" | "staff"
+  createdAt DateTime @default(now())
+}
+
+// ============================================================
+// PHẦN 2: NGƯỜI DÂN THEO DÕI ZALO OA (Followers)
+// ============================================================
+
+model Follower {
+  id          Int      @id @default(autoincrement())
+  zaloUserId  String   @unique // ID người dùng từ Zalo
+  displayName String?
+  avatarUrl   String?
+  phone       String?
+  followedAt  DateTime @default(now())
+  
+  // Phân loại người quan tâm
+  userType    String   @default("citizen") // "citizen" | "staff"
+  department  String?  // Phòng ban của cán bộ cơ quan
+  notes       String?  // Ghi chú nhanh
+
+  // Quan hệ
+  appointments Appointment[]
+  testResults  TestResult[]
+}
+
+// ============================================================
+// PHẦN 3: DỊCH VỤ Y TẾ
+// ============================================================
+
+model Appointment {
+  id          Int      @id @default(autoincrement())
+  fullName    String
+  phone       String
+  dob         String?  // Ngày sinh
+  vaccineType String   // Loại vắc xin / dịch vụ đặt lịch
+  appointedAt DateTime // Ngày hẹn
+  status      String   @default("pending") // "pending" | "approved" | "cancelled"
+  note        String?
+  createdAt   DateTime @default(now())
+
+  // Quan hệ (tuỳ chọn, liên kết với người theo dõi Zalo)
+  followerId  Int?
+  follower    Follower? @relation(fields: [followerId], references: [id])
+}
+
+model TestResult {
+  id          Int      @id @default(autoincrement())
+  fullName    String
+  phone       String
+  resultCode  String   @unique // Mã tra cứu
+  content     String   // Nội dung kết quả (có thể là text hoặc link file)
+  testedAt    DateTime
+  createdAt   DateTime @default(now())
+
+  // Quan hệ
+  followerId  Int?
+  follower    Follower? @relation(fields: [followerId], references: [id])
+}
+
+model ServicePrice {
+  id          Int      @id @default(autoincrement())
+  name        String   // Tên dịch vụ
+  category    String   // Nhóm dịch vụ
+  price       Float    // Giá (VND)
+  unit        String?  // Đơn vị tính
+  isActive    Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================
+// PHẦN 4: TIN TỨC & CẢNH BÁO
+// ============================================================
+
+model NewsArticle {
+  id            Int      @id @default(autoincrement())
+  title         String
+  content       String
+  category      String   // "daily_news" | "vac_schedule" | "alert"
+  coverUrl      String?  // URL Ảnh bìa (bắt buộc khi đăng Zalo)
+  summary       String?  // Mô tả ngắn
+  zaloArticleId String?  // ID bài viết trên Zalo sau khi xuất bản
+  isPublished   Boolean  @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================================
+// PHẦN 5: CẤU HÌNH HỆ THỐNG
+// ============================================================
+
+model SystemConfig {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique  // Khoá cấu hình (VD: "hotline", "map_url")
+  value     String            // Giá trị tương ứng
+  label     String?           // Tên mô tả cho Admin
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================
+// PHẦN 6: LOG TIN NHẮN ZALO (Webhook)
+// ============================================================
+
+model MessageLog {
+  id          Int      @id @default(autoincrement())
+  zaloUserId  String   // Người gửi (follower)
+  direction   String   // "inbound" (nhận) | "outbound" (gửi)
+  type        String   // "text" | "image" | "sticker" | "zns"
+  content     String?  // Nội dung tin nhắn
+  rawPayload  String?  // Toàn bộ JSON raw từ Zalo (để debug)
+  receivedAt  DateTime @default(now())
+}

@@ -1,65 +1,179 @@
-import Image from "next/image";
-
-export default function Home() {
+export default function Dashboard() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div>
+      {/* Page header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Tổng quan hệ thống</h1>
+          <p className="page-desc">Chào mừng trở lại! Đây là tóm tắt hoạt động hôm nay.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <button className="btn btn-primary">📢 Gửi thông báo khẩn</button>
+      </div>
+
+      {/* Stat cards */}
+      <div className="stat-grid">
+        <div className="stat-card">
+          <div className="stat-info">
+            <div className="stat-label">Tổng người theo dõi</div>
+            <div className="stat-value">12,450</div>
+            <div className="stat-change">↑ +120 tuần này</div>
+          </div>
+          <div className="stat-icon blue">👥</div>
         </div>
-      </main>
+        <div className="stat-card">
+          <div className="stat-info">
+            <div className="stat-label">Lịch hẹn tiêm (tháng)</div>
+            <div className="stat-value">342</div>
+            <div className="stat-change">↑ +18 so với tháng trước</div>
+          </div>
+          <div className="stat-icon green">💉</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-info">
+            <div className="stat-label">Tin nhắn ZNS đã gửi</div>
+            <div className="stat-value">8,912</div>
+            <div className="stat-change">↑ +1.2K tuần này</div>
+          </div>
+          <div className="stat-icon yellow">📨</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-info">
+            <div className="stat-label">Lượt tra cứu kết quả</div>
+            <div className="stat-value">1,120</div>
+            <div className="stat-change down">↓ -40 so với tuần trước</div>
+          </div>
+          <div className="stat-icon purple">🔬</div>
+        </div>
+      </div>
+
+      {/* Bottom grid */}
+      <div className="dashboard-grid">
+        {/* Recent activity */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">Hoạt động gần đây</div>
+              <div className="card-subtitle">Cập nhật theo thời gian thực</div>
+            </div>
+            <button className="btn btn-outline btn-sm">Xem tất cả</button>
+          </div>
+          <div className="activity-list">
+            <div className="activity-item">
+              <div className="activity-dot green" />
+              <div>
+                <div className="activity-text">
+                  <strong>Nguyễn Văn A</strong> đăng ký lịch tiêm vắc xin <strong>Cúm mùa</strong> ngày 22/05
+                </div>
+                <div className="activity-time">10 phút trước</div>
+              </div>
+            </div>
+            <div className="activity-item">
+              <div className="activity-dot" />
+              <div>
+                <div className="activity-text">
+                  <strong>Admin</strong> đã gửi broadcast "Cảnh báo dịch sốt xuất huyết" đến 4,500 người
+                </div>
+                <div className="activity-time">2 giờ trước</div>
+              </div>
+            </div>
+            <div className="activity-item">
+              <div className="activity-dot yellow" />
+              <div>
+                <div className="activity-text">
+                  <strong>Trần Thị B</strong> tra cứu kết quả xét nghiệm mã <strong>XN00231</strong>
+                </div>
+                <div className="activity-time">3 giờ trước</div>
+              </div>
+            </div>
+            <div className="activity-item">
+              <div className="activity-dot green" />
+              <div>
+                <div className="activity-text">
+                  Lịch hẹn #342 của <strong>Lê Hoàng C</strong> đã được <strong>duyệt</strong> — ZNS đã gửi
+                </div>
+                <div className="activity-time">5 giờ trước</div>
+              </div>
+            </div>
+            <div className="activity-item">
+              <div className="activity-dot red" />
+              <div>
+                <div className="activity-text">
+                  <strong>Phạm Thị D</strong> hủy đăng ký lịch tiêm ngày 20/05
+                </div>
+                <div className="activity-time">Hôm qua</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">Thao tác nhanh</div>
+          </div>
+          <div className="quick-actions">
+            <button className="quick-action-btn">
+              <span className="quick-action-icon">📢</span>
+              Gửi broadcast
+            </button>
+            <button className="quick-action-btn">
+              <span className="quick-action-icon">📝</span>
+              Đăng tin tức
+            </button>
+            <button className="quick-action-btn">
+              <span className="quick-action-icon">💉</span>
+              Duyệt lịch hẹn
+            </button>
+            <button className="quick-action-btn">
+              <span className="quick-action-icon">🔬</span>
+              Nhập KQ xét nghiệm
+            </button>
+            <button className="quick-action-btn">
+              <span className="quick-action-icon">📞</span>
+              Cập nhật hotline
+            </button>
+            <button className="quick-action-btn">
+              <span className="quick-action-icon">📊</span>
+              Xuất báo cáo
+            </button>
+          </div>
+
+          {/* Lịch hẹn chờ duyệt */}
+          <div style={{ marginTop: "24px" }}>
+            <div className="card-title" style={{ marginBottom: "12px" }}>
+              ⏳ Lịch hẹn chờ duyệt
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {[
+                { name: "Nguyễn V. A", type: "Cúm mùa", date: "22/05" },
+                { name: "Trần T. B",   type: "Viêm gan B", date: "23/05" },
+                { name: "Lê H. C",     type: "Sởi - Quai bị", date: "24/05" },
+              ].map((item) => (
+                <div
+                  key={item.name}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 12px",
+                    background: "var(--bg)",
+                    borderRadius: "var(--radius)",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{item.name}</div>
+                    <div style={{ color: "var(--text-muted)" }}>
+                      {item.type} · {item.date}
+                    </div>
+                  </div>
+                  <span className="badge badge-pending">Chờ duyệt</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
