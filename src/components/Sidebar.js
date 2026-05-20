@@ -19,6 +19,8 @@ const menuGroups = [
     title: "Hệ thống",
     items: [
       { icon: "⚙️", label: "Cài đặt & Zalo API", href: "/settings" },
+      { icon: "📞", label: "Cấu hình Hotline", href: "/settings?tab=contact" },
+      { icon: "🤖", label: "Kịch bản Chatbot", href: "/settings?tab=oa_info" },
       { icon: "👥", label: "Quản lý tài khoản", href: "/settings/users" },
     ],
   },
@@ -36,13 +38,6 @@ const menuGroups = [
       { icon: "📰", label: "Tin vắn dịch bệnh", href: "/news/daily" },
       { icon: "📅", label: "Lịch tiêm chủng", href: "/news/vaccination-schedule" },
       { icon: "🚨", label: "Thông báo khẩn", href: "/news/alerts" },
-    ],
-  },
-  {
-    title: "Hỗ trợ & Liên hệ",
-    items: [
-      { icon: "📞", label: "Cấu hình Hotline", href: "/support/hotline" },
-      { icon: "🤖", label: "Kịch bản Chatbot", href: "/support/chatbot" },
     ],
   },
 ];
@@ -96,6 +91,40 @@ export default function Sidebar() {
     return group;
   });
 
+  const [activeTabParam, setActiveTabParam] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      setActiveTabParam(params.get("tab") || "");
+    };
+    handleUrlChange();
+    window.addEventListener("popstate", handleUrlChange);
+    const interval = setInterval(handleUrlChange, 200);
+    return () => {
+      window.removeEventListener("popstate", handleUrlChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const isActive = (item) => {
+    if (item.href.includes("?")) {
+      const [path, query] = item.href.split("?");
+      if (pathname !== path) return false;
+      const params = new URLSearchParams(query);
+      const tabVal = params.get("tab");
+      return activeTabParam === tabVal;
+    }
+    if (pathname === item.href) {
+      if (pathname === "/settings" && activeTabParam) {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  };
+
   const initials = session?.user?.name
     ?.split(" ")
     .slice(-2)
@@ -130,7 +159,7 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`menu-item ${pathname === item.href ? "active" : ""}`}
+                  className={`menu-item ${isActive(item) ? "active" : ""}`}
                 >
                   <span className="menu-item-icon">{item.icon}</span>
                   {item.label}
