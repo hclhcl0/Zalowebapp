@@ -52,49 +52,64 @@ async function main() {
   });
 
   // Seed sample appointment linked to follower
-  await prisma.appointment.create({
-    data: {
-      fullName: "Nguyễn Hoàng Nam",
-      phone: "0905123456",
-      dob: "20/12/2023",
-      vaccineType: "Vắc-xin 6 trong 1 (Hexaxim)",
-      appointedAt: new Date("2026-05-25T08:30:00Z"),
-      status: "pending",
-      followerId: sampleFollower.id,
-    },
+  const existingApt = await prisma.appointment.findFirst({
+    where: { followerId: sampleFollower.id, vaccineType: "Vắc-xin 6 trong 1 (Hexaxim)" }
   });
+  if (!existingApt) {
+    await prisma.appointment.create({
+      data: {
+        fullName: "Nguyễn Hoàng Nam",
+        phone: "0905123456",
+        dob: "20/12/2023",
+        vaccineType: "Vắc-xin 6 trong 1 (Hexaxim)",
+        appointedAt: new Date("2026-05-25T08:30:00Z"),
+        status: "pending",
+        followerId: sampleFollower.id,
+      },
+    });
+  }
 
   // Seed sample test result linked to follower
-  await prisma.testResult.create({
-    data: {
-      fullName: "Nguyễn Hoàng Nam",
-      phone: "0905123456",
-      resultCode: "KQ-998877",
-      content: "Kết quả xét nghiệm kháng nguyên Sốt xuất huyết: ÂM TÍNH. Người bệnh theo dõi thêm tại nhà.",
-      testedAt: new Date("2026-05-18T14:15:00Z"),
-      followerId: sampleFollower.id,
-    },
+  const existingTR = await prisma.testResult.findUnique({
+    where: { resultCode: "KQ-998877" }
   });
+  if (!existingTR) {
+    await prisma.testResult.create({
+      data: {
+        fullName: "Nguyễn Hoàng Nam",
+        phone: "0905123456",
+        resultCode: "KQ-998877",
+        content: "Kết quả xét nghiệm kháng nguyên Sốt xuất huyết: ÂM TÍNH. Người bệnh theo dõi thêm tại nhà.",
+        testedAt: new Date("2026-05-18T14:15:00Z"),
+        followerId: sampleFollower.id,
+      },
+    });
+  }
 
   // Seed message logs
-  await prisma.messageLog.createMany({
-    data: [
-      {
-        zaloUserId: "zalo_user_test_123",
-        direction: "inbound",
-        type: "text",
-        content: "Chào CDC, tôi muốn đăng ký tiêm chủng cho bé vào tuần sau.",
-        receivedAt: new Date("2026-05-18T09:00:00Z"),
-      },
-      {
-        zaloUserId: "zalo_user_test_123",
-        direction: "outbound",
-        type: "text",
-        content: "Chào bạn Nam, bạn vui lòng sử dụng tính năng Đặt lịch tiêm chủng trực tuyến trên Mini App hoặc cung cấp thông tin để chúng tôi hỗ trợ nhé.",
-        receivedAt: new Date("2026-05-18T09:05:00Z"),
-      },
-    ],
+  const existingLogsCount = await prisma.messageLog.count({
+    where: { zaloUserId: "zalo_user_test_123" }
   });
+  if (existingLogsCount === 0) {
+    await prisma.messageLog.createMany({
+      data: [
+        {
+          zaloUserId: "zalo_user_test_123",
+          direction: "inbound",
+          type: "text",
+          content: "Chào CDC, tôi muốn đăng ký tiêm chủng cho bé vào tuần sau.",
+          receivedAt: new Date("2026-05-18T09:00:00Z"),
+        },
+        {
+          zaloUserId: "zalo_user_test_123",
+          direction: "outbound",
+          type: "text",
+          content: "Chào bạn Nam, bạn vui lòng sử dụng tính năng Đặt lịch tiêm chủng trực tuyến trên Mini App hoặc cung cấp thông tin để chúng tôi hỗ trợ nhé.",
+          receivedAt: new Date("2026-05-18T09:05:00Z"),
+        },
+      ],
+    });
+  }
 
   console.log("✅ Seed dữ liệu người quan tâm Zalo mẫu và lịch sử dịch vụ y tế thành công!");
   console.log("   ⚠️ Hãy đổi mật khẩu sau khi đăng nhập lần đầu!");
