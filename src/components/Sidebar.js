@@ -14,16 +14,6 @@ const menuGroups = [
       { icon: "📧", label: "Gửi Email Báo Lương", href: "/salary-email" },
     ],
   },
-
-  {
-    title: "Hệ thống",
-    items: [
-      { icon: "⚙️", label: "Cài đặt & Zalo API", href: "/settings" },
-      { icon: "📞", label: "Cấu hình Hotline", href: "/settings?tab=contact" },
-      { icon: "🤖", label: "Kịch bản Chatbot", href: "/settings?tab=oa_info" },
-      { icon: "👥", label: "Quản lý tài khoản", href: "/settings/users" },
-    ],
-  },
   {
     title: "Dịch vụ Y tế",
     items: [
@@ -38,6 +28,15 @@ const menuGroups = [
       { icon: "📰", label: "Tin vắn dịch bệnh", href: "/news/daily" },
       { icon: "📅", label: "Lịch tiêm chủng", href: "/news/vaccination-schedule" },
       { icon: "🚨", label: "Thông báo khẩn", href: "/news/alerts" },
+    ],
+  },
+  {
+    title: "Hệ thống",
+    items: [
+      { icon: "⚙️", label: "Cài đặt & Zalo API", href: "/settings" },
+      { icon: "📞", label: "Cấu hình Hotline", href: "/settings?tab=contact" },
+      { icon: "🤖", label: "Kịch bản Chatbot", href: "/settings?tab=oa_info" },
+      { icon: "👥", label: "Quản lý tài khoản", href: "/settings/users" },
     ],
   },
 ];
