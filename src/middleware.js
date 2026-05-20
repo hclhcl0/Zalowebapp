@@ -15,6 +15,7 @@ export default withAuth(
     callbacks: {
       authorized: ({ token }) => !!token,
     },
+    secret: process.env.NEXTAUTH_SECRET || "fallback_nextauth_secret_key_cdc_danang_2026_change_in_production",
   }
 );
 
