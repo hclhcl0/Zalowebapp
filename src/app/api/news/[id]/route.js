@@ -38,7 +38,7 @@ export async function PUT(request, { params }) {
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
     const body = await request.json();
-    const { title, content, category, isPublished, broadcastNow, coverUrl, summary } = body;
+    const { title, content, category, isPublished, broadcastNow, coverUrl, summary, author } = body;
 
     const existingArticle = await prisma.newsArticle.findUnique({
       where: { id },
@@ -71,6 +71,7 @@ export async function PUT(request, { params }) {
         ...(category !== undefined && { category }),
         ...(coverUrl !== undefined && { coverUrl }),
         ...(summary !== undefined && { summary }),
+        ...(author !== undefined && { author }),
         isPublished: targetPublish,
         publishedAt: targetPublish && !existingArticle.isPublished ? new Date() : existingArticle.publishedAt,
       },

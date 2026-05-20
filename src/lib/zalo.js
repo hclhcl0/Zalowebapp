@@ -360,7 +360,7 @@ export async function createArticleToZalo(articleData) {
     type: "normal",
     title: articleData.title,
     description: articleData.summary || articleData.content.substring(0, 150) + "...",
-    author: "CDC Đà Nẵng",
+    author: articleData.author || "CDC Đà Nẵng",
     cover: {
       photo_url: articleData.coverUrl,
       status: "show"

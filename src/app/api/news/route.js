@@ -34,7 +34,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { title, content, category, publish, broadcastNow, coverUrl, summary } = body;
+    const { title, content, category, publish, broadcastNow, coverUrl, summary, author } = body;
 
     if (!title || !content || !category) {
       return NextResponse.json(
@@ -60,6 +60,7 @@ export async function POST(request) {
         category,
         coverUrl,
         summary,
+        author: author || "CDC Đà Nẵng",
         isPublished: !isStaff && !!publish,
         publishedAt: (!isStaff && publish) ? new Date() : null,
       },

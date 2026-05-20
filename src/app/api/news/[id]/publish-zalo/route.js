@@ -47,7 +47,8 @@ export async function POST(request, { params }) {
       title: article.title,
       content: article.content,
       summary: article.summary,
-      coverUrl: coverUrl
+      coverUrl: coverUrl,
+      author: article.author
     });
 
     // 4. Update the article with Zalo Article ID (token in this case representing the article creation process)

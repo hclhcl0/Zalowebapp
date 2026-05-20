@@ -101,6 +101,7 @@ model NewsArticle {
   category      String   // "daily_news" | "vac_schedule" | "alert"
   coverUrl      String?  // URL Ảnh bìa (bắt buộc khi đăng Zalo)
   summary       String?  // Mô tả ngắn
+  author        String?  @default("CDC Đà Nẵng") // Tác giả bài viết
   zaloArticleId String?  // ID bài viết trên Zalo sau khi xuất bản
   isPublished   Boolean  @default(false)
   publishedAt   DateTime?
