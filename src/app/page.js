@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Dashboard() {
   return (
     <div>
@@ -7,9 +9,9 @@ export default function Dashboard() {
           <h1 className="page-title">Tổng quan hệ thống</h1>
           <p className="page-desc">Chào mừng trở lại! Đây là tóm tắt hoạt động hôm nay.</p>
         </div>
-        <button className="btn btn-primary">📢 Gửi thông báo khẩn</button>
+        <Link href="/news/alerts" className="btn btn-primary">📢 Gửi thông báo khẩn</Link>
       </div>
-
+      
       {/* Stat cards */}
       <div className="stat-grid">
         <div className="stat-card">
@@ -55,7 +57,7 @@ export default function Dashboard() {
               <div className="card-title">Hoạt động gần đây</div>
               <div className="card-subtitle">Cập nhật theo thời gian thực</div>
             </div>
-            <button className="btn btn-outline btn-sm">Xem tất cả</button>
+            <Link href="/followers" className="btn btn-outline btn-sm">Xem tất cả</Link>
           </div>
           <div className="activity-list">
             <div className="activity-item">
@@ -112,30 +114,30 @@ export default function Dashboard() {
             <div className="card-title">Thao tác nhanh</div>
           </div>
           <div className="quick-actions">
-            <button className="quick-action-btn">
+            <Link href="/broadcast" className="quick-action-btn">
               <span className="quick-action-icon">📢</span>
               Gửi broadcast
-            </button>
-            <button className="quick-action-btn">
+            </Link>
+            <Link href="/news/daily" className="quick-action-btn">
               <span className="quick-action-icon">📝</span>
               Đăng tin tức
-            </button>
-            <button className="quick-action-btn">
+            </Link>
+            <Link href="/services/vaccination" className="quick-action-btn">
               <span className="quick-action-icon">💉</span>
               Duyệt lịch hẹn
-            </button>
-            <button className="quick-action-btn">
+            </Link>
+            <Link href="/services/test-results" className="quick-action-btn">
               <span className="quick-action-icon">🔬</span>
               Nhập KQ xét nghiệm
-            </button>
-            <button className="quick-action-btn">
+            </Link>
+            <Link href="/support/hotline" className="quick-action-btn">
               <span className="quick-action-icon">📞</span>
               Cập nhật hotline
-            </button>
-            <button className="quick-action-btn">
-              <span className="quick-action-icon">📊</span>
-              Xuất báo cáo
-            </button>
+            </Link>
+            <Link href="/salary-email" className="quick-action-btn">
+              <span className="quick-action-icon">📧</span>
+              Gửi email báo lương
+            </Link>
           </div>
 
           {/* Lịch hẹn chờ duyệt */}
