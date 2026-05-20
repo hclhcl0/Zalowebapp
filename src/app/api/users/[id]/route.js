@@ -16,7 +16,8 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Không có quyền thực hiện" }, { status: 403 });
     }
 
-    const id = parseInt(params.id);
+    const resolvedParams = await params;
+    const id = parseInt(resolvedParams.id);
     const body = await request.json();
     const { fullName, role, password } = body;
 
@@ -64,7 +65,8 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Không có quyền thực hiện" }, { status: 403 });
     }
 
-    const id = parseInt(params.id);
+    const resolvedParams = await params;
+    const id = parseInt(resolvedParams.id);
     const existingUser = await prisma.admin.findUnique({
       where: { id },
     });

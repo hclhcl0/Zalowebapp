@@ -9,7 +9,8 @@ import { sendZNS } from "@/lib/zalo";
 
 export async function PATCH(request, { params }) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     const { status } = await request.json();
 
     const updated = await prisma.appointment.update({
@@ -38,7 +39,8 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
     await prisma.appointment.delete({ where: { id: Number(id) } });
     return NextResponse.json({ success: true });
   } catch (err) {
