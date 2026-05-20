@@ -5,6 +5,9 @@ import {
   Loader2, Eye, EyeOff, AlertCircle, RefreshCw, Search,
   ChevronLeft, ChevronRight, Users, Settings2, Mail, Trash2, Zap
 } from "lucide-react";
+import { generateSalaryEmail } from "@/lib/salaryEmailTemplate";
+import { generateCustomEmail } from "@/lib/customEmailTemplate";
+import { generateTaxEmail } from "@/lib/taxEmailTemplate";
 
 // Page size for tables pagination
 const PAGE_SIZE = 8;
@@ -17,19 +20,189 @@ const fmt = (v) => {
   return String(v);
 };
 
+const cleanPhone = (p) => {
+  if (!p) return "";
+  let cleaned = String(p).replace(/[^\d]/g, "");
+  if (cleaned.startsWith("84") && cleaned.length > 9) {
+    cleaned = "0" + cleaned.slice(2);
+  }
+  return cleaned;
+};
+
+const normalizeName = (n) => {
+  return String(n || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+};function ZaloLinkSelect({ value, followers, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedFollower = followers.find(f => f.zaloUserId === value);
+
+  const filtered = followers.filter(f => {
+    const term = search.toLowerCase();
+    const name = (f.displayName || "").toLowerCase();
+    const phone = (f.phone || "").toLowerCase();
+    const userId = (f.zaloUserId || "").toLowerCase();
+    return name.includes(term) || phone.includes(term) || userId.includes(term);
+  });
+
+  return (
+    <div ref={containerRef} style={{ position: "relative", width: "100%", minWidth: "150px" }}>
+      <button
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setSearch("");
+        }}
+        type="button"
+        className="form-input"
+        style={{
+          width: "100%",
+          height: "28px",
+          fontSize: "0.75rem",
+          padding: "2px 8px",
+          textAlign: "left",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          cursor: "pointer",
+          border: value ? "1px solid var(--success)" : "1px solid var(--border)",
+          background: value ? "#f0fdf4" : "var(--bg)",
+          color: value ? "#166534" : "var(--text)"
+        }}
+      >
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "90%" }}>
+          {selectedFollower ? `${selectedFollower.displayName} ${selectedFollower.phone ? `(${selectedFollower.phone})` : ""}` : "-- Chưa liên kết --"}
+        </span>
+        <span style={{ fontSize: "0.6rem", color: "var(--text-muted)", marginLeft: "4px" }}>▼</span>
+      </button>
+
+      {isOpen && (
+        <div style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          zIndex: 999,
+          background: "white",
+          border: "1px solid var(--border)",
+          borderRadius: "var(--radius)",
+          boxShadow: "var(--shadow-lg)",
+          marginTop: "4px",
+          padding: "6px",
+          minWidth: "220px"
+        }}>
+          <input
+            type="text"
+            placeholder="Tìm tên hoặc SĐT..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="form-input"
+            style={{
+              height: "28px",
+              fontSize: "0.75rem",
+              padding: "4px 8px",
+              marginBottom: "6px",
+              width: "100%",
+              boxSizing: "border-box"
+            }}
+            autoFocus
+          />
+          <div style={{
+            maxHeight: "150px",
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: "2px"
+          }}>
+            <button
+              onClick={() => {
+                onChange("");
+                setIsOpen(false);
+              }}
+              type="button"
+              style={{
+                width: "100%",
+                padding: "6px 8px",
+                fontSize: "0.75rem",
+                textAlign: "left",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                borderRadius: "4px",
+                color: "var(--danger)",
+                fontWeight: 600
+              }}
+              onMouseEnter={(e) => e.target.style.background = "#fef2f2"}
+              onMouseLeave={(e) => e.target.style.background = "transparent"}
+            >
+              -- Chưa liên kết --
+            </button>
+            {filtered.length === 0 ? (
+              <div style={{ padding: "6px 8px", fontSize: "0.75rem", color: "var(--text-muted)", textAlign: "center" }}>
+                Không tìm thấy người dùng
+              </div>
+            ) : (
+              filtered.map((f) => (
+                <button
+                  key={f.zaloUserId}
+                  onClick={() => {
+                    onChange(f.zaloUserId);
+                    setIsOpen(false);
+                  }}
+                  type="button"
+                  style={{
+                    width: "100%",
+                    padding: "6px 8px",
+                    fontSize: "0.75rem",
+                    textAlign: "left",
+                    background: f.zaloUserId === value ? "var(--primary-light)" : "transparent",
+                    color: f.zaloUserId === value ? "var(--primary)" : "var(--text)",
+                    border: "none",
+                    cursor: "pointer",
+                    borderRadius: "4px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (f.zaloUserId !== value) e.target.style.background = "var(--bg)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (f.zaloUserId !== value) e.target.style.background = "transparent";
+                  }}
+                >
+                  {f.displayName} {f.phone ? `(${f.phone})` : ""}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SalaryEmailPage() {
   const [activeTab, setActiveTab] = useState("salary");
 
   // === accounts states ===
   const [accounts, setAccounts] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [newPass, setNewPass] = useState("");
-
   const [batchSize, setBatchSize] = useState(10);
   const [delayMs, setDelayMs] = useState(2000);
+  const [followers, setFollowers] = useState([]);
 
-  // Load Gmail pool from localStorage
+  // Load Gmail pool from localStorage & followers from DB
   useEffect(() => {
     const saved = localStorage.getItem("cdc_gmail_pool");
     if (saved) {
@@ -39,224 +212,172 @@ export default function SalaryEmailPage() {
         console.error(e);
       }
     }
+    const savedBatch = localStorage.getItem("cdc_email_batch_size");
+    if (savedBatch) setBatchSize(Number(savedBatch));
+    const savedDelay = localStorage.getItem("cdc_email_delay_ms");
+    if (savedDelay) setDelayMs(Number(savedDelay));
     setIsLoaded(true);
+
+    // Tải người quan tâm Zalo
+    fetch("/api/followers")
+      .then(res => res.json())
+      .then(json => {
+        if (json.data) setFollowers(json.data);
+      })
+      .catch(err => console.error("Error loading Zalo followers:", err));
   }, []);
-
-  // Save Gmail pool to localStorage
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("cdc_gmail_pool", JSON.stringify(accounts));
+  const [isRefreshingFollowers, setIsRefreshingFollowers] = useState(false);
+  const refreshFollowers = async () => {
+    setIsRefreshingFollowers(true);
+    try {
+      const res = await fetch("/api/followers");
+      const json = await res.json();
+      if (json.data) {
+        setFollowers(json.data);
+      }
+    } catch (err) {
+      console.error("Error refreshing Zalo followers:", err);
+    } finally {
+      setIsRefreshingFollowers(false);
     }
-  }, [accounts, isLoaded]);
-
-  const addAccount = () => {
-    if (!newEmail.trim() || !newPass.trim()) return;
-    setAccounts((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        user: newEmail.trim(),
-        appPassword: newPass.replace(/\s/g, ""),
-        showPass: false,
-      },
-    ]);
-    setNewEmail("");
-    setNewPass("");
   };
 
-  const removeAccount = (id) => setAccounts((prev) => prev.filter((a) => a.id !== id));
-  const togglePass = (id) =>
-    setAccounts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, showPass: !a.showPass } : a))
-    );
-
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-12">
+    <div>
       {/* ── HEADER ── */}
-      <div className="mb-6 bg-gradient-to-r from-blue-700 via-indigo-600 to-indigo-800 p-6 rounded-2xl shadow-md text-white">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">📧</span>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Hệ Thống Gửi Email Tự Động</h1>
-              <p className="text-indigo-100 text-sm">Gửi báo lương quý, thuế TNCN và email đính kèm Excel tùy biến cho nhân viên CDC Đà Nẵng</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {accounts.length > 0 ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 hover:bg-white/30 transition rounded-lg text-xs font-semibold backdrop-blur-sm">
-                <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
-                {accounts.length} tài khoản trong Pool
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 rounded-lg text-xs font-semibold border border-red-500/30">
-                ⚠️ Chưa cấu hình Gmail Pool
-              </span>
-            )}
-          </div>
+      <div className="page-header" style={{ marginBottom: "20px" }}>
+        <div>
+          <h1 className="page-title">📧 Gửi Email Báo Lương &amp; Thuế</h1>
+          <p className="page-desc">Gửi báo lương quý, thuế TNCN và email đính kèm Excel tùy biến cho nhân viên CDC Đà Nẵng</p>
         </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-1 mt-6 border-b border-white/10">
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <button
-            onClick={() => setActiveTab("salary")}
-            className={`px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all ${
-              activeTab === "salary"
-                ? "bg-white text-indigo-800 shadow-sm font-bold"
-                : "text-indigo-100 hover:text-white hover:bg-white/10"
-            }`}
+            onClick={refreshFollowers}
+            className="btn btn-outline btn-sm"
+            style={{ height: "36px", gap: "6px", display: "inline-flex", alignItems: "center" }}
+            disabled={isRefreshingFollowers}
+            title="Làm mới danh sách người quan tâm Zalo từ hệ thống"
           >
-            📊 Báo Lương Quý
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingFollowers ? "animate-spin" : ""}`} />
+            Làm mới Zalo Followers
           </button>
-          <button
-            onClick={() => setActiveTab("custom")}
-            className={`px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all ${
-              activeTab === "custom"
-                ? "bg-white text-indigo-800 shadow-sm font-bold"
-                : "text-indigo-100 hover:text-white hover:bg-white/10"
-            }`}
-          >
-            ⚙️ Email Tùy Chọn (Dynamic Excel)
-          </button>
-          <button
-            onClick={() => setActiveTab("tax")}
-            className={`px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-all ${
-              activeTab === "tax"
-                ? "bg-white text-emerald-800 shadow-sm font-bold"
-                : "text-indigo-100 hover:text-white hover:bg-white/10"
-            }`}
-          >
-            🧾 Báo Thuế TNCN
-          </button>
+          {accounts.length > 0 ? (
+            <span className="badge badge-approved" style={{ padding: "8px 12px", gap: "6px", height: "36px", display: "inline-flex", alignItems: "center" }}>
+              <Zap className="w-3.5 h-3.5 fill-current" /> {accounts.length} Gmail Pool
+            </span>
+          ) : (
+            <span className="badge badge-cancelled" style={{ padding: "8px 12px", gap: "6px", height: "36px", display: "inline-flex", alignItems: "center" }}>
+              ⚠️ Chưa cấu hình Gmail Pool
+            </span>
+          )}
         </div>
       </div>
 
+      {/* Navigation Tabs */}
+      <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+        {[
+          { id: "salary", label: "📊 Báo Lương Quý", desc: "Theo mẫu lương tăng thêm" },
+          { id: "custom", label: "⚙️ Email Tùy Chọn", desc: "Excel cấu trúc bất kỳ" },
+          { id: "tax", label: "🧾 Báo Thuế TNCN", desc: "Chỉ gửi người nộp thuế" }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "4px",
+              padding: "14px 18px",
+              borderRadius: "var(--radius-lg)",
+              border: `2px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
+              background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
+              cursor: "pointer",
+              flex: "1 1 200px",
+              textAlign: "left",
+              transition: "all 0.2s",
+              boxShadow: activeTab === tab.id ? "var(--shadow-md)" : "var(--shadow-sm)"
+            }}
+          >
+            <span style={{ fontSize: "0.95rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>
+              {tab.label}
+            </span>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              {tab.desc}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left main contents: tab switcher contents */}
+        {/* Left main contents: active tab components */}
         <div className="lg:col-span-2 space-y-6">
           {activeTab === "salary" && (
-            <SalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} />
+            <SalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
           )}
           {activeTab === "custom" && (
-            <CustomSalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} />
+            <CustomSalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
           )}
           {activeTab === "tax" && (
-            <TaxTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} />
+            <TaxTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
           )}
         </div>
 
-        {/* Right side config panel: Gmail Pool Setup */}
+        {/* Right side config panel: Gmail Pool Settings Link */}
         <div className="space-y-6">
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center font-mono">@</span>
-                <h2 className="font-bold text-slate-800 text-sm">Gmail Account Pool</h2>
+          <div className="card" style={{ padding: "20px" }}>
+            <div className="card-header" style={{ marginBottom: "16px" }}>
+              <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>🔑 Gmail Account Pool</span>
               </div>
-              {accounts.length > 0 && (
-                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-xs font-medium">
-                  {accounts.length} Active
-                </span>
-              )}
             </div>
-            <div className="p-5 space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-800 text-xs leading-relaxed flex gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-                <span>
-                  Sử dụng <strong>Mật khẩu ứng dụng (App Password)</strong> của Gmail để bảo mật tài khoản. Hãy tạo trong <em>Google Account &rarr; Security &rarr; 2-Step Verification &rarr; App passwords</em>.
-                </span>
-              </div>
-
-              {/* Form add Gmail account */}
-              <div className="space-y-2">
-                <input
-                  type="email"
-                  placeholder="email@gmail.com"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="w-full h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-                <input
-                  type="password"
-                  placeholder="Mật khẩu ứng dụng (16 ký tự)"
-                  value={newPass}
-                  onChange={(e) => setNewPass(e.target.value)}
-                  className="w-full h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-                <button
-                  onClick={addAccount}
-                  disabled={!newEmail.trim() || !newPass.trim()}
-                  className="w-full h-9 bg-slate-800 hover:bg-slate-900 disabled:opacity-50 text-white font-semibold text-sm rounded-lg flex items-center justify-center gap-1.5 shadow-sm transition"
-                >
-                  <Plus className="w-4 h-4" /> Thêm tài khoản pool
-                </button>
-              </div>
-
-              {/* List of Gmail accounts */}
-              {accounts.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 text-xs border border-dashed border-slate-200 rounded-xl">
-                  Chưa có tài khoản nào. Hãy thêm ít nhất 1 Gmail để bắt đầu gửi email.
+            <div className="space-y-4">
+              <div style={{
+                background: accounts.length > 0 ? "#f0fdf4" : "#fef2f2",
+                border: `1px solid ${accounts.length > 0 ? "#bbf7d0" : "#fecaca"}`,
+                color: accounts.length > 0 ? "#15803d" : "#dc2626",
+                borderRadius: "var(--radius)",
+                padding: "12px",
+                fontSize: "0.8rem",
+                lineHeight: "1.5",
+                display: "flex",
+                gap: "8px"
+              }}>
+                <AlertCircle className="w-4 h-4 shrink-0 text-current mt-0.5" />
+                <div>
+                  <strong>{accounts.length > 0 ? `Đang hoạt động (${accounts.length} Gmail)` : "Chưa cấu hình"}</strong>
+                  <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                    {accounts.length > 0 
+                      ? "Tài khoản Gmail được luân phiên tự động để gửi báo lương & báo thuế."
+                      : "Vui lòng thêm tài khoản Gmail để bắt đầu thực hiện chiến dịch."}
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
-                  {accounts.map((acc, idx) => (
-                    <div key={acc.id} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
-                      <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-slate-800 truncate">{acc.user}</p>
-                        <p className="text-slate-400 font-mono text-[10px]">
-                          {acc.showPass ? acc.appPassword : "•••• •••• •••• ••••"}
-                        </p>
-                      </div>
-                      <button
-                        className="w-6 h-6 rounded hover:bg-slate-200 flex items-center justify-center text-slate-500"
-                        onClick={() => togglePass(acc.id)}
-                      >
-                        {acc.showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </button>
-                      <button
-                        className="w-6 h-6 rounded hover:bg-red-50 flex items-center justify-center text-red-500"
-                        onClick={() => removeAccount(acc.id)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
+              </div>
 
-          {/* Batch config options */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50">
-              <h2 className="font-bold text-slate-800 text-sm">⚙️ Cấu hình Tốc độ Gửi</h2>
-            </div>
-            <div className="p-5 space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Số email mỗi đợt (Batch size)</label>
-                <input
-                  type="number"
-                  value={batchSize}
-                  onChange={(e) => setBatchSize(Number(e.target.value))}
-                  className="w-full h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-                <span className="text-[10px] text-slate-400">Nên để từ 5-15 email/lần gửi để tránh bị đánh dấu Spam.</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.8rem", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-muted)" }}>Số lượng Gmail:</span>
+                  <span style={{ fontWeight: 600 }}>{accounts.length}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-muted)" }}>Số email mỗi đợt:</span>
+                  <span style={{ fontWeight: 600 }}>{batchSize} email</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-muted)" }}>Thời gian giãn cách:</span>
+                  <span style={{ fontWeight: 600 }}>{delayMs / 1000} giây</span>
+                </div>
               </div>
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Thời gian nghỉ giữa các đợt (Milliseconds)</label>
-                <input
-                  type="number"
-                  value={delayMs}
-                  onChange={(e) => setDelayMs(Number(e.target.value))}
-                  className="w-full h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-                <span className="text-[10px] text-slate-400">Ví dụ: 2000 = 2 giây nghỉ để giảm tải gửi.</span>
-              </div>
+
+              <a 
+                href="/settings?tab=gmail_pool" 
+                className="btn btn-primary"
+                style={{ width: "100%", justifyContent: "center", textDecoration: "none", display: "inline-flex", gap: "8px" }}
+              >
+                <Settings2 className="w-4 h-4" /> Cấu hình Gmail &amp; Tốc độ
+              </a>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </div>
@@ -266,9 +387,7 @@ export default function SalaryEmailPage() {
 // ==========================================
 // COMPONENT 1: BÁO LƯƠNG QUÝ TAB
 // ==========================================
-import { generateSalaryEmail } from "@/lib/salaryEmailTemplate";
-
-function SalaryTab({ accounts, batchSize, delayMs }) {
+function SalaryTab({ accounts, batchSize, delayMs, followers }) {
   const fileRef = useRef(null);
   const resultsRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -282,6 +401,7 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
   const [isDrag, setIsDrag] = useState(false);
   const [page, setPage] = useState(0);
 
+  const [channel, setChannel] = useState("email");
   const [subject, setSubject] = useState("Thông báo tiền lương tăng thêm Quý I/2026 - CDC Đà Nẵng");
   const [customMessage, setCustomMessage] = useState("");
 
@@ -289,6 +409,12 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
   const [isDone, setIsDone] = useState(false);
   const [prog, setProg] = useState({ sent: 0, total: 0, success: 0, failed: 0, results: [] });
   const [previewRecord, setPreviewRecord] = useState(null);
+
+  const handleLinkZalo = (recordId, zaloUserId) => {
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, zaloUserId } : r))
+    );
+  };
 
   const processFile = useCallback(async (file) => {
     setParseError("");
@@ -303,12 +429,33 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
       const json = await res.json();
       if (json.records) {
         setRecords(
-          json.records.map((r) => ({
-            ...r,
-            id: crypto.randomUUID(),
-            selected: true,
-            status: "idle",
-          }))
+          json.records.map((r) => {
+            // Tự động đối chiếu Zalo Follower
+            let matchedFollower = null;
+            if (followers && followers.length > 0) {
+              const excelZaloId = r.zaloUserId || r.zaloId || r.idZalo || r.zalo;
+              if (excelZaloId) {
+                const cleanId = String(excelZaloId).trim();
+                matchedFollower = followers.find(f => f.zaloUserId === cleanId);
+              }
+              if (!matchedFollower && (r.phone || r.sdt)) {
+                const cleanedR = cleanPhone(r.phone || r.sdt);
+                matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+              }
+              if (!matchedFollower) {
+                const normR = normalizeName(r.tenNhanVien);
+                matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+              }
+            }
+
+            return {
+              ...r,
+              id: crypto.randomUUID(),
+              selected: true,
+              status: "idle",
+              zaloUserId: matchedFollower ? matchedFollower.zaloUserId : "",
+            };
+          })
         );
       } else {
         setParseError(json.error || "Lỗi đọc file");
@@ -318,7 +465,7 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
     } finally {
       setParsing(false);
     }
-  }, []);
+  }, [followers]);
 
   const onDrop = useCallback(
     (e) => {
@@ -337,7 +484,7 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
 
   const startSend = async () => {
     const selectedRecords = records.filter((r) => r.selected && r.status !== "success");
-    if (!selectedRecords.length || !accounts.length || isSending) return;
+    if (!selectedRecords.length || (channel !== "zalo" && !accounts.length) || isSending) return;
     setIsSending(true);
     setIsDone(false);
     setProg({ sent: 0, total: selectedRecords.length, success: 0, failed: 0, results: [] });
@@ -365,6 +512,7 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
           batchSize,
           batchDelayMs: delayMs,
           customMessage,
+          channel,
         }),
       });
 
@@ -443,7 +591,7 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
   const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
   const pageRows = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const selectedCount = records.filter((r) => r.selected && r.status !== "success").length;
-  const canSend = selectedCount > 0 && accounts.length > 0 && !isSending;
+  const canSend = selectedCount > 0 && (channel === "zalo" || accounts.length > 0) && !isSending;
 
   const toggleSelectAll = (checked) => {
     setRecords((prev) => prev.map((r) => ({ ...r, selected: checked })));
@@ -455,12 +603,14 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
   return (
     <div className="space-y-6">
       {/* ── STEP 1: UPLOAD ── */}
-      <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-          <span className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">1</span>
-          <h2 className="font-semibold text-slate-800">Tải file Excel danh sách Báo lương</h2>
+      <div className="card">
+        <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
+          <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold" }}>1</span>
+            <span>Tải file Excel danh sách Báo lương</span>
+          </div>
         </div>
-        <div className="p-6">
+        <div>
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -469,250 +619,321 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
             onDragLeave={() => setIsDrag(false)}
             onDrop={onDrop}
             onClick={() => fileRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
-              isDrag ? "border-indigo-500 bg-indigo-50" : "border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50"
-            }`}
+            style={{
+              border: `2px dashed ${isDrag ? "var(--primary)" : "var(--border)"}`,
+              background: isDrag ? "var(--primary-light)" : "var(--bg)",
+              borderRadius: "var(--radius-lg)",
+              padding: "32px 20px",
+              textAlign: "center",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
           >
             <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFileChange} />
             {parsing ? (
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
-                <p className="text-slate-500 text-sm">Đang phân tích file...</p>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>Đang phân tích file...</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-1">
-                  <Upload className="w-6 h-6 text-indigo-600" />
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "4px" }}>
+                  <Upload className="w-5 h-5 text-primary" />
                 </div>
-                <p className="font-semibold text-slate-700 text-sm">Kéo thả hoặc click để chọn file Excel</p>
-                <p className="text-slate-400 text-xs">Hỗ trợ: .xlsx, .xls, .csv</p>
+                <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>Kéo thả hoặc click để chọn file Excel</p>
+                <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>Hỗ trợ: .xlsx, .xls, .csv</p>
               </div>
             )}
           </div>
 
           {parseError && (
-            <div className="mt-3 flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0" /> {parseError}
+            <div style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              color: "var(--danger)",
+              borderRadius: "var(--radius)",
+              padding: "12px",
+              fontSize: "0.8rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginTop: "12px"
+            }}>
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+              <span>{parseError}</span>
             </div>
           )}
 
           {records.length > 0 && (
-            <div className="mt-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded border border-indigo-200 flex items-center gap-1">
+            <div style={{ marginTop: "20px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className="badge badge-info" style={{ gap: "4px" }}>
                     <Users className="w-3.5 h-3.5" /> {records.length} Nhân viên
                   </span>
-                  <span className="text-slate-400 text-xs truncate max-w-[200px]">{fileName}</span>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", maxWidth: "240px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
                 </div>
-                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1 text-xs">
-                  <button
-                    onClick={() => {
-                      setFilterStatus("all");
-                      setPage(0);
-                    }}
-                    className={`px-3 py-1.5 rounded-md font-medium transition ${
-                      filterStatus === "all" ? "bg-white text-indigo-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    Tất cả
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterStatus("selected");
-                      setPage(0);
-                    }}
-                    className={`px-3 py-1.5 rounded-md font-medium transition ${
-                      filterStatus === "selected" ? "bg-white text-indigo-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    Đã chọn ({records.filter((r) => r.selected).length})
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterStatus("error");
-                      setPage(0);
-                    }}
-                    className={`px-3 py-1.5 rounded-md font-medium transition ${
-                      filterStatus === "error" ? "bg-white text-indigo-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    Lỗi ({records.filter((r) => r.status === "error").length})
-                  </button>
-                  <button
-                    onClick={() => {
-                      setFilterStatus("success");
-                      setPage(0);
-                    }}
-                    className={`px-3 py-1.5 rounded-md font-medium transition ${
-                      filterStatus === "success" ? "bg-white text-indigo-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    Đã gửi
-                  </button>
+                <div style={{ display: "flex", gap: "4px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)" }}>
+                  {[
+                    { id: "all", label: "Tất cả" },
+                    { id: "selected", label: `Đã chọn (${records.filter(r => r.selected).length})` },
+                    { id: "error", label: `Lỗi (${records.filter(r => r.status === "error").length})` },
+                    { id: "success", label: "Đã gửi" }
+                  ].map((st) => (
+                    <button
+                      key={st.id}
+                      onClick={() => {
+                        setFilterStatus(st.id);
+                        setPage(0);
+                      }}
+                      className="btn"
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "0.75rem",
+                        background: filterStatus === st.id ? "white" : "transparent",
+                        border: "none",
+                        boxShadow: filterStatus === st.id ? "var(--shadow-sm)" : "none",
+                        color: filterStatus === st.id ? "var(--primary)" : "var(--text-muted)",
+                        borderRadius: "4px"
+                      }}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mb-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+                <div style={{ flex: 1, position: "relative" }}>
                   <input
                     type="text"
-                    placeholder="Tìm kiếm tên nhân viên..."
-                    className="w-full pl-9 h-9 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="search-input"
+                    placeholder="Tìm kiếm theo tên nhân viên..."
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
                       setPage(0);
                     }}
+                    style={{ width: "100%", paddingLeft: "38px" }}
                   />
                 </div>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="px-3 h-9 text-xs border border-slate-200 hover:bg-slate-50 font-semibold rounded-lg text-slate-600 inline-flex items-center gap-1"
+                  className="btn btn-outline"
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Đổi file
                 </button>
               </div>
 
               {/* Table list */}
-              <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm bg-white">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50/70 border-b border-slate-200 text-slate-600 font-semibold">
-                        <th className="px-4 py-2.5 w-10 text-center">
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "45px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={records.length > 0 && records.every((r) => r.selected)}
+                          onChange={(e) => toggleSelectAll(e.target.checked)}
+                          style={{ cursor: "pointer" }}
+                        />
+                      </th>
+                      <th>Tên nhân viên</th>
+                      <th>Email nhận</th>
+                      <th>Liên kết Zalo</th>
+                      <th style={{ textAlign: "right" }}>HS T1</th>
+                      <th style={{ textAlign: "right" }}>HS T2</th>
+                      <th style={{ textAlign: "right" }}>HS T3</th>
+                      <th style={{ textAlign: "right" }}>Tổng thu nhập</th>
+                      <th style={{ textAlign: "center" }}>Trạng thái</th>
+                      <th style={{ textAlign: "center" }}>Xem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageRows.map((r) => (
+                      <tr key={r.id} style={{
+                        background: r.status === "success" ? "#f0fdf4" : r.status === "error" ? "#fef2f2" : "inherit"
+                      }}>
+                        <td style={{ textAlign: "center" }}>
                           <input
                             type="checkbox"
-                            checked={records.length > 0 && records.every((r) => r.selected)}
-                            onChange={(e) => toggleSelectAll(e.target.checked)}
-                            className="rounded border-slate-300 w-4 h-4 text-indigo-600 cursor-pointer"
+                            checked={r.selected}
+                            onChange={(e) => toggleSelect(r.id, e.target.checked)}
+                            style={{ cursor: "pointer" }}
                           />
-                        </th>
-                        <th className="px-4 py-2.5">Tên nhân viên</th>
-                        <th className="px-4 py-2.5">Email nhận</th>
-                        <th className="px-4 py-2.5 text-right">HS T1</th>
-                        <th className="px-4 py-2.5 text-right">HS T2</th>
-                        <th className="px-4 py-2.5 text-right">HS T3</th>
-                        <th className="px-4 py-2.5 text-right text-indigo-700">Tổng thu nhập</th>
-                        <th className="px-4 py-2.5 text-center">Trạng thái</th>
-                        <th className="px-4 py-2.5 text-center">Xem</th>
+                        </td>
+                        <td style={{ fontWeight: 600, color: "var(--text)" }}>{r.tenNhanVien}</td>
+                        <td style={{ fontFamily: "monospace", color: "var(--text-muted)", fontSize: "0.8rem" }}>{r.email}</td>
+                        <td>
+                          <ZaloLinkSelect
+                            value={r.zaloUserId || ""}
+                            followers={followers}
+                            onChange={(val) => handleLinkZalo(r.id, val)}
+                          />
+                        </td>
+                        <td style={{ textAlign: "right", color: "var(--text-muted)" }}>{r.heSoLieuT1}</td>
+                        <td style={{ textAlign: "right", color: "var(--text-muted)" }}>{r.heSoLieuT2}</td>
+                        <td style={{ textAlign: "right", color: "var(--text-muted)" }}>{r.heSoLieuT3}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700, color: "var(--primary)" }}>{fmt(r.tongThuNhap)}</td>
+                        <td style={{ textAlign: "center" }}>
+                          {r.status === "success" && <span className="badge badge-approved">Đã gửi</span>}
+                          {r.status === "error" && <span className="badge badge-cancelled" title={r.error}>Lỗi</span>}
+                          {r.status === "idle" && <span style={{ color: "var(--text-light)" }}>—</span>}
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ padding: "4px", minWidth: "auto" }}
+                            onClick={() => setPreviewRecord(r)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {pageRows.map((r, i) => (
-                        <tr
-                          key={r.id}
-                          className={`hover:bg-slate-50/50 transition-colors ${
-                            r.status === "error" ? "bg-red-50/30" : r.status === "success" ? "bg-emerald-50/30" : ""
-                          }`}
-                        >
-                          <td className="px-4 py-2 text-center">
-                            <input
-                              type="checkbox"
-                              checked={r.selected}
-                              onChange={(e) => toggleSelect(r.id, e.target.checked)}
-                              className="rounded border-slate-300 w-4 h-4 text-indigo-600 cursor-pointer"
-                            />
-                          </td>
-                          <td className="px-4 py-2 font-medium text-slate-800">{r.tenNhanVien}</td>
-                          <td className="px-4 py-2 text-slate-500 font-mono">{r.email}</td>
-                          <td className="px-4 py-2 text-right font-mono text-slate-600">{r.heSoLieuT1}</td>
-                          <td className="px-4 py-2 text-right font-mono text-slate-600">{r.heSoLieuT2}</td>
-                          <td className="px-4 py-2 text-right font-mono text-slate-600">{r.heSoLieuT3}</td>
-                          <td className="px-4 py-2 text-right font-semibold font-mono text-indigo-700">{fmt(r.tongThuNhap)}</td>
-                          <td className="px-4 py-2 text-center">
-                            {r.status === "success" && <CheckCircle className="w-5 h-5 text-emerald-500 inline-block" />}
-                            {r.status === "error" && <XCircle className="w-5 h-5 text-red-500 inline-block" title={r.error} />}
-                            {r.status === "idle" && <span className="text-slate-300 font-semibold">—</span>}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            <button
-                              onClick={() => setPreviewRecord(r)}
-                              className="p-1 rounded text-indigo-600 hover:bg-indigo-50 hover:text-indigo-800 transition"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {pageRows.length === 0 && (
-                        <tr>
-                          <td colSpan="9" className="text-center py-6 text-slate-400">
-                            Không tìm thấy kết quả phù hợp.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="px-4 py-3 flex items-center justify-between border-t border-slate-100 bg-slate-50/50">
-                    <span className="text-xs text-slate-500">
-                      Trang {page + 1}/{totalPages}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setPage((p) => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                        className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-30"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                        disabled={page === totalPages - 1}
-                        className="p-1.5 rounded hover:bg-slate-200 disabled:opacity-30"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                    ))}
+                    {pageRows.length === 0 && (
+                      <tr>
+                        <td colSpan="10" style={{ textAlign: "center", color: "var(--text-muted)", padding: "20px" }}>
+                          Không có dữ liệu phù hợp bộ lọc.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
+
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Trang {page + 1} / {totalPages}</span>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => setPage((p) => Math.max(0, p - 1))}
+                      disabled={page === 0}
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Trước
+                    </button>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                      disabled={page === totalPages - 1}
+                    >
+                      Sau <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </section>
+      </div>
 
-      {/* ── STEP 2: CẤU HÌNH GỬI ── */}
-      <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-          <span className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">2</span>
-          <h2 className="font-semibold text-slate-800">Cấu hình tiêu đề & Nội dung gửi kèm</h2>
+      <div className="card">
+        <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
+          <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold" }}>2</span>
+            <span>Cấu hình gửi báo lương (Email & Zalo OA)</span>
+          </div>
         </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Tiêu đề email (Subject)</label>
+        <div className="space-y-4">
+          <div className="form-group">
+            <label className="form-label" style={{ fontWeight: 600 }}>Kênh gửi thông báo</label>
+            <div style={{ display: "flex", gap: "16px", marginTop: "6px", flexWrap: "wrap" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                <input 
+                  type="radio" 
+                  name="channel-salary" 
+                  value="email" 
+                  checked={channel === "email"} 
+                  onChange={() => setChannel("email")} 
+                  style={{ cursor: "pointer" }}
+                />
+                📧 Chỉ gửi Gmail
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                <input 
+                  type="radio" 
+                  name="channel-salary" 
+                  value="zalo" 
+                  checked={channel === "zalo"} 
+                  onChange={() => setChannel("zalo")} 
+                  style={{ cursor: "pointer" }}
+                />
+                💬 Chỉ gửi Zalo OA
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                <input 
+                  type="radio" 
+                  name="channel-salary" 
+                  value="both" 
+                  checked={channel === "both"} 
+                  onChange={() => setChannel("both")} 
+                  style={{ cursor: "pointer" }}
+                />
+                🔄 Gửi cả hai kênh
+              </label>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Tiêu đề (Tiêu đề email / Tiêu đề tin nhắn Zalo)</label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              placeholder="Nhập tiêu đề email..."
+              className="form-input"
+              placeholder="Nhập tiêu đề..."
             />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Lời nhắn gửi kèm đầu email (Tùy chọn)</label>
+          <div className="form-group">
+            <label className="form-label">Lời nhắn gửi kèm đầu thư (Tùy chọn)</label>
             <textarea
               value={customMessage}
               onChange={(e) => setCustomMessage(e.target.value)}
-              rows="3"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              className="form-textarea"
               placeholder="Nhập lời mở đầu gửi kèm..."
             />
           </div>
 
           {records.length > 0 && (
-            <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl text-xs space-y-1">
-              <p className="text-indigo-800 font-semibold">
-                Sẽ gửi {selectedCount} email báo lương thông qua {accounts.length} tài khoản Gmail.
-              </p>
-              {accounts.length > 0 && (
-                <p className="text-indigo-600">
-                  Trung bình mỗi tài khoản gửi {Math.ceil(selectedCount / accounts.length)} email (thuật toán Round-Robin).
+            <div style={{
+              background: "var(--primary-light)",
+              border: "1px solid var(--border-focus)",
+              color: "var(--primary)",
+              borderRadius: "var(--radius)",
+              padding: "12px",
+              fontSize: "0.8rem",
+              lineHeight: "1.5"
+            }}>
+              {channel === "email" && (
+                <>
+                  <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
+                    Sẽ gửi {selectedCount} email báo lương thông qua {accounts.length} tài khoản Gmail.
+                  </p>
+                  {accounts.length > 0 && (
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      Trung bình mỗi tài khoản gửi {Math.ceil(selectedCount / accounts.length)} email (Round-Robin).
+                    </p>
+                  )}
+                </>
+              )}
+              {channel === "zalo" && (
+                <p style={{ margin: 0, fontWeight: 700 }}>
+                  Sẽ gửi {selectedCount} tin nhắn báo lương qua Zalo OA cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
                 </p>
+              )}
+              {channel === "both" && (
+                <>
+                  <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
+                    Sẽ gửi đồng thời {selectedCount} email (qua Gmail Pool) & tin nhắn Zalo OA cho cán bộ.
+                  </p>
+                  {accounts.length > 0 && (
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      Gmail: mỗi tài khoản gửi khoảng {Math.ceil(selectedCount / accounts.length)} email.
+                    </p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -720,122 +941,195 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
           <button
             onClick={startSend}
             disabled={!canSend}
-            className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-lg flex items-center justify-center gap-2 shadow-sm transition text-sm"
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center", height: "42px", fontSize: "0.95rem" }}
           >
             {isSending ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Đang gửi {prog.sent}/{prog.total}...
+                <Loader2 className="w-5 h-5 animate-spin" /> Đang xử lý {prog.sent}/{prog.total}...
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" /> Gửi {selectedCount} Email Báo Lương
+                <Send className="w-4 h-4" /> Bắt đầu gửi báo lương ({channel === "email" ? "Gmail" : channel === "zalo" ? "Zalo" : "Gmail & Zalo"})
               </>
             )}
           </button>
         </div>
-      </section>
+      </div>
 
       {/* ── PROGRESS & RESULTS ── */}
       {(isSending || isDone) && (
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isDone ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />}
-              <h2 className="font-semibold text-slate-800 text-sm">{isDone ? "Hoàn tất chiến dịch!" : `Đang tiến hành... ${pct}%`}</h2>
+        <div className="card">
+          <div className="card-header" style={{ marginBottom: "16px" }}>
+            <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {isDone ? <CheckCircle className="w-5 h-5 text-success" /> : <Loader2 className="w-5 h-5 text-primary animate-spin" />}
+              <span>{isDone ? "Hoàn tất chiến dịch!" : `Đang tiến hành gửi... ${pct}%`}</span>
             </div>
-            <div className="flex items-center gap-4 text-xs font-semibold">
-              {!isDone && isSending && (
-                <button
-                  onClick={() => abortControllerRef.current?.abort()}
-                  className="px-2.5 py-1 text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition"
-                >
-                  Dừng gửi
-                </button>
-              )}
-              <span className="text-slate-400 font-mono">
-                {prog.sent}/{prog.total}
-              </span>
-            </div>
+            {!isDone && isSending && (
+              <button
+                onClick={() => abortControllerRef.current?.abort()}
+                className="btn btn-danger btn-sm"
+              >
+                Dừng gửi
+              </button>
+            )}
           </div>
-          <div className="p-6 space-y-4">
-            {/* Progress bar */}
-            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div className="bg-indigo-600 h-2 rounded-full transition-all duration-300" style={{ width: `${pct}%` }}></div>
+          <div className="space-y-4">
+            <div style={{ width: "100%", background: "var(--border)", height: "8px", borderRadius: "999px", overflow: "hidden" }}>
+              <div style={{ width: `${pct}%`, background: "var(--primary)", height: "100%", transition: "width 0.3s ease" }}></div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-slate-800">{prog.sent}</p>
-                <p className="text-[10px] font-semibold text-slate-500">Đã xử lý</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", textAlign: "center" }}>
+              <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text)" }}>{prog.sent}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>Đã xử lý</p>
               </div>
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-emerald-700">{prog.success}</p>
-                <p className="text-[10px] font-semibold text-emerald-600">Thành công</p>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--success)" }}>{prog.success}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#166534", fontWeight: 600 }}>Thành công</p>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-red-600">{prog.failed}</p>
-                <p className="text-[10px] font-semibold text-red-500">Thất bại</p>
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--danger)" }}>{prog.failed}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#991b1b", fontWeight: 600 }}>Thất bại</p>
               </div>
             </div>
 
-            <div ref={resultsRef} className="max-h-60 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100 bg-slate-50/50">
+            <div
+              ref={resultsRef}
+              style={{
+                maxHeight: "180px",
+                overflowY: "auto",
+                borderRadius: "var(--radius)",
+                border: "1px solid var(--border)",
+                background: "var(--bg)"
+              }}
+            >
               {prog.results.map((r, i) => (
-                <div key={i} className={`flex items-center gap-2 px-3 py-2 text-xs ${r.status === "success" ? "bg-white" : "bg-red-50/50"}`}>
+                <div key={i} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "6px 12px",
+                  fontSize: "0.75rem",
+                  borderBottom: "1px solid var(--border)",
+                  background: r.status === "success" ? "white" : "#fff5f5"
+                }}>
                   {r.status === "success" ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
                   ) : (
-                    <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <XCircle className="w-3.5 h-3.5 text-danger shrink-0" />
                   )}
-                  <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-slate-800">{r.tenNhanVien}</span>
-                    <span className="text-slate-400 ml-2 font-mono">{r.email}</span>
-                    {r.status === "error" && <p className="text-red-500 text-[10px] mt-0.5">{r.error}</p>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontWeight: 600, color: "var(--text)" }}>{r.tenNhanVien}</span>
+                    <span style={{ color: "var(--text-muted)", marginLeft: "6px", fontFamily: "monospace", fontSize: "0.7rem" }}>{r.email}</span>
+                    {r.status === "error" && <p style={{ margin: "2px 0 0 0", color: "var(--danger)", fontSize: "0.65rem" }}>{r.error}</p>}
                   </div>
-                  <span className="text-slate-400 font-mono text-[10px]">{r.sentVia}</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--text-light)", fontFamily: "monospace" }}>{r.sentVia}</span>
                 </div>
               ))}
             </div>
 
-            {isDone && prog.failed > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 text-amber-800 text-xs flex gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-                <span>Có {prog.failed} email gửi thất bại. Vui lòng rà soát lại thông tin email của nhân viên.</span>
-              </div>
-            )}
-            {isDone && prog.failed === 0 && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-emerald-800 text-xs flex gap-2">
-                <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
-                <span>Hoàn tất! Tất cả {prog.success} email báo lương đã gửi thành công! 🎉</span>
+            {isDone && (
+              <div style={{
+                background: prog.failed > 0 ? "#fffbeb" : "#f0fdf4",
+                border: `1px solid ${prog.failed > 0 ? "#fde68a" : "#bbf7d0"}`,
+                color: prog.failed > 0 ? "#78350f" : "#166534",
+                borderRadius: "var(--radius)",
+                padding: "10px 12px",
+                fontSize: "0.75rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}>
+                {prog.failed > 0 ? (
+                  <>
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                    <span>Có {prog.failed} email gửi thất bại. Vui lòng rà soát lại thông tin email của nhân viên.</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
+                    <span>Hoàn tất! Tất cả {prog.success} email báo lương đã gửi thành công! 🎉</span>
+                  </>
+                )}
               </div>
             )}
           </div>
-        </section>
+        </div>
       )}
 
       {/* ── PREVIEW MODAL ── */}
       {previewRecord && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
-                <Mail className="w-4 h-4 text-indigo-600" /> Xem trước: {previewRecord.tenNhanVien}
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(15, 23, 42, 0.6)",
+          backdropFilter: "blur(4px)",
+          zIndex: 999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px"
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "var(--radius-xl)",
+            width: "100%",
+            maxWidth: "720px",
+            maxHeight: "90vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            boxShadow: "var(--shadow-lg)"
+          }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 20px",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--bg)"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+                <Mail className="w-4 h-4 text-primary" /> Xem trước báo lương: {previewRecord.tenNhanVien}
               </h3>
-              <button onClick={() => setPreviewRecord(null)} className="p-1 rounded-full hover:bg-slate-200">
+              <button
+                onClick={() => setPreviewRecord(null)}
+                className="btn btn-ghost btn-sm"
+                style={{ padding: "4px", minWidth: "auto", borderRadius: "50%" }}
+              >
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto bg-slate-100 p-4">
+            <div style={{
+              flex: 1,
+              overflowY: "auto",
+              background: "#f1f5f9",
+              padding: "20px"
+            }}>
               <div
-                className="bg-white border rounded shadow-sm max-w-full overflow-x-auto p-4"
+                style={{
+                  background: "white",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)",
+                  padding: "24px",
+                  boxShadow: "var(--shadow-sm)"
+                }}
                 dangerouslySetInnerHTML={{
                   __html: generateSalaryEmail(previewRecord, { quarterTitle: subject, customMessage }),
                 }}
               />
             </div>
-            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 text-xs">
+            <div style={{
+              padding: "12px 20px",
+              borderTop: "1px solid var(--border)",
+              background: "var(--bg)",
+              display: "flex",
+              justifyContent: "flex-end"
+            }}>
               <button
                 onClick={() => setPreviewRecord(null)}
-                className="px-4 py-2 border border-slate-200 font-semibold rounded-lg hover:bg-slate-50 text-slate-600"
+                className="btn btn-outline btn-sm"
               >
                 Đóng
               </button>
@@ -850,9 +1144,7 @@ function SalaryTab({ accounts, batchSize, delayMs }) {
 // ==========================================
 // COMPONENT 2: CUSTOM DYNAMIC EXCEL TAB
 // ==========================================
-import { generateCustomEmail } from "@/lib/customEmailTemplate";
-
-function CustomSalaryTab({ accounts, batchSize, delayMs }) {
+function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
   const fileRef = useRef(null);
   const resultsRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -867,6 +1159,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
   const [columnMapping, setColumnMapping] = useState({
     nameCol: "",
     emailCol: "",
+    phoneCol: "",
     displayCols: [],
     totalCol: "",
   });
@@ -879,6 +1172,8 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
   const [page, setPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  
+  const [channel, setChannel] = useState("email");
   const [subject, setSubject] = useState("Thông báo chi trả thu nhập - CDC Đà Nẵng");
   const [customMessage, setCustomMessage] = useState("");
   const [footerNote, setFooterNote] = useState("");
@@ -887,6 +1182,12 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
   const [isDone, setIsDone] = useState(false);
   const [prog, setProg] = useState({ sent: 0, total: 0, success: 0, failed: 0, results: [] });
   const [previewRecord, setPreviewRecord] = useState(null);
+
+  const handleLinkZalo = (recordId, zaloUserId) => {
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, zaloUserId } : r))
+    );
+  };
 
   const processFile = useCallback(async (file) => {
     setParseError("");
@@ -916,11 +1217,15 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
             json.headers[lowerHeaders.findIndex((h) => h.includes("họ và tên") || h.includes("tên nhân viên") || h.includes("ho ten"))] ||
             "";
           const guessEmail = json.headers[lowerHeaders.findIndex((h) => h.includes("mail") || h.includes("email"))] || "";
+          const guessPhone = json.headers[lowerHeaders.findIndex((h) => h.includes("sđt") || h.includes("sdt") || h.includes("điện thoại") || h.includes("phone"))] || "";
+          const guessZaloId = json.headers[lowerHeaders.findIndex((h) => h.includes("zalo id") || h.includes("zalo_id") || h.includes("zaloid") || h.includes("zalo userid") || h.includes("zalo user id"))] || "";
           const guessTotal = json.headers[lowerHeaders.findIndex((h) => h.includes("tổng cộng") || h.includes("thành tiền") || h.includes("cong"))] || "";
 
           setColumnMapping({
             nameCol: guessName,
             emailCol: guessEmail,
+            phoneCol: guessPhone,
+            zaloIdCol: guessZaloId,
             totalCol: guessTotal,
             displayCols: [],
           });
@@ -961,12 +1266,35 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
       const json = await res.json();
       if (json.records) {
         setRecords(
-          json.records.map((r) => ({
-            ...r,
-            id: crypto.randomUUID(),
-            selected: true,
-            status: "idle",
-          }))
+          json.records.map((r) => {
+            // Tự động đối chiếu Zalo Follower
+            let matchedFollower = null;
+            if (followers && followers.length > 0) {
+              if (columnMapping.zaloIdCol && r[columnMapping.zaloIdCol]) {
+                const cleanId = String(r[columnMapping.zaloIdCol]).trim();
+                matchedFollower = followers.find(f => f.zaloUserId === cleanId);
+              }
+              if (!matchedFollower && columnMapping.phoneCol && r[columnMapping.phoneCol]) {
+                const cleanedR = cleanPhone(r[columnMapping.phoneCol]);
+                matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+              }
+              if (!matchedFollower) {
+                const nameVal = r[columnMapping.nameCol];
+                if (nameVal) {
+                  const normR = normalizeName(nameVal);
+                  matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                }
+              }
+            }
+
+            return {
+              ...r,
+              id: crypto.randomUUID(),
+              selected: true,
+              status: "idle",
+              zaloUserId: matchedFollower ? matchedFollower.zaloUserId : "",
+            };
+          })
         );
         setStep(3);
       } else {
@@ -993,7 +1321,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
 
   const startSend = async () => {
     const selected = records.filter((r) => r.selected && r.status !== "success");
-    if (!selected.length || !accounts.length || isSending) return;
+    if (!selected.length || (channel !== "zalo" && !accounts.length) || isSending) return;
     setIsSending(true);
     setIsDone(false);
     setProg({ sent: 0, total: selected.length, success: 0, failed: 0, results: [] });
@@ -1027,6 +1355,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
           batchDelayMs: delayMs,
           customMessage,
           footerNote,
+          channel,
         }),
       });
 
@@ -1104,18 +1433,20 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
   const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
   const pageRows = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const selectedCount = records.filter((r) => r.selected && r.status !== "success").length;
-  const canSend = selectedCount > 0 && accounts.length > 0 && !isSending;
+  const canSend = selectedCount > 0 && (channel === "zalo" || accounts.length > 0) && !isSending;
 
   return (
     <div className="space-y-6">
       {/* ── STEP 1: UPLOAD & MAP ── */}
       {step < 3 && (
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-            <span className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center font-mono">1</span>
-            <h2 className="font-semibold text-slate-800">Tải & Khớp Cột (Excel Tùy Chọn)</h2>
+        <div className="card">
+          <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
+            <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>1</span>
+              <span>Tải &amp; Khớp Cột (Excel Tùy Chọn)</span>
+            </div>
           </div>
-          <div className="p-6">
+          <div>
             {step === 1 ? (
               <div
                 onDragOver={(e) => {
@@ -1125,9 +1456,15 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
                 onDragLeave={() => setIsDrag(false)}
                 onDrop={onDrop}
                 onClick={() => fileRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
-                  isDrag ? "border-indigo-500 bg-indigo-50" : "border-slate-300 hover:border-indigo-400 hover:bg-indigo-50/50"
-                }`}
+                style={{
+                  border: `2px dashed ${isDrag ? "var(--primary)" : "var(--border)"}`,
+                  background: isDrag ? "var(--primary-light)" : "var(--bg)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "32px 20px",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
               >
                 <input
                   ref={fileRef}
@@ -1140,44 +1477,68 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
                   }}
                 />
                 {parsing ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
-                    <p className="text-slate-500 text-sm">Đang nạp file Excel...</p>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>Đang nạp file Excel...</p>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-1">
-                      <Upload className="w-6 h-6 text-indigo-600" />
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "4px" }}>
+                      <Upload className="w-5 h-5 text-primary" />
                     </div>
-                    <p className="font-semibold text-slate-700 text-sm">Thả file hoặc click để đọc Excel cấu trúc bất kỳ</p>
-                    <p className="text-slate-400 text-xs">Hỗ trợ: .xlsx, .xls, .csv</p>
+                    <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>Kéo thả hoặc click để đọc Excel cấu trúc bất kỳ</p>
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>Hỗ trợ: .xlsx, .xls, .csv</p>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-slate-500">Đã đọc file:</span>
-                    <span className="px-2 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded font-semibold">
-                      {fileName}
-                    </span>
+              <div className="space-y-6" style={{ animation: "fadeIn 0.3s ease" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Đang xử lý:</span>
+                    <span className="badge badge-info">{fileName}</span>
                   </div>
-                  <button onClick={() => setStep(1)} className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1 font-semibold">
+                  <button onClick={() => setStep(1)} className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <RefreshCw className="w-3.5 h-3.5" /> Đổi file khác
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                {/* Settings index header */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)" }}>
+                  <div className="form-group" style={{ flex: "1 1 200px", margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: "0.75rem" }}>Hàng tiêu đề (0-indexed)</label>
+                    <input
+                      type="number"
+                      value={headerRowIndex}
+                      onChange={(e) => setHeaderRowIndex(Number(e.target.value))}
+                      className="form-input"
+                      style={{ height: "34px", padding: "4px 8px" }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "1 1 200px" }}>
+                    <input
+                      type="checkbox"
+                      id="isSubHeader"
+                      checked={isSubHeader}
+                      onChange={(e) => setIsSubHeader(e.target.checked)}
+                      style={{ cursor: "pointer" }}
+                    />
+                    <label htmlFor="isSubHeader" className="form-label" style={{ margin: 0, fontSize: "0.75rem", cursor: "pointer" }}>
+                      Có hàng tiêu đề phụ (Merge 2 hàng đầu)
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ fontSize: "0.8rem" }}>
                   {/* Left: compulsory columns */}
                   <div className="space-y-4">
-                    <h3 className="font-bold text-slate-800 border-b border-slate-100 pb-1.5">1. Thiết Lập Khớp Cột Cơ Bản</h3>
-                    <div>
-                      <label className="block text-slate-600 font-semibold mb-1">Cột Tên nhân viên <span className="text-red-500">*</span></label>
+                    <h3 style={{ margin: "0 0 10px 0", fontWeight: 700, color: "var(--text)", borderBottom: "1px solid var(--border)", paddingBottom: "6px" }}>1. Thiết lập cột cơ bản</h3>
+                    <div className="form-group">
+                      <label className="form-label">Cột Tên nhân viên <span style={{ color: "var(--danger)" }}>*</span></label>
                       <select
                         value={columnMapping.nameCol}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, nameCol: e.target.value }))}
-                        className="w-full h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="form-select"
                       >
                         <option value="">-- Chọn cột chứa Họ tên --</option>
                         {headers.map((h) => (
@@ -1187,12 +1548,12 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
                         ))}
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-slate-600 font-semibold mb-1">Cột Email nhân viên <span className="text-red-500">*</span></label>
+                    <div className="form-group">
+                      <label className="form-label">Cột Email nhân viên <span style={{ color: "var(--danger)" }}>*</span></label>
                       <select
                         value={columnMapping.emailCol}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, emailCol: e.target.value }))}
-                        className="w-full h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="form-select"
                       >
                         <option value="">-- Chọn cột chứa Email --</option>
                         {headers.map((h) => (
@@ -1202,12 +1563,42 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
                         ))}
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-slate-600 font-semibold mb-1">Cột Tổng thu nhập (Tùy chọn, tô đậm vàng ở cuối bảng)</label>
+                    <div className="form-group">
+                      <label className="form-label">Cột Số điện thoại (Tùy chọn, đối chiếu Zalo)</label>
+                      <select
+                        value={columnMapping.phoneCol || ""}
+                        onChange={(e) => setColumnMapping((p) => ({ ...p, phoneCol: e.target.value }))}
+                        className="form-select"
+                      >
+                        <option value="">-- Không sử dụng --</option>
+                        {headers.map((h) => (
+                          <option key={h} value={h}>
+                            {h}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Cột Zalo ID (Tùy chọn, đối chiếu Zalo trực tiếp)</label>
+                      <select
+                        value={columnMapping.zaloIdCol || ""}
+                        onChange={(e) => setColumnMapping((p) => ({ ...p, zaloIdCol: e.target.value }))}
+                        className="form-select"
+                      >
+                        <option value="">-- Không sử dụng --</option>
+                        {headers.map((h) => (
+                          <option key={h} value={h}>
+                            {h}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Cột Tổng thu nhập (Tùy chọn, sẽ tô đậm vàng ở chân bảng)</label>
                       <select
                         value={columnMapping.totalCol}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, totalCol: e.target.value }))}
-                        className="w-full h-9 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="form-select"
                       >
                         <option value="">-- Không sử dụng --</option>
                         {headers.map((h) => (
@@ -1221,15 +1612,22 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
 
                   {/* Right: show columns options list */}
                   <div className="space-y-4">
-                    <h3 className="font-bold text-slate-800 border-b border-slate-100 pb-1.5">2. Chọn Các Cột Sẽ Hiển Thị Trực Quan Trong Email</h3>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 max-h-[220px] overflow-y-auto space-y-2">
+                    <h3 style={{ margin: "0 0 10px 0", fontWeight: 700, color: "var(--text)", borderBottom: "1px solid var(--border)", paddingBottom: "6px" }}>2. Chọn các cột hiển thị trong Email</h3>
+                    <div style={{
+                      background: "var(--bg)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "var(--radius)",
+                      padding: "12px",
+                      maxHeight: "220px",
+                      overflowY: "auto"
+                    }} className="space-y-3">
                       {(() => {
                         const validHeaders = headers.filter((h) => h !== columnMapping.nameCol && h !== columnMapping.emailCol);
-                        if (validHeaders.length === 0) return <p className="text-slate-400 text-center py-4">Vui lòng chọn cột tên và email trước.</p>;
+                        if (validHeaders.length === 0) return <p style={{ textAlign: "center", color: "var(--text-muted)", margin: "20px 0" }}>Vui lòng chọn cột Họ tên và Email trước.</p>;
 
                         const grouped = validHeaders.reduce((acc, h) => {
                           const parts = h.split(" - ");
-                          const group = parts.length > 1 ? parts[0] : "Nội dung chung";
+                          const group = parts.length > 1 ? parts[0] : "Thông tin chi tiết";
                           const sub = parts.length > 1 ? parts.slice(1).join(" - ") : h;
                           if (!acc[group]) acc[group] = [];
                           acc[group].push({ full: h, sub });
@@ -1237,20 +1635,20 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
                         }, {});
 
                         return Object.entries(grouped).map(([group, cols]) => (
-                          <div key={group}>
-                            <p className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded text-[10px] uppercase mb-1">{group}</p>
-                            <div className="space-y-1 pl-1">
+                          <div key={group} style={{ marginBottom: "8px" }}>
+                            <p style={{ margin: "0 0 4px 0", fontWeight: 700, color: "var(--primary)", background: "var(--primary-light)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.7rem", textTransform: "uppercase" }}>{group}</p>
+                            <div className="space-y-1" style={{ paddingLeft: "4px" }}>
                               {cols.map((c) => {
                                 const isChecked = !!columnMapping.displayCols.find((x) => x.key === c.full);
                                 return (
-                                  <label key={c.full} className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 p-1 rounded">
+                                  <label key={c.full} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", padding: "3px", borderRadius: "4px" }} className="hover:bg-slate-200/50">
                                     <input
                                       type="checkbox"
                                       checked={isChecked}
                                       onChange={(e) => toggleDisplayCol(c.full, e.target.checked)}
-                                      className="rounded border-slate-300 text-indigo-600"
+                                      style={{ cursor: "pointer" }}
                                     />
-                                    <span>{c.sub}</span>
+                                    <span style={{ fontSize: "0.75rem", color: "var(--text)" }}>{c.sub}</span>
                                   </label>
                                 );
                               })}
@@ -1263,7 +1661,14 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
                 </div>
 
                 {parseError && (
-                  <div className="text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                  <div style={{
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    color: "var(--danger)",
+                    borderRadius: "var(--radius)",
+                    padding: "12px",
+                    fontSize: "0.8rem"
+                  }}>
                     {parseError}
                   </div>
                 )}
@@ -1271,300 +1676,461 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
                 <button
                   onClick={loadData}
                   disabled={parsing || !columnMapping.nameCol || !columnMapping.emailCol}
-                  className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow"
+                  className="btn btn-primary"
+                  style={{ width: "100%", justifyContent: "center", height: "40px" }}
                 >
                   {parsing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Settings2 className="w-4 h-4" />}
-                  Khớp tiêu chí & Nạp danh sách
+                  Khớp tiêu chí &amp; Đọc dòng dữ liệu
                 </button>
               </div>
             )}
           </div>
-        </section>
+        </div>
       )}
 
       {/* ── STEP 3: PREVIEW & SEND ── */}
       {step === 3 && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center font-mono">2</span>
-                <h2 className="font-semibold text-slate-800">Danh Sách Nhân Viên Từ Excel</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setStep(2)}
-                  className="px-2.5 py-1 text-xs border border-slate-200 rounded-lg hover:bg-slate-50 font-semibold text-slate-600 flex items-center gap-1"
-                >
-                  <Settings2 className="w-3 h-3" /> Chỉnh lại cột
-                </button>
-                <button onClick={() => setStep(1)} className="px-2.5 py-1 text-xs text-slate-500 hover:text-slate-700 font-semibold">
-                  Đổi file
-                </button>
+        <div className="space-y-6" style={{ animation: "fadeIn 0.3s ease" }}>
+          <div className="card">
+            <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
+              <div className="card-title" style={{ display: "flex", alignItems: "center", justifyBetween: "space-between", width: "100%" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>2</span>
+                  <span>Danh Sách Nhân Viên Từ Excel</span>
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={() => setStep(2)}
+                    className="btn btn-outline btn-sm"
+                  >
+                    <Settings2 className="w-3.5 h-3.5" /> Chỉnh lại cột
+                  </button>
+                  <button onClick={() => setStep(1)} className="btn btn-ghost btn-sm">
+                    Đổi file
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="p-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3 text-xs">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="success">
-                    <Users className="w-3.5 h-3.5 mr-1" /> {records.length} nhân sự
-                  </Badge>
-                  <span className="text-slate-400 font-mono">{fileName}</span>
+            <div>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className="badge badge-approved">
+                    <Users className="w-3.5 h-3.5" style={{ marginRight: "4px" }} /> {records.length} Nhân sự
+                  </span>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", maxWidth: "240px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
                 </div>
-                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-                  {["all", "selected", "error", "success"].map((st) => (
+                <div style={{ display: "flex", gap: "4px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)" }}>
+                  {[
+                    { id: "all", label: "Tất cả" },
+                    { id: "selected", label: `Đã chọn (${records.filter(r => r.selected).length})` },
+                    { id: "error", label: `Lỗi (${records.filter(r => r.status === "error").length})` },
+                    { id: "success", label: "Thành công" }
+                  ].map((st) => (
                     <button
-                      key={st}
+                      key={st.id}
                       onClick={() => {
-                        setFilterStatus(st);
+                        setFilterStatus(st.id);
                         setPage(0);
                       }}
-                      className={`px-3 py-1.5 rounded-md font-semibold transition ${
-                        filterStatus === st ? "bg-white text-indigo-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                      }`}
+                      className="btn"
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "0.75rem",
+                        background: filterStatus === st.id ? "white" : "transparent",
+                        border: "none",
+                        boxShadow: filterStatus === st.id ? "var(--shadow-sm)" : "none",
+                        color: filterStatus === st.id ? "var(--primary)" : "var(--text-muted)",
+                        borderRadius: "4px"
+                      }}
                     >
-                      {st === "all" ? "Tất cả" : st === "selected" ? `Đã chọn (${records.filter((r) => r.selected).length})` : st === "error" ? "Lỗi" : "Thành công"}
+                      {st.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="relative mb-3">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <div style={{ position: "relative", marginBottom: "12px" }}>
                 <input
                   type="text"
+                  className="search-input"
                   placeholder="Tìm nhân viên..."
-                  className="w-full pl-9 h-9 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     setPage(0);
                   }}
+                  style={{ width: "100%", paddingLeft: "38px" }}
                 />
               </div>
 
               {/* Records preview table */}
-              <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm bg-white text-xs">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-slate-50/70 border-b border-slate-200 text-slate-600 font-semibold">
-                        <th className="px-4 py-2.5 w-10 text-center">
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "45px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={records.length > 0 && records.every((r) => r.selected)}
+                          onChange={(e) => setRecords((prev) => prev.map((r) => ({ ...r, selected: e.target.checked })))}
+                          style={{ cursor: "pointer" }}
+                        />
+                      </th>
+                      <th>Nhân viên</th>
+                      <th>Email nhận</th>
+                      <th>Liên kết Zalo</th>
+                      {columnMapping.totalCol && <th style={{ textAlign: "right" }}>{columnMapping.totalCol}</th>}
+                      <th style={{ textAlign: "center" }}>Trạng thái</th>
+                      <th style={{ textAlign: "center" }}>Xem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageRows.map((r) => (
+                      <tr key={r.id} style={{
+                        background: r.status === "success" ? "#f0fdf4" : r.status === "error" ? "#fef2f2" : "inherit"
+                      }}>
+                        <td style={{ textAlign: "center" }}>
                           <input
                             type="checkbox"
-                            checked={records.length > 0 && records.every((r) => r.selected)}
-                            onChange={(e) => setRecords((prev) => prev.map((r) => ({ ...r, selected: e.target.checked })))}
-                            className="rounded border-slate-300 w-4 h-4 text-indigo-600 cursor-pointer"
+                            checked={r.selected}
+                            onChange={(e) =>
+                              setRecords((prev) => prev.map((rec) => (rec.id === r.id ? { ...rec, selected: e.target.checked } : rec)))
+                            }
+                            style={{ cursor: "pointer" }}
                           />
-                        </th>
-                        <th className="px-4 py-2.5">Nhân viên</th>
-                        <th className="px-4 py-2.5">Email</th>
-                        {columnMapping.totalCol && <th className="px-4 py-2.5 text-right text-indigo-700">{columnMapping.totalCol}</th>}
-                        <th className="px-4 py-2.5 text-center">Trạng thái</th>
-                        <th className="px-4 py-2.5 text-center">Xem</th>
+                        </td>
+                        <td style={{ fontWeight: 600, color: "var(--text)" }}>{r.tenNhanVien}</td>
+                        <td style={{ fontFamily: "monospace", color: "var(--text-muted)", fontSize: "0.8rem" }}>{r.email}</td>
+                        <td>
+                          <ZaloLinkSelect
+                            value={r.zaloUserId || ""}
+                            followers={followers}
+                            onChange={(val) => handleLinkZalo(r.id, val)}
+                          />
+                        </td>
+                        {columnMapping.totalCol && <td style={{ textAlign: "right", fontWeight: 700, color: "var(--primary)" }}>{fmt(r.data[columnMapping.totalCol])}</td>}
+                        <td style={{ textAlign: "center" }}>
+                          {r.status === "success" && <span className="badge badge-approved">Đã gửi</span>}
+                          {r.status === "error" && <span className="badge badge-cancelled" title={r.error}>Lỗi</span>}
+                          {r.status === "idle" && <span style={{ color: "var(--text-light)" }}>—</span>}
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ padding: "4px", minWidth: "auto" }}
+                            onClick={() => setPreviewRecord(r)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {pageRows.map((r, i) => (
-                        <tr
-                          key={r.id}
-                          className={`hover:bg-slate-50/50 transition-colors ${
-                            r.status === "error" ? "bg-red-50/30" : r.status === "success" ? "bg-emerald-50/30" : ""
-                          }`}
-                        >
-                          <td className="px-4 py-2 text-center">
-                            <input
-                              type="checkbox"
-                              checked={r.selected}
-                              onChange={(e) =>
-                                setRecords((prev) => prev.map((rec) => (rec.id === r.id ? { ...rec, selected: e.target.checked } : rec)))
-                              }
-                              className="rounded border-slate-300 w-4 h-4 text-indigo-600 cursor-pointer"
-                            />
-                          </td>
-                          <td className="px-4 py-2 font-medium text-slate-800">{r.tenNhanVien}</td>
-                          <td className="px-4 py-2 text-slate-500 font-mono">{r.email}</td>
-                          {columnMapping.totalCol && <td className="px-4 py-2 text-right font-semibold text-indigo-700">{fmt(r.data[columnMapping.totalCol])}</td>}
-                          <td className="px-4 py-2 text-center">
-                            {r.status === "success" && <CheckCircle className="w-5 h-5 text-emerald-500 inline-block" />}
-                            {r.status === "error" && <XCircle className="w-5 h-5 text-red-500 inline-block" title={r.error} />}
-                            {r.status === "idle" && <span className="text-slate-300 font-semibold">—</span>}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            <button
-                              onClick={() => setPreviewRecord(r)}
-                              className="p-1 rounded text-indigo-600 hover:bg-indigo-50 transition"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                    {pageRows.length === 0 && (
+                      <tr>
+                        <td colSpan="7" style={{ textAlign: "center", color: "var(--text-muted)", padding: "20px" }}>
+                          Không có kết quả.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-                {totalPages > 1 && (
-                  <div className="px-4 py-3 flex items-center justify-between border-t border-slate-100 bg-slate-50/50">
-                    <span className="text-xs text-slate-500">
-                      Trang {page + 1}/{totalPages}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setPage((p) => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                        className="p-1.5 rounded hover:bg-slate-200"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                        disabled={page === totalPages - 1}
-                        className="p-1.5 rounded hover:bg-slate-200"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Trang {page + 1} / {totalPages}</span>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => setPage((p) => Math.max(0, p - 1))}
+                      disabled={page === 0}
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Trước
+                    </button>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                      disabled={page === totalPages - 1}
+                    >
+                      Sau <ChevronRight className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
+              <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>3</span>
+                <span>Cấu hình gửi thông báo tùy biến (Email & Zalo OA)</span>
               </div>
             </div>
-          </section>
+            <div className="space-y-4">
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600 }}>Kênh gửi thông báo</label>
+                <div style={{ display: "flex", gap: "16px", marginTop: "6px", flexWrap: "wrap" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                    <input 
+                      type="radio" 
+                      name="channel-custom" 
+                      value="email" 
+                      checked={channel === "email"} 
+                      onChange={() => setChannel("email")} 
+                      style={{ cursor: "pointer" }}
+                    />
+                    📧 Chỉ gửi Gmail
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                    <input 
+                      type="radio" 
+                      name="channel-custom" 
+                      value="zalo" 
+                      checked={channel === "zalo"} 
+                      onChange={() => setChannel("zalo")} 
+                      style={{ cursor: "pointer" }}
+                    />
+                    💬 Chỉ gửi Zalo OA
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                    <input 
+                      type="radio" 
+                      name="channel-custom" 
+                      value="both" 
+                      checked={channel === "both"} 
+                      onChange={() => setChannel("both")} 
+                      style={{ cursor: "pointer" }}
+                    />
+                    🔄 Gửi cả hai kênh
+                  </label>
+                </div>
+              </div>
 
-          {/* Gửi Email Tùy biến */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-              <h2 className="font-semibold text-slate-800 text-sm">3. Nội dung & Gửi Email Tùy Biến</h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Tiêu đề gửi đi (Subject)</label>
+              <div className="form-group">
+                <label className="form-label">Tiêu đề gửi đi (Subject / Tiêu đề Zalo)</label>
                 <input
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="form-input"
+                  placeholder="Nhập tiêu đề thư..."
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Lời nhắn đầu email (Tùy chọn)</label>
+              <div className="form-group">
+                <label className="form-label">Lời nhắn đầu thông báo (Tùy chọn)</label>
                 <textarea
                   value={customMessage}
                   onChange={(e) => setCustomMessage(e.target.value)}
-                  rows="3"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="form-textarea"
                   placeholder="Kính gửi ông/bà... Dưới đây là thông tin chi tiết..."
                 />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Ghi chú chân email (Footer note - Tùy chọn)</label>
+              <div className="form-group">
+                <label className="form-label">Ghi chú chân thông báo (Footer note - Tùy chọn)</label>
                 <textarea
                   value={footerNote}
                   onChange={(e) => setFooterNote(e.target.value)}
-                  rows="3"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="form-textarea"
                   placeholder="Mọi thắc mắc xin phản hồi... Trân trọng."
                 />
               </div>
 
+              {records.length > 0 && (
+                <div style={{
+                  background: "var(--primary-light)",
+                  border: "1px solid var(--border-focus)",
+                  color: "var(--primary)",
+                  borderRadius: "var(--radius)",
+                  padding: "12px",
+                  fontSize: "0.8rem",
+                  lineHeight: "1.5"
+                }}>
+                  {channel === "email" && (
+                    <>
+                      <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
+                        Sẽ gửi {selectedCount} email tùy biến thông qua {accounts.length} tài khoản Gmail.
+                      </p>
+                      {accounts.length > 0 && (
+                        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                          Trung bình mỗi tài khoản gửi {Math.ceil(selectedCount / accounts.length)} email (Round-Robin).
+                        </p>
+                      )}
+                    </>
+                  )}
+                  {channel === "zalo" && (
+                    <p style={{ margin: 0, fontWeight: 700 }}>
+                      Sẽ gửi {selectedCount} tin nhắn Zalo OA tùy biến cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
+                    </p>
+                  )}
+                  {channel === "both" && (
+                    <>
+                      <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
+                        Sẽ gửi đồng thời {selectedCount} email tùy biến (qua Gmail Pool) & tin nhắn Zalo OA cho cán bộ.
+                      </p>
+                      {accounts.length > 0 && (
+                        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                          Gmail: mỗi tài khoản gửi khoảng {Math.ceil(selectedCount / accounts.length)} email.
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={startSend}
                 disabled={!canSend}
-                className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow"
+                className="btn btn-primary"
+                style={{ width: "100%", justifyContent: "center", height: "42px" }}
               >
                 {isSending ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" /> Đang gửi {prog.sent}/{prog.total}...
+                    <Loader2 className="w-5 h-5 animate-spin" /> Đang xử lý {prog.sent}/{prog.total}...
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4" /> Gửi {selectedCount} Email Khớp Cột
+                    <Send className="w-4 h-4" /> Bắt đầu gửi ({channel === "email" ? "Gmail" : channel === "zalo" ? "Zalo" : "Gmail & Zalo"})
                   </>
                 )}
               </button>
             </div>
-          </section>
+          </div>
         </div>
       )}
 
       {/* ── PROGRESS & RESULTS ── */}
       {(isSending || isDone) && (
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isDone ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />}
-              <h2 className="font-semibold text-slate-800 text-sm">{isDone ? "Hoàn tất!" : `Đang tiến hành... ${pct}%`}</h2>
+        <div className="card">
+          <div className="card-header" style={{ marginBottom: "16px" }}>
+            <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {isDone ? <CheckCircle className="w-5 h-5 text-success" /> : <Loader2 className="w-5 h-5 text-primary animate-spin" />}
+              <span>{isDone ? "Hoàn tất!" : `Đang tiến hành... ${pct}%`}</span>
             </div>
-            <div className="flex items-center gap-4 text-xs font-semibold">
-              {!isDone && isSending && (
-                <button
-                  onClick={() => abortControllerRef.current?.abort()}
-                  className="px-2.5 py-1 text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition"
-                >
-                  Dừng
-                </button>
-              )}
-              <span className="text-slate-400 font-mono">
-                {prog.sent}/{prog.total}
-              </span>
-            </div>
+            {!isDone && isSending && (
+              <button
+                onClick={() => abortControllerRef.current?.abort()}
+                className="btn btn-danger btn-sm"
+              >
+                Dừng
+              </button>
+            )}
           </div>
-          <div className="p-6 space-y-4">
-            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div className="bg-indigo-600 h-2 rounded-full transition-all duration-300" style={{ width: `${pct}%` }}></div>
+          <div className="space-y-4">
+            <div style={{ width: "100%", background: "var(--border)", height: "8px", borderRadius: "999px", overflow: "hidden" }}>
+              <div style={{ width: `${pct}%`, background: "var(--primary)", height: "100%", transition: "width 0.3s ease" }}></div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 text-center text-xs font-semibold">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-slate-800">{prog.sent}</p>
-                <p className="text-slate-500 mt-0.5">Đã gửi</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", textAlign: "center" }}>
+              <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text)" }}>{prog.sent}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>Đã gửi</p>
               </div>
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-emerald-700">{prog.success}</p>
-                <p className="text-emerald-600 mt-0.5">Thành công</p>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--success)" }}>{prog.success}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#166534", fontWeight: 600 }}>Thành công</p>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-red-600">{prog.failed}</p>
-                <p className="text-red-500 mt-0.5">Thất bại</p>
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--danger)" }}>{prog.failed}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#991b1b", fontWeight: 600 }}>Thất bại</p>
               </div>
             </div>
 
-            <div ref={resultsRef} className="max-h-60 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100 bg-slate-50/50">
+            <div
+              ref={resultsRef}
+              style={{
+                maxHeight: "180px",
+                overflowY: "auto",
+                borderRadius: "var(--radius)",
+                border: "1px solid var(--border)",
+                background: "var(--bg)"
+              }}
+            >
               {prog.results.map((r, i) => (
-                <div key={i} className={`flex items-center gap-2 px-3 py-2 text-xs ${r.status === "success" ? "bg-white" : "bg-red-50/50"}`}>
+                <div key={i} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "6px 12px",
+                  fontSize: "0.75rem",
+                  borderBottom: "1px solid var(--border)",
+                  background: r.status === "success" ? "white" : "#fff5f5"
+                }}>
                   {r.status === "success" ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
                   ) : (
-                    <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <XCircle className="w-3.5 h-3.5 text-danger shrink-0" />
                   )}
-                  <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-slate-800">{r.tenNhanVien}</span>
-                    <span className="text-slate-400 ml-2 font-mono">{r.email}</span>
-                    {r.status === "error" && <p className="text-red-500 text-[10px] mt-0.5">{r.error}</p>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontWeight: 600, color: "var(--text)" }}>{r.tenNhanVien}</span>
+                    <span style={{ color: "var(--text-muted)", marginLeft: "6px", fontFamily: "monospace", fontSize: "0.7rem" }}>{r.email}</span>
+                    {r.status === "error" && <p style={{ margin: "2px 0 0 0", color: "var(--danger)", fontSize: "0.65rem" }}>{r.error}</p>}
                   </div>
-                  <span className="text-slate-400 font-mono text-[10px]">{r.sentVia}</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--text-light)", fontFamily: "monospace" }}>{r.sentVia}</span>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
       )}
 
       {/* ── PREVIEW MODAL ── */}
       {previewRecord && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
-                <Mail className="w-4 h-4 text-indigo-600" /> Xem trước: {previewRecord.tenNhanVien}
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(15, 23, 42, 0.6)",
+          backdropFilter: "blur(4px)",
+          zIndex: 999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px"
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "var(--radius-xl)",
+            width: "100%",
+            maxWidth: "720px",
+            maxHeight: "90vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            boxShadow: "var(--shadow-lg)"
+          }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 20px",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--bg)"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+                <Mail className="w-4 h-4 text-primary" /> Xem trước email: {previewRecord.tenNhanVien}
               </h3>
-              <button onClick={() => setPreviewRecord(null)} className="p-1 rounded-full hover:bg-slate-200">
+              <button
+                onClick={() => setPreviewRecord(null)}
+                className="btn btn-ghost btn-sm"
+                style={{ padding: "4px", minWidth: "auto", borderRadius: "50%" }}
+              >
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto bg-slate-100 p-4">
+            <div style={{
+              flex: 1,
+              overflowY: "auto",
+              background: "#f1f5f9",
+              padding: "20px"
+            }}>
               <div
-                className="bg-white border rounded shadow-sm max-w-full overflow-x-auto p-4"
+                style={{
+                  background: "white",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)",
+                  padding: "24px",
+                  boxShadow: "var(--shadow-sm)"
+                }}
                 dangerouslySetInnerHTML={{
                   __html: generateCustomEmail(previewRecord, {
                     emailTitle: subject || "Thông báo lương - CDC Đà Nẵng",
@@ -1575,10 +2141,16 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
                 }}
               />
             </div>
-            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 text-xs">
+            <div style={{
+              padding: "12px 20px",
+              borderTop: "1px solid var(--border)",
+              background: "var(--bg)",
+              display: "flex",
+              justifyContent: "flex-end"
+            }}>
               <button
                 onClick={() => setPreviewRecord(null)}
-                className="px-4 py-2 border border-slate-200 font-semibold rounded-lg hover:bg-slate-50 text-slate-600"
+                className="btn btn-outline btn-sm"
               >
                 Đóng
               </button>
@@ -1593,9 +2165,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs }) {
 // ==========================================
 // COMPONENT 3: THUẾ TNCN TAB
 // ==========================================
-import { generateTaxEmail } from "@/lib/taxEmailTemplate";
-
-function TaxTab({ accounts, batchSize, delayMs }) {
+function TaxTab({ accounts, batchSize, delayMs, followers }) {
   const fileRef = useRef(null);
   const resultsRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -1611,6 +2181,7 @@ function TaxTab({ accounts, batchSize, delayMs }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
+  const [channel, setChannel] = useState("email");
   const [subject, setSubject] = useState("");
   const [customMessage, setCustomMessage] = useState("");
   const [showKhoanDetail, setShowKhoanDetail] = useState(true);
@@ -1619,6 +2190,12 @@ function TaxTab({ accounts, batchSize, delayMs }) {
   const [isDone, setIsDone] = useState(false);
   const [prog, setProg] = useState({ sent: 0, total: 0, success: 0, failed: 0, results: [] });
   const [previewRecord, setPreviewRecord] = useState(null);
+
+  const handleLinkZalo = (recordId, zaloUserId) => {
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, zaloUserId } : r))
+    );
+  };
 
   const processFile = useCallback(async (file) => {
     setParseError("");
@@ -1638,11 +2215,39 @@ function TaxTab({ accounts, batchSize, delayMs }) {
       }
       if (json.records) {
         const withTax = json.records.filter((r) => r.thueTNCN > 0);
-        setRecords(withTax.map((r) => ({ ...r, id: crypto.randomUUID(), selected: true, status: "idle" })));
+        setRecords(
+          withTax.map((r) => {
+            // Tự động đối chiếu Zalo Follower
+            let matchedFollower = null;
+            if (followers && followers.length > 0) {
+              const excelZaloId = r.zaloUserId || r.zaloId || r.idZalo || r.zalo;
+              if (excelZaloId) {
+                const cleanId = String(excelZaloId).trim();
+                matchedFollower = followers.find(f => f.zaloUserId === cleanId);
+              }
+              if (!matchedFollower && (r.phone || r.sdt)) {
+                const cleanedR = cleanPhone(r.phone || r.sdt);
+                matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+              }
+              if (!matchedFollower) {
+                const normR = normalizeName(r.tenNhanVien);
+                matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+              }
+            }
+
+            return {
+              ...r,
+              id: crypto.randomUUID(),
+              selected: true,
+              status: "idle",
+              zaloUserId: matchedFollower ? matchedFollower.zaloUserId : "",
+            };
+          })
+        );
         setThang(json.thang || "");
         if (json.records.length !== withTax.length) {
           const skipped = json.records.length - withTax.length;
-          setParseError(`ℹ️ Đã bỏ qua ${skipped} nhân viên không phát sinh thuế TNCN.`);
+          setParseError(`ℹ️ Đã tự động bỏ qua ${skipped} nhân viên không có thuế TNCN.`);
         }
       }
     } catch (e) {
@@ -1650,7 +2255,7 @@ function TaxTab({ accounts, batchSize, delayMs }) {
     } finally {
       setParsing(false);
     }
-  }, []);
+  }, [followers]);
 
   const onDrop = useCallback(
     (e) => {
@@ -1664,7 +2269,7 @@ function TaxTab({ accounts, batchSize, delayMs }) {
 
   const startSend = async () => {
     const selected = records.filter((r) => r.selected && r.status !== "success");
-    if (!selected.length || !accounts.length || isSending) return;
+    if (!selected.length || (channel !== "zalo" && !accounts.length) || isSending) return;
     setIsSending(true);
     setIsDone(false);
     setProg({ sent: 0, total: selected.length, success: 0, failed: 0, results: [] });
@@ -1691,6 +2296,7 @@ function TaxTab({ accounts, batchSize, delayMs }) {
           batchDelayMs: delayMs,
           customMessage,
           showKhoanDetail,
+          channel,
         }),
       });
 
@@ -1768,17 +2374,19 @@ function TaxTab({ accounts, batchSize, delayMs }) {
   const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
   const pageRows = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const selectedCount = records.filter((r) => r.selected && r.status !== "success").length;
-  const canSend = selectedCount > 0 && accounts.length > 0 && !isSending;
+  const canSend = selectedCount > 0 && (channel === "zalo" || accounts.length > 0) && !isSending;
 
   return (
     <div className="space-y-6">
       {/* ── STEP 1: UPLOAD ── */}
-      <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-          <span className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center font-mono">1</span>
-          <h2 className="font-semibold text-slate-800">Tải file Excel Thuế TNCN</h2>
+      <div className="card">
+        <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
+          <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>1</span>
+            <span>Tải file Excel Thuế TNCN</span>
+          </div>
         </div>
-        <div className="p-6">
+        <div>
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -1787,9 +2395,15 @@ function TaxTab({ accounts, batchSize, delayMs }) {
             onDragLeave={() => setIsDrag(false)}
             onDrop={onDrop}
             onClick={() => fileRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
-              isDrag ? "border-emerald-500 bg-emerald-50" : "border-slate-300 hover:border-emerald-400 hover:bg-emerald-50/50"
-            }`}
+            style={{
+              border: `2px dashed ${isDrag ? "var(--primary)" : "var(--border)"}`,
+              background: isDrag ? "var(--primary-light)" : "var(--bg)",
+              borderRadius: "var(--radius-lg)",
+              padding: "32px 20px",
+              textAlign: "center",
+              cursor: "pointer",
+              transition: "all 0.2s"
+            }}
           >
             <input
               ref={fileRef}
@@ -1802,310 +2416,481 @@ function TaxTab({ accounts, batchSize, delayMs }) {
               }}
             />
             {parsing ? (
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
-                <p className="text-slate-500 text-sm">Đang phân tích file...</p>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>Đang phân tích file...</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-1">
-                  <Upload className="w-6 h-6 text-emerald-600" />
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "4px" }}>
+                  <Upload className="w-5 h-5 text-primary" />
                 </div>
-                <p className="font-semibold text-slate-700 text-sm">Kéo thả hoặc nhấn để chọn file Thuế TNCN</p>
-                <p className="text-slate-400 text-xs">Hỗ trợ: .xlsx, .xls, .csv</p>
+                <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>Kéo thả hoặc nhấn để chọn file Thuế TNCN</p>
+                <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>Hỗ trợ: .xlsx, .xls, .csv</p>
               </div>
             )}
           </div>
 
           {parseError && (
-            <div className={`mt-3 flex items-center gap-2 rounded-lg px-4 py-3 text-xs ${parseError.startsWith("ℹ️") ? "text-indigo-700 bg-indigo-50 border border-indigo-200" : "text-red-600 bg-red-50 border border-red-200"}`}>
-              <AlertCircle className="w-4 h-4 shrink-0" /> {parseError}
+            <div style={{
+              background: parseError.startsWith("ℹ️") ? "var(--primary-light)" : "#fef2f2",
+              border: `1px solid ${parseError.startsWith("ℹ️") ? "var(--border-focus)" : "#fecaca"}`,
+              color: parseError.startsWith("ℹ️") ? "var(--primary)" : "var(--danger)",
+              borderRadius: "var(--radius)",
+              padding: "12px",
+              fontSize: "0.8rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginTop: "12px"
+            }}>
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{parseError}</span>
             </div>
           )}
 
           {records.length > 0 && (
-            <div className="mt-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3 text-xs">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200 flex items-center gap-1 font-semibold">
+            <div style={{ marginTop: "20px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span className="badge badge-info" style={{ gap: "4px" }}>
                     <Users className="w-3.5 h-3.5" /> {records.length} Nhân viên phát sinh thuế
                   </span>
-                  <span className="text-slate-400 font-mono">{fileName}</span>
-                  {thang && <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded border border-indigo-200 font-bold">Tháng {thang}</span>}
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", maxWidth: "240px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
+                  {thang && <span className="badge badge-approved">Tháng {thang}</span>}
                 </div>
-                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-                  {["all", "selected", "error", "success"].map((st) => (
+                <div style={{ display: "flex", gap: "4px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)" }}>
+                  {[
+                    { id: "all", label: "Tất cả" },
+                    { id: "selected", label: `Đã chọn (${records.filter(r => r.selected).length})` },
+                    { id: "error", label: `Lỗi (${records.filter(r => r.status === "error").length})` },
+                    { id: "success", label: "Đã gửi" }
+                  ].map((st) => (
                     <button
-                      key={st}
+                      key={st.id}
                       onClick={() => {
-                        setFilterStatus(st);
+                        setFilterStatus(st.id);
                         setPage(0);
                       }}
-                      className={`px-3 py-1.5 rounded-md font-semibold transition ${
-                        filterStatus === st ? "bg-white text-emerald-800 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                      }`}
+                      className="btn"
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "0.75rem",
+                        background: filterStatus === st.id ? "white" : "transparent",
+                        border: "none",
+                        boxShadow: filterStatus === st.id ? "var(--shadow-sm)" : "none",
+                        color: filterStatus === st.id ? "var(--primary)" : "var(--text-muted)",
+                        borderRadius: "4px"
+                      }}
                     >
-                      {st === "all" ? "Tất cả" : st === "selected" ? `Đã chọn (${records.filter((r) => r.selected).length})` : st === "error" ? "Lỗi" : "Đã gửi"}
+                      {st.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mb-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <div style={{ display: "flex", gap: "10px", marginBottom: "12px" }}>
+                <div style={{ flex: 1, position: "relative" }}>
                   <input
                     type="text"
-                    placeholder="Tìm tên nhân viên..."
-                    className="w-full pl-9 h-9 text-sm rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="search-input"
+                    placeholder="Tìm kiếm theo tên nhân viên..."
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
                       setPage(0);
                     }}
+                    style={{ width: "100%", paddingLeft: "38px" }}
                   />
                 </div>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="px-3 h-9 text-xs border border-slate-200 hover:bg-slate-50 font-semibold rounded-lg text-slate-600 inline-flex items-center gap-1 shrink-0"
+                  className="btn btn-outline"
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
                   <RefreshCw className="w-3.5 h-3.5" /> Đổi file
                 </button>
               </div>
 
               {/* Table check list */}
-              <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm bg-white text-xs">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-slate-50/70 border-b border-slate-200 text-slate-600 font-semibold">
-                        <th className="px-4 py-2.5 w-10 text-center">
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "45px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={records.length > 0 && records.every((r) => r.selected)}
+                          onChange={(e) => setRecords((prev) => prev.map((r) => ({ ...r, selected: e.target.checked })))}
+                          style={{ cursor: "pointer" }}
+                        />
+                      </th>
+                      <th>Khoa/Phòng</th>
+                      <th>Tên nhân viên</th>
+                      <th>Email nhận</th>
+                      <th>Liên kết Zalo</th>
+                      <th style={{ textAlign: "right" }}>Tổng thu nhập</th>
+                      <th style={{ textAlign: "right" }}>TNTT</th>
+                      <th style={{ textAlign: "right", color: "var(--danger)" }}>Thuế phải nộp</th>
+                      <th style={{ textAlign: "center" }}>TT</th>
+                      <th style={{ textAlign: "center" }}>Xem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pageRows.map((r) => (
+                      <tr key={r.id} style={{
+                        background: r.status === "success" ? "#f0fdf4" : r.status === "error" ? "#fef2f2" : "inherit"
+                      }}>
+                        <td style={{ textAlign: "center" }}>
                           <input
                             type="checkbox"
-                            checked={records.length > 0 && records.every((r) => r.selected)}
-                            onChange={(e) => setRecords((prev) => prev.map((r) => ({ ...r, selected: e.target.checked })))}
-                            className="rounded border-slate-300 w-4 h-4 text-emerald-600 cursor-pointer"
+                            checked={r.selected}
+                            onChange={(e) =>
+                              setRecords((prev) => prev.map((rec) => (rec.id === r.id ? { ...rec, selected: e.target.checked } : rec)))
+                            }
+                            style={{ cursor: "pointer" }}
                           />
-                        </th>
-                        <th className="px-4 py-2.5">Khoa/Phòng</th>
-                        <th className="px-4 py-2.5">Tên nhân viên</th>
-                        <th className="px-4 py-2.5">Email</th>
-                        <th className="px-4 py-2.5 text-right">Tổng thu nhập</th>
-                        <th className="px-4 py-2.5 text-right">TNTT</th>
-                        <th className="px-4 py-2.5 text-right text-red-600">Thuế phải nộp</th>
-                        <th className="px-4 py-2.5 text-center">TT</th>
-                        <th className="px-4 py-2.5 text-center">Xem</th>
+                        </td>
+                        <td style={{ color: "var(--text-muted)" }}>{r.phong}</td>
+                        <td style={{ fontWeight: 600, color: "var(--text)" }}>{r.tenNhanVien}</td>
+                        <td style={{ fontFamily: "monospace", color: "var(--text-muted)", fontSize: "0.8rem" }}>{r.email}</td>
+                        <td>
+                          <ZaloLinkSelect
+                            value={r.zaloUserId || ""}
+                            followers={followers}
+                            onChange={(val) => handleLinkZalo(r.id, val)}
+                          />
+                        </td>
+                        <td style={{ textAlign: "right", fontFamily: "monospace", color: "var(--text-muted)" }}>{fmt(r.cong)}</td>
+                        <td style={{ textAlign: "right", fontFamily: "monospace", color: "var(--text-muted)" }}>{fmt(Math.max(0, r.thuNhapTinhThue))}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700, color: "var(--danger)" }}>{fmt(r.thueTNCN)}</td>
+                        <td style={{ textAlign: "center" }}>
+                          {r.status === "success" && <span className="badge badge-approved">Đã gửi</span>}
+                          {r.status === "error" && <span className="badge badge-cancelled" title={r.error}>Lỗi</span>}
+                          {r.status === "idle" && <span style={{ color: "var(--text-light)" }}>—</span>}
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ padding: "4px", minWidth: "auto" }}
+                            onClick={() => setPreviewRecord(r)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {pageRows.map((r, i) => (
-                        <tr
-                          key={r.id}
-                          className={`hover:bg-slate-50/50 transition-colors ${
-                            r.status === "error" ? "bg-red-50/30" : r.status === "success" ? "bg-emerald-50/30" : ""
-                          }`}
-                        >
-                          <td className="px-4 py-2 text-center">
-                            <input
-                              type="checkbox"
-                              checked={r.selected}
-                              onChange={(e) =>
-                                setRecords((prev) => prev.map((rec) => (rec.id === r.id ? { ...rec, selected: e.target.checked } : rec)))
-                              }
-                              className="rounded border-slate-300 w-4 h-4 text-emerald-600 cursor-pointer"
-                            />
-                          </td>
-                          <td className="px-4 py-2 text-slate-500">{r.phong}</td>
-                          <td className="px-4 py-2 font-medium text-slate-800">{r.tenNhanVien}</td>
-                          <td className="px-4 py-2 text-slate-500 font-mono">{r.email}</td>
-                          <td className="px-4 py-2 text-right font-mono text-slate-600">{fmt(r.cong)}</td>
-                          <td className="px-4 py-2 text-right font-mono text-slate-600">{fmt(Math.max(0, r.thuNhapTinhThue))}</td>
-                          <td className="px-4 py-2 text-right font-semibold font-mono text-red-600">{fmt(r.thueTNCN)}</td>
-                          <td className="px-4 py-2 text-center">
-                            {r.status === "success" && <CheckCircle className="w-5 h-5 text-emerald-500 inline-block" />}
-                            {r.status === "error" && <XCircle className="w-5 h-5 text-red-500 inline-block" title={r.error} />}
-                            {r.status === "idle" && <span className="text-slate-300 font-semibold">—</span>}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            <button
-                              onClick={() => setPreviewRecord(r)}
-                              className="p-1 rounded text-emerald-600 hover:bg-emerald-50 transition"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="px-4 py-3 flex items-center justify-between border-t border-slate-100 bg-slate-50/50">
-                    <span className="text-xs text-slate-500">
-                      Trang {page + 1}/{totalPages}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setPage((p) => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                        className="p-1.5 rounded hover:bg-slate-200"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                        disabled={page === totalPages - 1}
-                        className="p-1.5 rounded hover:bg-slate-200"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
+                    ))}
+                    {pageRows.length === 0 && (
+                      <tr>
+                        <td colSpan="10" style={{ textAlign: "center", color: "var(--text-muted)", padding: "20px" }}>
+                          Không có kết quả.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
+
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Trang {page + 1} / {totalPages}</span>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => setPage((p) => Math.max(0, p - 1))}
+                      disabled={page === 0}
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Trước
+                    </button>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                      disabled={page === totalPages - 1}
+                    >
+                      Sau <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
-      </section>
+      </div>
 
       {/* ── STEP 2: SEND CONFIG ── */}
-      <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
-          <span className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center font-mono">2</span>
-          <h2 className="font-semibold text-slate-800">Cấu hình &amp; Tiến hành gửi thuế</h2>
+      <div className="card">
+        <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
+          <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>2</span>
+            <span>Cấu hình &amp; Tiến hành gửi thuế (Email & Zalo OA)</span>
+          </div>
         </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Tiêu đề email</label>
+        <div className="space-y-4">
+          <div className="form-group">
+            <label className="form-label" style={{ fontWeight: 600 }}>Kênh gửi thông báo</label>
+            <div style={{ display: "flex", gap: "16px", marginTop: "6px", flexWrap: "wrap" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                <input 
+                  type="radio" 
+                  name="channel-tax" 
+                  value="email" 
+                  checked={channel === "email"} 
+                  onChange={() => setChannel("email")} 
+                  style={{ cursor: "pointer" }}
+                />
+                📧 Chỉ gửi Gmail
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                <input 
+                  type="radio" 
+                  name="channel-tax" 
+                  value="zalo" 
+                  checked={channel === "zalo"} 
+                  onChange={() => setChannel("zalo")} 
+                  style={{ cursor: "pointer" }}
+                />
+                💬 Chỉ gửi Zalo OA
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
+                <input 
+                  type="radio" 
+                  name="channel-tax" 
+                  value="both" 
+                  checked={channel === "both"} 
+                  onChange={() => setChannel("both")} 
+                  style={{ cursor: "pointer" }}
+                />
+                🔄 Gửi cả hai kênh
+              </label>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Tiêu đề thông báo (Subject / Tiêu đề Zalo)</label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder={`Thông báo Thuế Thu Nhập Cá Nhân tháng ${thang || "__"} - CDC Đà Nẵng`}
-              className="w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="form-input"
             />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Nội dung đính kèm thêm (Tùy chọn)</label>
+          <div className="form-group">
+            <label className="form-label">Nội dung đính kèm thêm (Tùy chọn)</label>
             <textarea
               value={customMessage}
               onChange={(e) => setCustomMessage(e.target.value)}
-              rows="3"
+              className="form-textarea"
               placeholder="Nhập nội dung lưu ý thêm..."
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--bg)", padding: "10px 14px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
             <input
               type="checkbox"
               id="showKhoanDetail"
               checked={showKhoanDetail}
               onChange={(e) => setShowKhoanDetail(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-300 text-emerald-600 cursor-pointer"
+              style={{ cursor: "pointer" }}
             />
-            <label htmlFor="showKhoanDetail" className="text-sm text-slate-700 cursor-pointer select-none">
-              <span className="font-semibold text-xs">Hiển thị chi tiết từng khoản thu nhập trong email</span>
+            <label htmlFor="showKhoanDetail" className="form-label" style={{ margin: 0, fontSize: "0.8rem", cursor: "pointer" }}>
+              Hiển thị chi tiết từng khoản thu nhập trong thông báo
             </label>
           </div>
+
+          {records.length > 0 && (
+            <div style={{
+              background: "var(--primary-light)",
+              border: "1px solid var(--border-focus)",
+              color: "var(--primary)",
+              borderRadius: "var(--radius)",
+              padding: "12px",
+              fontSize: "0.8rem",
+              lineHeight: "1.5"
+            }}>
+              {channel === "email" && (
+                <>
+                  <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
+                    Sẽ gửi {selectedCount} email thuế TNCN thông qua {accounts.length} tài khoản Gmail.
+                  </p>
+                  {accounts.length > 0 && (
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      Trung bình mỗi tài khoản gửi {Math.ceil(selectedCount / accounts.length)} email (Round-Robin).
+                    </p>
+                  )}
+                </>
+              )}
+              {channel === "zalo" && (
+                <p style={{ margin: 0, fontWeight: 700 }}>
+                  Sẽ gửi {selectedCount} tin nhắn Zalo OA thuế TNCN cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
+                </p>
+              )}
+              {channel === "both" && (
+                <>
+                  <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
+                    Sẽ gửi đồng thời {selectedCount} email thuế TNCN (qua Gmail Pool) & tin nhắn Zalo OA cho cán bộ.
+                  </p>
+                  {accounts.length > 0 && (
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                      Gmail: mỗi tài khoản gửi khoảng {Math.ceil(selectedCount / accounts.length)} email.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           <button
             onClick={startSend}
             disabled={!canSend}
-            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg flex items-center justify-center gap-1.5 shadow transition text-sm"
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center", height: "42px" }}
           >
             {isSending ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Đang gửi {prog.sent}/{prog.total}...
+                <Loader2 className="w-5 h-5 animate-spin" /> Đang xử lý {prog.sent}/{prog.total}...
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" /> Gửi {selectedCount} Email Thuế TNCN
+                <Send className="w-4 h-4" /> Bắt đầu gửi ({channel === "email" ? "Gmail" : channel === "zalo" ? "Zalo" : "Gmail & Zalo"})
               </>
             )}
           </button>
         </div>
-      </section>
+      </div>
 
       {/* ── PROGRESS & RESULTS ── */}
       {(isSending || isDone) && (
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isDone ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />}
-              <h2 className="font-semibold text-slate-800 text-sm">{isDone ? "Hoàn tất gửi thuế!" : `Đang tiến hành... ${pct}%`}</h2>
+        <div className="card">
+          <div className="card-header" style={{ marginBottom: "16px" }}>
+            <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {isDone ? <CheckCircle className="w-5 h-5 text-success" /> : <Loader2 className="w-5 h-5 text-primary animate-spin" />}
+              <span>{isDone ? "Hoàn tất gửi thuế!" : `Đang tiến hành... ${pct}%`}</span>
             </div>
-            <div className="flex items-center gap-4 text-xs font-semibold">
-              {!isDone && isSending && (
-                <button
-                  onClick={() => abortControllerRef.current?.abort()}
-                  className="px-2.5 py-1 text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition"
-                >
-                  Dừng
-                </button>
-              )}
-              <span className="text-slate-400 font-mono">
-                {prog.sent}/{prog.total}
-              </span>
-            </div>
+            {!isDone && isSending && (
+              <button
+                onClick={() => abortControllerRef.current?.abort()}
+                className="btn btn-danger btn-sm"
+              >
+                Dừng
+              </button>
+            )}
           </div>
-          <div className="p-6 space-y-4">
-            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-              <div className="bg-emerald-600 h-2 rounded-full transition-all duration-300" style={{ width: `${pct}%` }}></div>
+          <div className="space-y-4">
+            <div style={{ width: "100%", background: "var(--border)", height: "8px", borderRadius: "999px", overflow: "hidden" }}>
+              <div style={{ width: `${pct}%`, background: "var(--primary)", height: "100%", transition: "width 0.3s ease" }}></div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 text-center text-xs font-semibold">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-slate-800">{prog.sent}</p>
-                <p className="text-slate-500 mt-0.5">Đã gửi</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", textAlign: "center" }}>
+              <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text)" }}>{prog.sent}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>Đã gửi</p>
               </div>
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-emerald-700">{prog.success}</p>
-                <p className="text-emerald-600 mt-0.5">Thành công</p>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--success)" }}>{prog.success}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#166534", fontWeight: 600 }}>Thành công</p>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                <p className="text-xl font-bold text-red-600">{prog.failed}</p>
-                <p className="text-red-500 mt-0.5">Thất bại</p>
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "var(--radius)", padding: "10px" }}>
+                <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--danger)" }}>{prog.failed}</span>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "#991b1b", fontWeight: 600 }}>Thất bại</p>
               </div>
             </div>
 
-            <div ref={resultsRef} className="max-h-60 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100 bg-slate-50/50">
+            <div
+              ref={resultsRef}
+              style={{
+                maxHeight: "180px",
+                overflowY: "auto",
+                borderRadius: "var(--radius)",
+                border: "1px solid var(--border)",
+                background: "var(--bg)"
+              }}
+            >
               {prog.results.map((r, i) => (
-                <div key={i} className={`flex items-center gap-2 px-3 py-2 text-xs ${r.status === "success" ? "bg-white" : "bg-red-50/50"}`}>
+                <div key={i} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "6px 12px",
+                  fontSize: "0.75rem",
+                  borderBottom: "1px solid var(--border)",
+                  background: r.status === "success" ? "white" : "#fff5f5"
+                }}>
                   {r.status === "success" ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
                   ) : (
-                    <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <XCircle className="w-3.5 h-3.5 text-danger shrink-0" />
                   )}
-                  <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-slate-800">{r.tenNhanVien}</span>
-                    <span className="text-slate-400 ml-2 font-mono">{r.email}</span>
-                    {r.status === "error" && <p className="text-red-500 text-[10px] mt-0.5">{r.error}</p>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontWeight: 600, color: "var(--text)" }}>{r.tenNhanVien}</span>
+                    <span style={{ color: "var(--text-muted)", marginLeft: "6px", fontFamily: "monospace", fontSize: "0.7rem" }}>{r.email}</span>
+                    {r.status === "error" && <p style={{ margin: "2px 0 0 0", color: "var(--danger)", fontSize: "0.65rem" }}>{r.error}</p>}
                   </div>
-                  <span className="text-slate-400 font-mono text-[10px]">{r.sentVia}</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--text-light)", fontFamily: "monospace" }}>{r.sentVia}</span>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        </div>
       )}
 
       {/* ── PREVIEW MODAL ── */}
       {previewRecord && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 flex items-center gap-1.5">
-                <Mail className="w-4 h-4 text-emerald-600" /> Xem trước: {previewRecord.tenNhanVien}
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(15, 23, 42, 0.6)",
+          backdropFilter: "blur(4px)",
+          zIndex: 999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px"
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "var(--radius-xl)",
+            width: "100%",
+            maxWidth: "720px",
+            maxHeight: "90vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            boxShadow: "var(--shadow-lg)"
+          }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 20px",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--bg)"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+                <Mail className="w-4 h-4 text-emerald-600" /> Xem trước email thuế: {previewRecord.tenNhanVien}
               </h3>
-              <button onClick={() => setPreviewRecord(null)} className="p-1 rounded-full hover:bg-slate-200">
+              <button
+                onClick={() => setPreviewRecord(null)}
+                className="btn btn-ghost btn-sm"
+                style={{ padding: "4px", minWidth: "auto", borderRadius: "50%" }}
+              >
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto bg-slate-100 p-4">
+            <div style={{
+              flex: 1,
+              overflowY: "auto",
+              background: "#f1f5f9",
+              padding: "20px"
+            }}>
               <div
-                className="bg-white border rounded shadow-sm max-w-full overflow-x-auto p-4"
+                style={{
+                  background: "white",
+                  border: "1px solid var(--border)",
+                  borderRadius: "var(--radius)",
+                  padding: "24px",
+                  boxShadow: "var(--shadow-sm)"
+                }}
                 dangerouslySetInnerHTML={{
                   __html: generateTaxEmail(previewRecord, {
                     emailTitle: subject || `Thông báo Thuế Thu Nhập Cá Nhân tháng ${thang}`,
@@ -2115,10 +2900,16 @@ function TaxTab({ accounts, batchSize, delayMs }) {
                 }}
               />
             </div>
-            <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 text-xs">
+            <div style={{
+              padding: "12px 20px",
+              borderTop: "1px solid var(--border)",
+              background: "var(--bg)",
+              display: "flex",
+              justifyContent: "flex-end"
+            }}>
               <button
                 onClick={() => setPreviewRecord(null)}
-                className="px-4 py-2 border border-slate-200 font-semibold rounded-lg hover:bg-slate-50 text-slate-600"
+                className="btn btn-outline btn-sm"
               >
                 Đóng
               </button>

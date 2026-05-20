@@ -58,6 +58,7 @@ export async function POST(req) {
     const idxName  = findCol(["Họ và tên", "TenNhanVien", "tenNhanVien"]);
     const idxEmail = findCol(["Địa chỉ mail", "email", "Email"]);
     const idxTotal = findCol(["Thành tiền", "tongThuNhap", "Tổng thu nhập"]);
+    const idxZalo  = findCol(["zalo id", "zalo_id", "zaloid", "zalo userid", "zalo user id", "id zalo", "zalo"]);
     const idxMonth1 = findCol(["Tháng 1", "Tháng 01", "heSoLieuT1"]);
     const idxMonth2 = findCol(["Tháng 2", "Tháng 02", "heSoLieuT2"], idxMonth1 + 1);
     const idxMonth3 = findCol(["Tháng 3", "Tháng 03", "heSoLieuT3"], idxMonth2 + 1);
@@ -97,6 +98,7 @@ export async function POST(req) {
 
       records.push({
         tenNhanVien: name, email,
+        zaloUserId: idxZalo !== -1 ? String(row[idxZalo] || "").trim() : undefined,
         heSoLieuT1: readVal(row[idxMonth1] || row[idxMonth1 + 1]),
         pcvkT1: readVal(row[idxMonth1 + 1]),
         pccvT1: readVal(row[idxMonth1 + 2]),

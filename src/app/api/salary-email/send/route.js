@@ -1,31 +1,71 @@
-/**
- * POST /api/salary-email/send
- * Gửi email báo lương theo danh sách từ Excel với SSE streaming
- */
 import { EmailPool } from "@/lib/emailPool";
 import { generateSalaryEmail } from "@/lib/salaryEmailTemplate";
+import { sendTextMessage } from "@/lib/zalo";
+import { generateSalaryZaloMessage } from "@/lib/zaloMessageTemplates";
+import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 
 function enc(controller, data) {
   controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`));
 }
 
-export async function POST(req) {
-  const body = await req.json();
-  const { records, accounts, subject, batchSize = 10, batchDelayMs = 2000, customMessage } = body;
+function cleanPhone(p) {
+  if (!p) return "";
+  let cleaned = String(p).replace(/[^\d]/g, "");
+  if (cleaned.startsWith("84") && cleaned.length > 9) {
+    cleaned = "0" + cleaned.slice(2);
+  }
+  return cleaned;
+}
 
-  if (!records?.length) return new Response("Không có dữ liệu nhân viên.", { status: 400 });
-  if (!accounts?.length) return new Response("Cần ít nhất 1 tài khoản Gmail.", { status: 400 });
+function normalizeName(n) {
+  return String(n || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+}
 
-  const transporters = new Map();
-  for (const acc of accounts) {
-    transporters.set(acc.id, nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: acc.user, pass: acc.appPassword },
-    }));
+async function findZaloUserId(record) {
+  if (record.zaloUserId) return record.zaloUserId;
+
+  // 1. Tìm theo số điện thoại
+  const phone = cleanPhone(record.phone || record.sdt);
+  if (phone) {
+    const follower = await prisma.follower.findFirst({
+      where: { phone: { contains: phone } }
+    });
+    if (follower) return follower.zaloUserId;
   }
 
-  const pool = new EmailPool(accounts);
+  // 2. Tìm theo tên nhân viên (không dấu, chữ thường)
+  const normName = normalizeName(record.tenNhanVien);
+  if (normName) {
+    const followers = await prisma.follower.findMany();
+    const match = followers.find(f => normalizeName(f.displayName) === normName);
+    if (match) return match.zaloUserId;
+  }
+
+  return null;
+}
+
+export async function POST(req) {
+  const body = await req.json();
+  const { records, accounts, subject, batchSize = 10, batchDelayMs = 2000, customMessage, channel = "email" } = body;
+
+  if (!records?.length) return new Response("Không có dữ liệu nhân viên.", { status: 400 });
+  
+  if (channel !== "zalo" && !accounts?.length) {
+    return new Response("Cần ít nhất 1 tài khoản Gmail để gửi email.", { status: 400 });
+  }
+
+  const transporters = new Map();
+  if (channel === "email" || channel === "both") {
+    for (const acc of accounts) {
+      transporters.set(acc.id, nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: acc.user, pass: acc.appPassword },
+      }));
+    }
+  }
+
+  const pool = accounts?.length ? new EmailPool(accounts) : null;
   const emailSubject = subject || "Thông báo lương quý - CDC Đà Nẵng";
 
   const stream = new ReadableStream({
@@ -34,27 +74,58 @@ export async function POST(req) {
       for (let i = 0; i < records.length; i++) {
         if (req.signal.aborted) break;
         const record = records[i];
-        const account = pool.next();
-        const transporter = transporters.get(account.id);
-        let result;
+        
+        let result = { 
+          tenNhanVien: record.tenNhanVien, 
+          email: record.email || "", 
+          status: "success", 
+          sentVia: "" 
+        };
+        let sentViaList = [];
+
         try {
-          const html = generateSalaryEmail(record, { quarterTitle: emailSubject, customMessage });
-          await transporter.sendMail({
-            from: `"CDC Đà Nẵng - Phòng TCHC" <${account.user}>`,
-            to: record.email,
-            subject: emailSubject,
-            html,
-          });
-          result = { tenNhanVien: record.tenNhanVien, email: record.email, status: "success", sentVia: account.user };
+          // 1. GỬI QUA ZALO
+          if (channel === "zalo" || channel === "both") {
+            const zaloUserId = await findZaloUserId(record);
+            if (!zaloUserId) {
+              throw new Error("Không tìm thấy Zalo User ID (cán bộ chưa quan tâm OA hoặc thông tin chưa đồng bộ).");
+            }
+            const zaloMsg = generateSalaryZaloMessage(record, { quarterTitle: emailSubject, customMessage });
+            const zaloRes = await sendTextMessage(zaloUserId, zaloMsg);
+            if (zaloRes.error !== 0) {
+              throw new Error(`Zalo API error: ${zaloRes.message} (Mã: ${zaloRes.error})`);
+            }
+            sentViaList.push("Zalo");
+          }
+
+          // 2. GỬI QUA GMAIL
+          if (channel === "email" || channel === "both") {
+            const account = pool.next();
+            const transporter = transporters.get(account.id);
+            const html = generateSalaryEmail(record, { quarterTitle: emailSubject, customMessage });
+            await transporter.sendMail({
+              from: `"CDC Đà Nẵng - Phòng TCHC" <${account.user}>`,
+              to: record.email,
+              subject: emailSubject,
+              html,
+            });
+            sentViaList.push(`Gmail (${account.user})`);
+          }
+
+          result.status = "success";
+          result.sentVia = sentViaList.join(" & ");
         } catch (err) {
-          result = { tenNhanVien: record.tenNhanVien, email: record.email, status: "error", sentVia: account.user, error: err.message };
+          result.status = "error";
+          result.sentVia = sentViaList.length ? sentViaList.join(" & ") : (channel === "zalo" ? "Zalo" : "Gmail");
+          result.error = err.message;
         }
+
         enc(controller, { type: "progress", index: i + 1, total: records.length, result });
         if (batchSize > 0 && (i + 1) % batchSize === 0 && i < records.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
         }
       }
-      enc(controller, { type: "done", stats: pool.getStats() });
+      enc(controller, { type: "done", stats: pool ? pool.getStats() : { sentCount: 0 } });
       controller.close();
     },
   });
@@ -68,3 +139,4 @@ export async function POST(req) {
     },
   });
 }
+

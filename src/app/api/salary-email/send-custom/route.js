@@ -4,10 +4,57 @@
  */
 import { EmailPool } from "@/lib/emailPool";
 import { generateCustomEmail } from "@/lib/customEmailTemplate";
+import { sendTextMessage } from "@/lib/zalo";
+import { generateCustomZaloMessage } from "@/lib/zaloMessageTemplates";
+import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 
 function enc(controller, data) {
   controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`));
+}
+
+function cleanPhone(p) {
+  if (!p) return "";
+  let cleaned = String(p).replace(/[^\d]/g, "");
+  if (cleaned.startsWith("84") && cleaned.length > 9) {
+    cleaned = "0" + cleaned.slice(2);
+  }
+  return cleaned;
+}
+
+function normalizeName(n) {
+  return String(n || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+}
+
+async function findZaloUserId(record, columnMapping) {
+  if (record.zaloUserId) return record.zaloUserId;
+
+  // 1. Tìm theo số điện thoại từ mapping cột nếu có
+  let rawPhone = "";
+  if (columnMapping && columnMapping.phoneCol) {
+    rawPhone = record.data?.[columnMapping.phoneCol] || "";
+  }
+  if (!rawPhone && record.phone) {
+    rawPhone = record.phone;
+  }
+  
+  const phone = cleanPhone(rawPhone);
+  if (phone) {
+    const follower = await prisma.follower.findFirst({
+      where: { phone: { contains: phone } }
+    });
+    if (follower) return follower.zaloUserId;
+  }
+
+  // 2. Tìm theo tên nhân viên (không dấu, chữ thường)
+  const normName = normalizeName(record.tenNhanVien);
+  if (normName) {
+    const followers = await prisma.follower.findMany();
+    const match = followers.find(f => normalizeName(f.displayName) === normName);
+    if (match) return match.zaloUserId;
+  }
+
+  return null;
 }
 
 export async function POST(req) {
@@ -22,31 +69,36 @@ export async function POST(req) {
       batchDelayMs = 2000,
       customMessage,
       footerNote,
-      emailTitle
+      emailTitle,
+      channel = "email"
     } = body;
 
     if (!records?.length) {
       return new Response("Không có dữ liệu nhân viên.", { status: 400 });
     }
-    if (!accounts?.length) {
-      return new Response("Cần ít nhất 1 tài khoản Gmail.", { status: 400 });
+    
+    if (channel !== "zalo" && !accounts?.length) {
+      return new Response("Cần ít nhất 1 tài khoản Gmail để gửi email.", { status: 400 });
     }
-    if (!columnMapping?.nameCol || !columnMapping?.emailCol) {
+    
+    if (!columnMapping?.nameCol || (channel !== "zalo" && !columnMapping?.emailCol)) {
       return new Response("Thiếu cột họ tên hoặc email trong mapping.", { status: 400 });
     }
 
     const transporters = new Map();
-    for (const acc of accounts) {
-      transporters.set(
-        acc.id,
-        nodemailer.createTransport({
-          service: "gmail",
-          auth: { user: acc.user, pass: acc.appPassword },
-        })
-      );
+    if (channel === "email" || channel === "both") {
+      for (const acc of accounts) {
+        transporters.set(
+          acc.id,
+          nodemailer.createTransport({
+            service: "gmail",
+            auth: { user: acc.user, pass: acc.appPassword },
+          })
+        );
+      }
     }
 
-    const pool = new EmailPool(accounts);
+    const pool = accounts?.length ? new EmailPool(accounts) : null;
     const finalSubject = subject || emailTitle || "Thông báo lương - CDC Đà Nẵng";
     const finalTitle = emailTitle || subject || "Thông báo lương - CDC Đà Nẵng";
 
@@ -57,37 +109,60 @@ export async function POST(req) {
         for (let i = 0; i < records.length; i++) {
           if (req.signal.aborted) break;
           const record = records[i];
-          const account = pool.next();
-          const transporter = transporters.get(account.id);
+          
+          let result = { 
+            tenNhanVien: record.tenNhanVien, 
+            email: record.email || "", 
+            status: "success", 
+            sentVia: "" 
+          };
+          let sentViaList = [];
 
-          let result;
           try {
-            const html = generateCustomEmail(record, {
-              emailTitle: finalTitle,
-              columnMapping,
-              customMessage,
-              footerNote,
-            });
-            await transporter.sendMail({
-              from: `"CDC Đà Nẵng - Phòng TCHC" <${account.user}>`,
-              to: record.email,
-              subject: finalSubject,
-              html,
-            });
-            result = {
-              tenNhanVien: record.tenNhanVien,
-              email: record.email,
-              status: "success",
-              sentVia: account.user,
-            };
+            // 1. GỬI QUA ZALO
+            if (channel === "zalo" || channel === "both") {
+              const zaloUserId = await findZaloUserId(record, columnMapping);
+              if (!zaloUserId) {
+                throw new Error("Không tìm thấy Zalo User ID (cán bộ chưa quan tâm OA hoặc thông tin chưa đồng bộ).");
+              }
+              const zaloMsg = generateCustomZaloMessage(record, {
+                emailTitle: finalTitle,
+                columnMapping,
+                customMessage,
+                footerNote,
+              });
+              const zaloRes = await sendTextMessage(zaloUserId, zaloMsg);
+              if (zaloRes.error !== 0) {
+                throw new Error(`Zalo API error: ${zaloRes.message} (Mã: ${zaloRes.error})`);
+              }
+              sentViaList.push("Zalo");
+            }
+
+            // 2. GỬI QUA GMAIL
+            if (channel === "email" || channel === "both") {
+              const account = pool.next();
+              const transporter = transporters.get(account.id);
+              const html = generateCustomEmail(record, {
+                emailTitle: finalTitle,
+                columnMapping,
+                customMessage,
+                footerNote,
+              });
+              await transporter.sendMail({
+                from: `"CDC Đà Nẵng - Phòng TCHC" <${account.user}>`,
+                to: record.email,
+                subject: finalSubject,
+                html,
+              });
+              sentViaList.push(`Gmail (${account.user})`);
+            }
+
+            result.status = "success";
+            result.sentVia = sentViaList.join(" & ");
           } catch (err) {
-            result = {
-              tenNhanVien: record.tenNhanVien,
-              email: record.email,
-              status: "error",
-              sentVia: account.user,
-              error: err.message,
-            };
+            result.status = "error";
+            result.sentVia = sentViaList.length ? sentViaList.join(" & ") : (channel === "zalo" ? "Zalo" : "Gmail");
+            result.error = err.message;
           }
 
           enc(controller, { type: "progress", index: i + 1, total: records.length, result });
@@ -97,7 +172,7 @@ export async function POST(req) {
           }
         }
 
-        enc(controller, { type: "done", stats: pool.getStats() });
+        enc(controller, { type: "done", stats: pool ? pool.getStats() : { sentCount: 0 } });
         controller.close();
       },
     });
@@ -204,10 +279,19 @@ export async function PUT(req) {
         data[columnMapping.totalCol] = rowObj[columnMapping.totalCol];
       }
 
+      const extraFields = {};
+      if (columnMapping.zaloIdCol) {
+        extraFields[columnMapping.zaloIdCol] = rowObj[columnMapping.zaloIdCol];
+      }
+      if (columnMapping.phoneCol) {
+        extraFields[columnMapping.phoneCol] = rowObj[columnMapping.phoneCol];
+      }
+
       records.push({
         id: `${i}`,
         tenNhanVien: name,
         email,
+        ...extraFields,
         data,
       });
     }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Plus, Trash2, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 // Các nhóm cài đặt
 const SETTING_GROUPS = [
@@ -24,6 +25,13 @@ const SETTING_GROUPS = [
       { key: "zalo_access_token",  label: "Access Token",    type: "password", placeholder: "••••••••••••••••",           secret: true  },
       { key: "zalo_refresh_token", label: "Refresh Token",   type: "password", placeholder: "••••••••••••••••",           secret: true  },
     ],
+  },
+  {
+    id: "gmail_pool",
+    icon: "✉️",
+    title: "Gmail Account Pool",
+    desc: "Danh sách tài khoản Gmail dùng luân phiên để gửi email báo lương & báo thuế tự động.",
+    fields: [],
   },
   {
     id: "webhook",
@@ -100,6 +108,75 @@ function SettingsPageContent() {
   const [newCatId, setNewCatId] = useState("");
   const [newCatName, setNewCatName] = useState("");
   const [newCatIcon, setNewCatIcon] = useState("📢");
+
+  // Gmail Pool states
+  const [accounts, setAccounts] = useState([]);
+  const [batchSize, setBatchSize] = useState(10);
+  const [delayMs, setDelayMs] = useState(2000);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [isLocalLoaded, setIsLocalLoaded] = useState(false);
+
+  // Load Gmail configuration from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedAcc = localStorage.getItem("cdc_gmail_pool");
+      if (savedAcc) {
+        try {
+          setAccounts(JSON.parse(savedAcc));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      const savedBatch = localStorage.getItem("cdc_email_batch_size");
+      if (savedBatch) setBatchSize(Number(savedBatch));
+      const savedDelay = localStorage.getItem("cdc_email_delay_ms");
+      if (savedDelay) setDelayMs(Number(savedDelay));
+      setIsLocalLoaded(true);
+    }
+  }, []);
+
+  // Save Gmail pool to localStorage on change
+  useEffect(() => {
+    if (isLocalLoaded && typeof window !== "undefined") {
+      localStorage.setItem("cdc_gmail_pool", JSON.stringify(accounts));
+    }
+  }, [accounts, isLocalLoaded]);
+
+  // Save Gmail batchSize to localStorage on change
+  useEffect(() => {
+    if (isLocalLoaded && typeof window !== "undefined") {
+      localStorage.setItem("cdc_email_batch_size", String(batchSize));
+    }
+  }, [batchSize, isLocalLoaded]);
+
+  // Save Gmail delayMs to localStorage on change
+  useEffect(() => {
+    if (isLocalLoaded && typeof window !== "undefined") {
+      localStorage.setItem("cdc_email_delay_ms", String(delayMs));
+    }
+  }, [delayMs, isLocalLoaded]);
+
+  const addAccount = () => {
+    if (!newEmail.trim() || !newPass.trim()) return;
+    setAccounts((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        user: newEmail.trim(),
+        appPassword: newPass.replace(/\s/g, ""),
+        showPass: false,
+      },
+    ]);
+    setNewEmail("");
+    setNewPass("");
+  };
+
+  const removeAccount = (id) => setAccounts((prev) => prev.filter((a) => a.id !== id));
+  const togglePass = (id) =>
+    setAccounts((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, showPass: !a.showPass } : a))
+    );
 
   const categoriesList = (() => {
     try {
@@ -190,6 +267,15 @@ function SettingsPageContent() {
       router.replace("/settings");
     }
   }, [searchParams, loadSettings, router]);
+
+  // Đọc tab hoạt động từ query params (ví dụ: ?tab=gmail_pool)
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && SETTING_GROUPS.some(g => g.id === tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
 
   // Tạo URL OAuth để redirect Admin sang Zalo
   async function handleGenerateOAuthUrl() {
@@ -284,7 +370,7 @@ function SettingsPageContent() {
       <div className="page-header">
         <div>
           <h1 className="page-title">⚙️ Cài đặt hệ thống</h1>
-          <p className="page-desc">Quản lý kết nối Zalo OA, thông tin liên hệ và các cấu hình khác.</p>
+          <p className="page-desc">Quản lý kết nối Zalo OA, thông tin liên hệ và cấu hình Gmail gửi thư tự động.</p>
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           {saved && (
@@ -393,12 +479,12 @@ function SettingsPageContent() {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                          <label className="form-label" style={{ fontSize: "0.75rem" }}>Code Challenge (tự động)</label>
-                          <input type="text" className="form-input" value={oauthData.codeChallenge} readOnly style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "var(--text-muted)" }} />
+                           <label className="form-label" style={{ fontSize: "0.75rem" }}>Code Challenge (tự động)</label>
+                           <input type="text" className="form-input" value={oauthData.codeChallenge} readOnly style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "var(--text-muted)" }} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                          <label className="form-label" style={{ fontSize: "0.75rem" }}>State (chống CSRF)</label>
-                          <input type="text" className="form-input" value={oauthData.state} readOnly style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "var(--text-muted)" }} />
+                           <label className="form-label" style={{ fontSize: "0.75rem" }}>State (chống CSRF)</label>
+                           <input type="text" className="form-input" value={oauthData.state} readOnly style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "var(--text-muted)" }} />
                         </div>
                       </div>
                       <a href={oauthData.authUrl} target="_blank" rel="noopener noreferrer" className="btn btn-success" style={{ textDecoration: "none", display: "inline-flex" }}>
@@ -406,6 +492,167 @@ function SettingsPageContent() {
                       </a>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* UI cho tab Gmail Account Pool */}
+              {activeGroup.id === "gmail_pool" && (
+                <div style={{ marginTop: "20px", borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr", md: "1.2fr 0.8fr", gap: "24px" }}>
+                    {/* Danh sách & form */}
+                    <div>
+                      <h3 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>📧 Danh sách tài khoản trong Pool</span>
+                        {accounts.length > 0 && <span className="badge badge-info">{accounts.length}</span>}
+                      </h3>
+
+                      <div style={{
+                        background: "#fffbeb",
+                        border: "1px solid #fde68a",
+                        color: "#78350f",
+                        borderRadius: "var(--radius)",
+                        padding: "12px",
+                        fontSize: "0.8rem",
+                        lineHeight: "1.5",
+                        marginBottom: "16px",
+                        display: "flex",
+                        gap: "8px"
+                      }}>
+                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                        <span>
+                          Sử dụng <strong>Mật khẩu ứng dụng (App Password)</strong>. Hãy tạo trong <em>Google Account &rarr; Bảo mật &rarr; Xác minh 2 bước &rarr; Mật khẩu ứng dụng</em>.
+                        </span>
+                      </div>
+
+                      {/* Add Form */}
+                      <div className="space-y-3" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px", marginBottom: "16px" }}>
+                        <div style={{ fontWeight: 600, fontSize: "0.8rem", marginBottom: "4px" }}>➕ Thêm Gmail mới</div>
+                        <div className="form-group" style={{ marginBottom: "8px" }}>
+                          <input
+                            type="email"
+                            placeholder="Email gửi (ví dụ: cdc@gmail.com)"
+                            value={newEmail}
+                            onChange={(e) => setNewEmail(e.target.value)}
+                            className="form-input"
+                            style={{ height: "36px" }}
+                          />
+                        </div>
+                        <div className="form-group" style={{ marginBottom: "12px" }}>
+                          <input
+                            type="password"
+                            placeholder="Mật khẩu ứng dụng (16 ký tự)"
+                            value={newPass}
+                            onChange={(e) => setNewPass(e.target.value)}
+                            className="form-input"
+                            style={{ height: "36px" }}
+                          />
+                        </div>
+                        <button
+                          onClick={addAccount}
+                          disabled={!newEmail.trim() || !newPass.trim()}
+                          className="btn btn-primary btn-sm"
+                          style={{ width: "100%", justifyContent: "center" }}
+                        >
+                          <Plus className="w-4 h-4" /> Thêm vào Pool
+                        </button>
+                      </div>
+
+                      {/* Accounts list */}
+                      {accounts.length === 0 ? (
+                        <div style={{
+                          textAlign: "center",
+                          padding: "24px 0",
+                          color: "var(--text-muted)",
+                          fontSize: "0.8rem",
+                          border: "2px dashed var(--border)",
+                          borderRadius: "var(--radius)"
+                        }}>
+                          Chưa có tài khoản Gmail nào được cấu hình.
+                        </div>
+                      ) : (
+                        <div className="space-y-2" style={{ maxHeight: "250px", overflowY: "auto", paddingRight: "4px" }}>
+                          {accounts.map((acc, idx) => (
+                            <div key={acc.id} style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              background: "white",
+                              border: "1px solid var(--border)",
+                              borderRadius: "var(--radius)",
+                              padding: "8px 12px"
+                            }}>
+                              <div style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                background: "var(--border)",
+                                color: "var(--text-muted)",
+                                fontSize: "0.7rem",
+                                fontWeight: "bold",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyCenter: "center",
+                                flexShrink: 0
+                              }}>
+                                {idx + 1}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0, fontSize: "0.8rem" }}>
+                                <p style={{ fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{acc.user}</p>
+                                <p style={{ color: "var(--text-muted)", fontFamily: "monospace", fontSize: "0.75rem", margin: 0 }}>
+                                  {acc.showPass ? acc.appPassword : "•••• •••• •••• ••••"}
+                                </p>
+                              </div>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: "4px", minWidth: "auto" }}
+                                onClick={() => togglePass(acc.id)}
+                              >
+                                {acc.showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                              </button>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: "4px", minWidth: "auto", color: "var(--danger)" }}
+                                onClick={() => removeAccount(acc.id)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tốc độ gửi */}
+                    <div>
+                      <h3 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "12px" }}>⚙️ Tốc độ & Giãn cách</h3>
+                      <div className="space-y-4" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px" }}>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: "0.8rem" }}>Số email mỗi đợt (Batch size)</label>
+                          <input
+                            type="number"
+                            value={batchSize}
+                            onChange={(e) => setBatchSize(Number(e.target.value))}
+                            className="form-input"
+                          />
+                          <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
+                            Gửi tuần tự từng đợt để tối ưu tài nguyên của Gmail.
+                          </span>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: "0.8rem" }}>Thời gian giãn cách (ms)</label>
+                          <input
+                            type="number"
+                            value={delayMs}
+                            onChange={(e) => setDelayMs(Number(e.target.value))}
+                            className="form-input"
+                          />
+                          <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
+                            Khoảng thời gian nghỉ giữa các đợt (ví dụ: 2000 = 2 giây).
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -451,7 +698,7 @@ function SettingsPageContent() {
                   <div style={{ fontWeight: 600, marginBottom: "12px", fontSize: "0.9rem" }}>📋 Danh sách danh mục hiện tại:</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
                     {categoriesList.map((cat) => (
-                      <div key={cat.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                      <div key={cat.id} style={{ display: "flex", alignItems: "center", justifyBetween: "space-between", padding: "12px 16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid var(--border)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                           <span style={{ fontSize: "1.4rem" }}>{cat.icon}</span>
                           <div>
@@ -521,113 +768,114 @@ function SettingsPageContent() {
               )}
             </div>
 
-
             {/* Form các trường */}
-            <div className="card">
-              {/* Readonly info (Webhook URL) */}
-              {activeGroup.readonly?.map((item) => (
-                <div key={item.label} className="form-group">
-                  <label className="form-label">{item.label}</label>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={item.value}
-                      readOnly
-                      style={{ background: "var(--bg)", color: "var(--text-muted)", cursor: "default", fontFamily: "monospace", fontSize: "0.8rem" }}
-                    />
-                    <button
-                      className="btn btn-outline btn-sm"
-                      onClick={() => navigator.clipboard.writeText(item.value)}
-                      title="Sao chép"
-                    >
-                      📋
-                    </button>
+            {(activeGroup.fields?.length > 0 || activeGroup.readonly?.length > 0 || (activeGroup.id === "contact" && values["map_embed_url"])) && (
+              <div className="card">
+                {/* Readonly info (Webhook URL) */}
+                {activeGroup.readonly?.map((item) => (
+                  <div key={item.label} className="form-group">
+                    <label className="form-label">{item.label}</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={item.value}
+                        readOnly
+                        style={{ background: "var(--bg)", color: "var(--text-muted)", cursor: "default", fontFamily: "monospace", fontSize: "0.8rem" }}
+                      />
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => navigator.clipboard.writeText(item.value)}
+                        title="Sao chép"
+                      >
+                        📋
+                      </button>
+                    </div>
+                    {item.note && (
+                      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>ℹ️ {item.note}</p>
+                    )}
                   </div>
-                  {item.note && (
-                    <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>ℹ️ {item.note}</p>
-                  )}
-                </div>
-              ))}
+                ))}
 
-              {/* Editable fields */}
-              {activeGroup.fields.map((field) => {
-                const isVisible = showSecrets[field.key];
-                const inputType = field.secret
-                  ? (isVisible ? "text" : "password")
-                  : field.type === "textarea" ? undefined : field.type;
+                {/* Editable fields */}
+                {activeGroup.fields?.map((field) => {
+                  const isVisible = showSecrets[field.key];
+                  const inputType = field.secret
+                    ? (isVisible ? "text" : "password")
+                    : field.type === "textarea" ? undefined : field.type;
 
-                return (
-                  <div key={field.key} className="form-group">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <label className="form-label" htmlFor={field.key}>{field.label}</label>
-                      {field.secret && (
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => setShowSecrets((p) => ({ ...p, [field.key]: !p[field.key] }))}
-                          style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                        >
-                          {isVisible ? "🙈 Ẩn" : "👁️ Hiện"}
-                        </button>
+                  return (
+                    <div key={field.key} className="form-group">
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <label className="form-label" htmlFor={field.key}>{field.label}</label>
+                        {field.secret && (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => setShowSecrets((p) => ({ ...p, [field.key]: !p[field.key] }))}
+                            style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                          >
+                            {isVisible ? "🙈 Ẩn" : "👁️ Hiện"}
+                          </button>
+                        )}
+                      </div>
+
+                      {field.type === "textarea" ? (
+                        <textarea
+                          id={field.key}
+                          className="form-textarea"
+                          placeholder={field.placeholder}
+                          value={values[field.key] ?? ""}
+                          onChange={(e) => handleChange(field.key, e.target.value)}
+                          rows={3}
+                        />
+                      ) : (
+                        <input
+                          id={field.key}
+                          type={inputType}
+                          className="form-input"
+                          placeholder={field.placeholder}
+                          value={values[field.key] ?? ""}
+                          onChange={(e) => handleChange(field.key, e.target.value)}
+                          autoComplete={field.secret ? "off" : undefined}
+                          style={field.type === "password" || field.secret ? { fontFamily: isVisible ? "Inter, sans-serif" : "monospace" } : {}}
+                        />
+                      )}
+
+                      {field.key === "zalo_access_token" && (
+                        <p style={{ fontSize: "0.75rem", color: "var(--warning)", marginTop: "4px" }}>
+                          ⚠️ Access Token có thời hạn. Xem hướng dẫn tại{" "}
+                          <a href="https://developers.zalo.me/docs/official-account" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
+                            Zalo Developers Docs ↗
+                          </a>
+                        </p>
+                      )}
+                      {field.key === "map_embed_url" && (
+                        <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                          ℹ️ Lấy link từ Google Maps → Chia sẻ → Nhúng bản đồ → Sao chép URL trong thẻ src.
+                        </p>
                       )}
                     </div>
+                  );
+                })}
 
-                    {field.type === "textarea" ? (
-                      <textarea
-                        id={field.key}
-                        className="form-textarea"
-                        placeholder={field.placeholder}
-                        value={values[field.key] ?? ""}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
-                        rows={3}
-                      />
-                    ) : (
-                      <input
-                        id={field.key}
-                        type={inputType}
-                        className="form-input"
-                        placeholder={field.placeholder}
-                        value={values[field.key] ?? ""}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
-                        autoComplete={field.secret ? "off" : undefined}
-                        style={field.type === "password" || field.secret ? { fontFamily: isVisible ? "Inter, sans-serif" : "monospace" } : {}}
-                      />
-                    )}
-
-                    {field.key === "zalo_access_token" && (
-                      <p style={{ fontSize: "0.75rem", color: "var(--warning)", marginTop: "4px" }}>
-                        ⚠️ Access Token có thời hạn. Xem hướng dẫn tại{" "}
-                        <a href="https://developers.zalo.me/docs/official-account" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
-                          Zalo Developers Docs ↗
-                        </a>
-                      </p>
-                    )}
-                    {field.key === "map_embed_url" && (
-                      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                        ℹ️ Lấy link từ Google Maps → Chia sẻ → Nhúng bản đồ → Sao chép URL trong thẻ src.
-                      </p>
-                    )}
+                {/* Preview bản đồ nếu có */}
+                {activeGroup.id === "contact" && values["map_embed_url"] && (
+                  <div style={{ marginTop: "16px" }}>
+                    <div className="form-label" style={{ marginBottom: "8px" }}>🗺️ Xem trước bản đồ</div>
+                    <iframe
+                      src={values["map_embed_url"]}
+                      width="100%"
+                      height="280"
+                      style={{ border: "none", borderRadius: "var(--radius)", display: "block" }}
+                      allowFullScreen
+                      loading="lazy"
+                      title="Google Maps Preview"
+                    />
                   </div>
-                );
-              })}
-
-              {/* Preview bản đồ nếu có */}
-              {activeGroup.id === "contact" && values["map_embed_url"] && (
-                <div style={{ marginTop: "16px" }}>
-                  <div className="form-label" style={{ marginBottom: "8px" }}>🗺️ Xem trước bản đồ</div>
-                  <iframe
-                    src={values["map_embed_url"]}
-                    width="100%"
-                    height="280"
-                    style={{ border: "none", borderRadius: "var(--radius)", display: "block" }}
-                    allowFullScreen
-                    loading="lazy"
-                    title="Google Maps Preview"
-                  />
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

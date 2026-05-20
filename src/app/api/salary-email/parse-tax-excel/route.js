@@ -98,6 +98,7 @@ export async function POST(req) {
     const idxGiamTru = findIdx(headerRow, ["giam tru"]);
     const idxTNTT = findIdx(headerRow, ["thu nhap tinh thue", "tntt"]);
     const idxThue = findIdx(headerRow, ["thue tncn", "thue phai nop"]);
+    const idxZalo = findIdx(headerRow, ["zalo id", "zalo_id", "zaloid", "zalo userid", "zalo user id", "id zalo", "zalo"]);
 
     let idxEmail = findIdx(headerRow, ["email", "dia chi mail", "dia chi email"]);
     if (idxEmail === -1) idxEmail = autoDetectEmailCol(dataRows, idxThue > 0 ? idxThue + 1 : 0);
@@ -136,6 +137,7 @@ export async function POST(req) {
       records.push({
         phong: toStr(row[0]),
         tenNhanVien: name,
+        zaloUserId: idxZalo !== -1 ? toStr(row[idxZalo]) : undefined,
         soTK: toStr(idxSoTK !== -1 ? row[idxSoTK] : ""),
         email, khoans, thang,
         cong: toNum(idxCong !== -1 ? row[idxCong] : undefined),
