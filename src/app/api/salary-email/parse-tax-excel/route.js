@@ -5,6 +5,8 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 
+export const dynamic = "force-dynamic";
+
 function toNum(v) {
   if (v === null || v === undefined || v === "") return 0;
   const n = typeof v === "number" ? v : parseFloat(String(v).replace(/[^\d.-]/g, ""));

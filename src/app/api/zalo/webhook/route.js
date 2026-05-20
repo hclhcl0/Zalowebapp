@@ -13,6 +13,8 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 import { sendTextMessage } from "@/lib/zalo";
 import crypto from "crypto";
 

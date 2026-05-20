@@ -5,6 +5,8 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 
+export const dynamic = "force-dynamic";
+
 function readVal(v) {
   if (v === null || v === undefined) return 0;
   if (typeof v === "number") return v;

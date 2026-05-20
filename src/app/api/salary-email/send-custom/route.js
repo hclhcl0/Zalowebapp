@@ -9,6 +9,8 @@ import { generateCustomZaloMessage } from "@/lib/zaloMessageTemplates";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 
+export const dynamic = "force-dynamic";
+
 function enc(controller, data) {
   controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`));
 }

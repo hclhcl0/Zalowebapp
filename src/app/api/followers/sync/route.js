@@ -6,6 +6,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getFollowers, getUserProfile } from "@/lib/zalo";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   try {
     // 1. Gọi Zalo OA API lấy danh sách ID người quan tâm (Phân trang tối đa 50 người/lượt)
