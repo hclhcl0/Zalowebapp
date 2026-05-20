@@ -17,19 +17,26 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      username,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        username,
+        password,
+        redirect: false,
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (result?.error) {
-      setError("Tên đăng nhập hoặc mật khẩu không đúng.");
-    } else {
-      router.push("/");
-      router.refresh();
+      if (result?.error) {
+        setError("Tên đăng nhập hoặc mật khẩu không đúng.");
+      } else if (result?.status === 200 || result?.ok) {
+        router.push("/");
+        router.refresh();
+      } else {
+        setError("Đăng nhập thất bại. Trạng thái: " + (result?.status || "Không xác định"));
+      }
+    } catch (err) {
+      setLoading(false);
+      setError("Lỗi kết nối: " + (err.message || "Không thể kết nối đến máy chủ"));
     }
   }
 
