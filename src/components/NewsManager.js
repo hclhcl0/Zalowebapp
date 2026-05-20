@@ -12,6 +12,7 @@ export default function NewsManager({ category, title, description }) {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [currentArticle, setCurrentArticle] = useState(null); // null if creating, article object if editing
+  const [syncing, setSyncing] = useState(false);
 
   // Form states
   const [formTitle, setFormTitle] = useState("");
@@ -226,6 +227,32 @@ export default function NewsManager({ category, title, description }) {
     }
   };
 
+  // Sync articles from Zalo OA
+  const handleSyncZalo = async () => {
+    if (!confirm("Bạn có chắc chắn muốn đồng bộ toàn bộ bài viết từ Zalo OA về database không? Quá trình này sẽ mất một vài giây.")) {
+      return;
+    }
+
+    setErrorMsg("");
+    setSuccessMsg("");
+    setSyncing(true);
+
+    try {
+      const res = await fetch("/api/news/sync", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Không thể đồng bộ bài viết từ Zalo OA");
+      
+      setSuccessMsg(`Đồng bộ thành công! Đã thêm mới ${data.createdCount} bài viết và cập nhật ${data.updatedCount} bài viết từ Zalo OA.`);
+      fetchArticles();
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div>
       {/* Page Header */}
@@ -235,9 +262,22 @@ export default function NewsManager({ category, title, description }) {
           <p className="page-desc">{description}</p>
         </div>
         {!isEditing && (
-          <button className="btn btn-primary" onClick={handleOpenCreate}>
-            ➕ Soạn tin mới
-          </button>
+          <div style={{ display: "flex", gap: "10px" }}>
+            {!isStaff && (
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={handleSyncZalo}
+                disabled={syncing}
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+              >
+                {syncing ? "⏳ Đang đồng bộ..." : "🔁 Đồng bộ từ Zalo"}
+              </button>
+            )}
+            <button className="btn btn-primary" onClick={handleOpenCreate}>
+              ➕ Soạn tin mới
+            </button>
+          </div>
         )}
       </div>
 
