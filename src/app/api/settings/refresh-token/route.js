@@ -5,6 +5,8 @@
 import { NextResponse } from "next/server";
 import { refreshZaloAccessToken } from "@/lib/zalo";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   try {
     const data = await refreshZaloAccessToken();
