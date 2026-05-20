@@ -11,6 +11,7 @@ const menuGroups = [
       { icon: "📊", label: "Dashboard", href: "/" },
       { icon: "👤", label: "Người quan tâm Zalo", href: "/followers" },
       { icon: "📣", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
+      { icon: "📧", label: "Gửi Email Báo Lương", href: "/salary-email" },
     ],
   },
 
