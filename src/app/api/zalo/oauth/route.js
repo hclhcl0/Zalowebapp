@@ -9,6 +9,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 
+export const dynamic = "force-dynamic";
+
 // Tạo code_verifier ngẫu nhiên (43-128 ký tự, URL-safe)
 function generateCodeVerifier() {
   return crypto.randomBytes(64).toString("base64url").slice(0, 128);
