@@ -53,7 +53,7 @@ export const authOptions = {
     strategy: "jwt",
     maxAge: 8 * 60 * 60, // 8 giờ
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "fallback_nextauth_secret_key_cdc_danang_2026_change_in_production",
 };
 
 const handler = NextAuth(authOptions);
