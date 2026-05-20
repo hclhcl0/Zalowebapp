@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { createArticleToZalo } from "@/lib/zalo";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request, { params }) {
   try {
     const session = await getServerSession(authOptions);

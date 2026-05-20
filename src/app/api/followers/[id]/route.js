@@ -7,6 +7,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserProfile } from "@/lib/zalo";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request, { params }) {
   try {
     const resolvedParams = await params;
