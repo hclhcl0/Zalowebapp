@@ -52,6 +52,9 @@ export async function POST() {
       if (!rawUserId) continue;
       const zaloUserId = String(rawUserId);
 
+      // Thêm độ trễ 150ms giữa các yêu cầu để tránh bị Zalo API đánh giá spam (Rate limit)
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
       // Lấy profile chi tiết từ Zalo
       let displayName = "Người dùng Zalo";
       let avatarUrl = "";
@@ -74,9 +77,11 @@ export async function POST() {
           if (rawPhone !== undefined && rawPhone !== null) {
             phone = String(rawPhone);
           }
+        } else {
+          console.warn(`[Zalo Sync] Lỗi API khi lấy profile user ${zaloUserId}: Code ${profileRes.error} - ${profileRes.message}`);
         }
       } catch (err) {
-        console.warn(`Không thể lấy chi tiết profile cho user ${zaloUserId}:`, err.message);
+        console.warn(`[Zalo Sync] Không thể kết nối lấy profile cho user ${zaloUserId}:`, err.message);
       }
 
       // Hàm chuẩn hóa số điện thoại
