@@ -260,7 +260,7 @@ export default function BroadcastPage() {
 
 
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "24px", alignItems: "flex-start" }}>
+      <div className="dashboard-grid" style={{ alignItems: "flex-start", gap: "24px" }}>
 
         {/* === LEFT: Compose Form === */}
         <form onSubmit={handleSend}>
