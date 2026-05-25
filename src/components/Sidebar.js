@@ -158,7 +158,7 @@ export default function Sidebar() {
         setDeferredPrompt(null);
       }
     } else {
-      alert("Trình duyệt của bạn không hỗ trợ cài đặt tự động hoặc ứng dụng đã được cài đặt.");
+      alert("Tính năng cài đặt tự động đang bị khóa bởi trình duyệt (thường do chưa dùng đường dẫn bảo mật HTTPS hoặc đang dùng trình duyệt nhúng của Zalo).\n\nTuy nhiên, bạn có thể TỰ CÀI ĐẶT bằng cách:\n1. Mở trang web này bằng Chrome/Safari.\n2. Bấm vào biểu tượng 3 chấm (⋮) ở góc trên bên phải.\n3. Chọn 'Thêm vào màn hình chính' (Add to Home screen) hoặc 'Cài đặt ứng dụng' (Install app).");
     }
   };
 
@@ -225,7 +225,7 @@ export default function Sidebar() {
           ))}
           
         {/* PWA Install Button */}
-        {!isStandalone && (deferredPrompt || isIOS) && (
+        {!isStandalone && (
           <div className="menu-group" style={{ marginTop: "1rem" }}>
             <button 
               onClick={handleInstallClick}
