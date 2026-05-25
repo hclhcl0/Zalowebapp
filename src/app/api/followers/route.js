@@ -13,6 +13,10 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("query") || "";
     const userType = searchParams.get("userType") || "all";
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+
+    const skip = (page - 1) * limit;
 
     const whereClause = {
       AND: [
@@ -31,6 +35,9 @@ export async function GET(request) {
       whereClause.AND.push({ userType });
     }
 
+    // Lấy tổng số lượng để tính phân trang
+    const total = await prisma.follower.count({ where: whereClause });
+
     const followers = await prisma.follower.findMany({
       where: whereClause,
       include: {
@@ -38,9 +45,19 @@ export async function GET(request) {
         testResults: true,
       },
       orderBy: { followedAt: "desc" },
+      skip,
+      take: limit,
     });
 
-    return NextResponse.json({ data: followers });
+    return NextResponse.json({
+      data: followers,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

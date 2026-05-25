@@ -9,6 +9,12 @@ export default function FollowersPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [userTypeFilter, setUserTypeFilter] = useState("all");
+
+  // Phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   
   // Modal states
   const [selectedFollower, setSelectedFollower] = useState(null);
@@ -47,16 +53,25 @@ export default function FollowersPage() {
   const fetchFollowers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/followers?query=${encodeURIComponent(searchQuery)}&userType=${userTypeFilter}`);
+      const res = await fetch(`/api/followers?query=${encodeURIComponent(searchQuery)}&userType=${userTypeFilter}&page=${currentPage}&limit=${pageSize}`);
       const json = await res.json();
       if (json.data) {
         setFollowers(json.data);
+        if (json.pagination) {
+          setTotalPages(json.pagination.totalPages || 1);
+          setTotalItems(json.pagination.total || 0);
+        }
       }
     } catch (err) {
       console.error("Error fetching followers:", err);
     } finally {
       setLoading(false);
     }
+  }, [searchQuery, userTypeFilter, currentPage, pageSize]);
+
+  // Reset về trang 1 khi thay đổi bộ lọc hoặc tìm kiếm
+  useEffect(() => {
+    setCurrentPage(1);
   }, [searchQuery, userTypeFilter]);
 
   useEffect(() => {
@@ -326,6 +341,93 @@ export default function FollowersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && followers.length > 0 && (
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "16px 24px",
+            borderTop: "1px solid var(--border)",
+            background: "#fafafa",
+            borderBottomLeftRadius: "var(--radius)",
+            borderBottomRightRadius: "var(--radius)",
+            flexWrap: "wrap",
+            gap: "12px"
+          }}>
+            {/* Left Side: Summary info */}
+            <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+              Hiển thị <strong>{followers.length}</strong> trên <strong>{totalItems}</strong> người quan tâm
+            </div>
+
+            {/* Right Side: Page buttons */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {/* Page Size Select */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "12px" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Số dòng:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(parseInt(e.target.value, 10));
+                    setCurrentPage(1);
+                  }}
+                  style={{
+                    padding: "4px 8px",
+                    fontSize: "0.8rem",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    background: "white",
+                    cursor: "pointer"
+                  }}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+
+              {/* Navigation Buttons */}
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1 || loading}
+                style={{ padding: "4px 10px", fontSize: "0.8rem", height: "32px", border: "1px solid var(--border)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+              >
+                ⏮️ Đầu
+              </button>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1 || loading}
+                style={{ padding: "4px 10px", fontSize: "0.8rem", height: "32px", border: "1px solid var(--border)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+              >
+                ◀️ Trước
+              </button>
+
+              <span style={{ fontSize: "0.85rem", color: "var(--text)", fontWeight: 600, padding: "0 8px" }}>
+                Trang {currentPage} / {totalPages}
+              </span>
+
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages || loading}
+                style={{ padding: "4px 10px", fontSize: "0.8rem", height: "32px", border: "1px solid var(--border)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+              >
+                Sau ▶️
+              </button>
+              <button
+                className="btn btn-outline btn-sm"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages || loading}
+                style={{ padding: "4px 10px", fontSize: "0.8rem", height: "32px", border: "1px solid var(--border)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
+              >
+                Cuối ⏭️
+              </button>
+            </div>
           </div>
         )}
       </div>
