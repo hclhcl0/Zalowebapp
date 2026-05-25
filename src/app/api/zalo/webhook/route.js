@@ -109,6 +109,28 @@ async function handleTextMessage(userId, text) {
   if (!text) return;
   const lowerText = text.toLowerCase().trim();
 
+  // Đảm bảo người dùng có trong cơ sở dữ liệu (phòng trường hợp lỗi lúc Follow)
+  try {
+    const { getUserProfile } = await import("@/lib/zalo");
+    const profile = await getUserProfile(userId);
+    if (profile && !profile.error && profile.data) {
+      await prisma.follower.upsert({
+        where: { zaloUserId: userId },
+        update: { 
+          displayName: profile.data.display_name,
+          avatarUrl: profile.data.avatar,
+        },
+        create: {
+          zaloUserId: userId,
+          displayName: profile.data.display_name || "Người dùng Zalo",
+          avatarUrl: profile.data.avatar || null,
+        },
+      });
+    }
+  } catch (e) {
+    console.error("[ZALO WEBHOOK] Lỗi cập nhật profile khi nhận tin nhắn:", e);
+  }
+
   // Từ khoá kích hoạt chatbot tự động
   if (lowerText.includes("đặt lịch") || lowerText.includes("tiêm chủng")) {
     await sendTextMessage(
@@ -141,14 +163,32 @@ async function handleTextMessage(userId, text) {
 // Xử lý: Người dùng mới theo dõi OA
 // ============================================================
 async function handleFollow(userId, data) {
+  // Zalo webhook đôi khi không có sẵn display_name trong payload, cần gọi API lấy profile
+  let displayName = data.follower?.display_name || "Người dùng Zalo";
+  let avatarUrl = data.follower?.avatar || null;
+
+  try {
+    const { getUserProfile } = await import("@/lib/zalo");
+    const profile = await getUserProfile(userId);
+    if (profile && !profile.error && profile.data) {
+      displayName = profile.data.display_name || displayName;
+      avatarUrl = profile.data.avatar || avatarUrl;
+    }
+  } catch (err) {
+    console.error("[ZALO WEBHOOK] Error fetching user profile:", err);
+  }
+
   // Lưu hoặc cập nhật follower vào database
   await prisma.follower.upsert({
     where: { zaloUserId: userId },
-    update: { displayName: data.follower?.display_name || null },
+    update: { 
+      displayName: displayName,
+      ...(avatarUrl && { avatarUrl })
+    },
     create: {
       zaloUserId: userId,
-      displayName: data.follower?.display_name || null,
-      avatarUrl: data.follower?.avatar || null,
+      displayName: displayName,
+      avatarUrl: avatarUrl,
     },
   });
 
