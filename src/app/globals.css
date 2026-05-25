@@ -357,6 +357,11 @@ a { text-decoration: none; color: inherit; }
   border-radius: var(--radius);
   border: 1px solid var(--border);
 }
+@media (min-width: 1024px) {
+  .table-wrapper {
+    overflow: visible !important;
+  }
+}
 
 table {
   width: 100%;

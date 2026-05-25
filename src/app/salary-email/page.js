@@ -58,6 +58,20 @@ const normalizeName = (n) => {
 
   return (
     <div ref={containerRef} style={{ position: "relative", width: "100%", minWidth: "150px" }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .zalo-select-option {
+          transition: background-color 0.1s;
+        }
+        .zalo-select-option:hover {
+          background-color: var(--bg) !important;
+        }
+        .zalo-select-option.active:hover {
+          background-color: var(--primary-light) !important;
+        }
+        .zalo-select-danger-option:hover {
+          background-color: #fef2f2 !important;
+        }
+      `}} />
       <button
         onClick={() => {
           setIsOpen(!isOpen);
@@ -130,6 +144,7 @@ const normalizeName = (n) => {
                 setIsOpen(false);
               }}
               type="button"
+              className="zalo-select-option zalo-select-danger-option"
               style={{
                 width: "100%",
                 padding: "6px 8px",
@@ -143,8 +158,6 @@ const normalizeName = (n) => {
                 fontWeight: 600,
                 lineHeight: "1.5"
               }}
-              onMouseEnter={(e) => e.target.style.background = "#fef2f2"}
-              onMouseLeave={(e) => e.target.style.background = "transparent"}
             >
               -- Chưa liên kết --
             </button>
@@ -161,6 +174,7 @@ const normalizeName = (n) => {
                     setIsOpen(false);
                   }}
                   type="button"
+                  className={`zalo-select-option ${f.zaloUserId === value ? "active" : ""}`}
                   style={{
                     width: "100%",
                     padding: "6px 8px",
@@ -175,12 +189,6 @@ const normalizeName = (n) => {
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
                     lineHeight: "1.5"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (f.zaloUserId !== value) e.target.style.background = "var(--bg)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (f.zaloUserId !== value) e.target.style.background = "transparent";
                   }}
                 >
                   {f.displayName} {f.phone ? `(${f.phone})` : ""}
@@ -412,10 +420,26 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
   const [prog, setProg] = useState({ sent: 0, total: 0, success: 0, failed: 0, results: [] });
   const [previewRecord, setPreviewRecord] = useState(null);
 
-  const handleLinkZalo = (recordId, zaloUserId) => {
+  const handleLinkZalo = async (recordId, zaloUserId, record) => {
     setRecords((prev) =>
       prev.map((r) => (r.id === recordId ? { ...r, zaloUserId } : r))
     );
+    if (zaloUserId && record) {
+      const rawPhone = record.phone || record.sdt;
+      const phoneVal = cleanPhone(rawPhone);
+      if (phoneVal) {
+        try {
+          await fetch("/api/followers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ zaloUserId, phone: phoneVal })
+          });
+          console.log(`Saved phone ${phoneVal} for Zalo User ID ${zaloUserId}`);
+        } catch (err) {
+          console.error("Failed to save follower phone link:", err);
+        }
+      }
+    }
   };
 
   const processFile = useCallback(async (file) => {
@@ -442,7 +466,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               }
               if (!matchedFollower && (r.phone || r.sdt)) {
                 const cleanedR = cleanPhone(r.phone || r.sdt);
-                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone) === cleanedR);
               }
               if (!matchedFollower) {
                 const normR = normalizeName(r.tenNhanVien);
@@ -771,7 +795,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
                           <ZaloLinkSelect
                             value={r.zaloUserId || ""}
                             followers={followers}
-                            onChange={(val) => handleLinkZalo(r.id, val)}
+                            onChange={(val) => handleLinkZalo(r.id, val, r)}
                           />
                         </td>
                         <td style={{ textAlign: "right", color: "var(--text-muted)" }}>{r.heSoLieuT1}</td>
@@ -1185,10 +1209,32 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
   const [prog, setProg] = useState({ sent: 0, total: 0, success: 0, failed: 0, results: [] });
   const [previewRecord, setPreviewRecord] = useState(null);
 
-  const handleLinkZalo = (recordId, zaloUserId) => {
+  const handleLinkZalo = async (recordId, zaloUserId, record) => {
     setRecords((prev) =>
       prev.map((r) => (r.id === recordId ? { ...r, zaloUserId } : r))
     );
+    if (zaloUserId && record) {
+      let rawPhone = "";
+      if (columnMapping && columnMapping.phoneCol) {
+        rawPhone = record.data?.[columnMapping.phoneCol] || record[columnMapping.phoneCol] || "";
+      }
+      if (!rawPhone && record.phone) {
+        rawPhone = record.phone;
+      }
+      const phoneVal = cleanPhone(rawPhone);
+      if (phoneVal) {
+        try {
+          await fetch("/api/followers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ zaloUserId, phone: phoneVal })
+          });
+          console.log(`Saved phone ${phoneVal} for Zalo User ID ${zaloUserId}`);
+        } catch (err) {
+          console.error("Failed to save follower phone link:", err);
+        }
+      }
+    }
   };
 
   const processFile = useCallback(async (file) => {
@@ -1278,7 +1324,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
               }
               if (!matchedFollower && columnMapping.phoneCol && r[columnMapping.phoneCol]) {
                 const cleanedR = cleanPhone(r[columnMapping.phoneCol]);
-                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone) === cleanedR);
               }
               if (!matchedFollower) {
                 const nameVal = r[columnMapping.nameCol];
@@ -1807,7 +1853,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                           <ZaloLinkSelect
                             value={r.zaloUserId || ""}
                             followers={followers}
-                            onChange={(val) => handleLinkZalo(r.id, val)}
+                            onChange={(val) => handleLinkZalo(r.id, val, r)}
                           />
                         </td>
                         {columnMapping.totalCol && <td style={{ textAlign: "right", fontWeight: 700, color: "var(--primary)" }}>{fmt(r.data[columnMapping.totalCol])}</td>}
@@ -2193,10 +2239,26 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
   const [prog, setProg] = useState({ sent: 0, total: 0, success: 0, failed: 0, results: [] });
   const [previewRecord, setPreviewRecord] = useState(null);
 
-  const handleLinkZalo = (recordId, zaloUserId) => {
+  const handleLinkZalo = async (recordId, zaloUserId, record) => {
     setRecords((prev) =>
       prev.map((r) => (r.id === recordId ? { ...r, zaloUserId } : r))
     );
+    if (zaloUserId && record) {
+      const rawPhone = record.phone || record.sdt;
+      const phoneVal = cleanPhone(rawPhone);
+      if (phoneVal) {
+        try {
+          await fetch("/api/followers", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ zaloUserId, phone: phoneVal })
+          });
+          console.log(`Saved phone ${phoneVal} for Zalo User ID ${zaloUserId}`);
+        } catch (err) {
+          console.error("Failed to save follower phone link:", err);
+        }
+      }
+    }
   };
 
   const processFile = useCallback(async (file) => {
@@ -2229,7 +2291,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               }
               if (!matchedFollower && (r.phone || r.sdt)) {
                 const cleanedR = cleanPhone(r.phone || r.sdt);
-                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone) === cleanedR);
               }
               if (!matchedFollower) {
                 const normR = normalizeName(r.tenNhanVien);
@@ -2560,7 +2622,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
                           <ZaloLinkSelect
                             value={r.zaloUserId || ""}
                             followers={followers}
-                            onChange={(val) => handleLinkZalo(r.id, val)}
+                            onChange={(val) => handleLinkZalo(r.id, val, r)}
                           />
                         </td>
                         <td style={{ textAlign: "right", fontFamily: "monospace", color: "var(--text-muted)" }}>{fmt(r.cong)}</td>

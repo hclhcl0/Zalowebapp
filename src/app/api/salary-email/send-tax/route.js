@@ -29,13 +29,21 @@ function normalizeName(n) {
 }
 
 async function findZaloUserId(record) {
-  if (record.zaloUserId) return record.zaloUserId;
+  // Nếu frontend truyền zaloUserId (kể cả chuỗi rỗng khi unlinked), sử dụng nó trực tiếp và không tự động khớp lại
+  if (record.zaloUserId !== undefined) {
+    return record.zaloUserId || null;
+  }
 
-  // 1. Tìm theo số điện thoại
+  // 1. Tìm theo số điện thoại dự phòng
   const phone = cleanPhone(record.phone || record.sdt);
   if (phone) {
+    const possibleFormats = [phone];
+    if (phone.startsWith("0")) {
+      possibleFormats.push("84" + phone.slice(1));
+      possibleFormats.push("+84" + phone.slice(1));
+    }
     const follower = await prisma.follower.findFirst({
-      where: { phone: { contains: phone } }
+      where: { phone: { in: possibleFormats } }
     });
     if (follower) return follower.zaloUserId;
   }
