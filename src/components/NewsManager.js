@@ -250,79 +250,141 @@ export default function NewsManager({ category, title, description }) {
               📭 Chưa có bài viết nào trong mục này. Bấm nút "Soạn tin mới" phía trên để tạo.
             </div>
           ) : (
-            <div className="table-responsive">
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
-                    <th style={{ padding: "12px 8px" }}>Bài viết</th>
-                    <th style={{ padding: "12px 8px", width: "150px" }}>Ngày tạo</th>
-                    <th style={{ padding: "12px 8px", width: "120px" }}>Trạng thái</th>
-                    <th style={{ padding: "12px 8px", width: "200px" }}>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {articles.map((article) => (
-                    <tr key={article.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.2s" }}>
-                      <td style={{ padding: "16px 8px" }}>
-                        <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)", marginBottom: "4px" }}>
+            <div className="news-responsive-container">
+              {/* PC Desktop Table view */}
+              <div className="table-responsive desktop-only">
+                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                      <th style={{ padding: "12px 8px" }}>Bài viết</th>
+                      <th style={{ padding: "12px 8px", width: "150px" }}>Ngày tạo</th>
+                      <th style={{ padding: "12px 8px", width: "120px" }}>Trạng thái</th>
+                      <th style={{ padding: "12px 8px", width: "200px" }}>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {articles.map((article) => (
+                      <tr key={article.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.2s" }}>
+                        <td style={{ padding: "16px 8px" }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)", marginBottom: "4px" }}>
+                            {article.title}
+                          </div>
+                          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "450px", marginBottom: "4px" }}>
+                            {article.summary || (article.content ? article.content.replace(/<[^>]*>/g, '') : '')}
+                          </div>
+                          {article.zaloArticleId && (
+                            <div style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 500, display: "flex", alignItems: "center", gap: "4px" }}>
+                              <span>🔹 Zalo ID: {article.zaloArticleId}</span>
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: "16px 8px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                          {new Date(article.createdAt).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })}
+                        </td>
+                        <td style={{ padding: "16px 8px" }}>
+                          {article.isPublished ? (
+                            <span className="badge badge-approved">Đã xuất bản</span>
+                          ) : (
+                            <span className="badge badge-pending">Bản nháp</span>
+                          )}
+                        </td>
+                        <td style={{ padding: "16px 8px" }}>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => handleOpenEdit(article)} style={{ padding: "4px 8px" }}>
+                              ✏️ Sửa
+                            </button>
+                            
+                            {/* Admin only actions */}
+                            {!isStaff && (
+                              <>
+                                <button
+                                  className={`btn btn-sm ${article.isPublished ? "btn-outline" : "btn-primary"}`}
+                                  onClick={() => handleTogglePublish(article)}
+                                  style={{ padding: "4px 8px", fontSize: "0.75rem" }}
+                                >
+                                  {article.isPublished ? "Hạ nháp" : "Xuất bản"}
+                                </button>
+                                
+                                <button
+                                  className="btn btn-sm"
+                                  onClick={() => handlePublishZalo(article)}
+                                  style={{ padding: "4px 8px", fontSize: "0.75rem", background: "#0068ff", color: "white", border: "none" }}
+                                  disabled={actionLoading}
+                                >
+                                  🚀 Đăng Zalo OA
+                                </button>
+
+                                <button className="btn btn-outline btn-sm" onClick={() => handleDelete(article.id)} style={{ padding: "4px 8px", color: "var(--danger)", borderColor: "var(--danger)" }}>
+                                  🗑️
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className="mobile-card-list mobile-only">
+                {articles.map((article) => (
+                  <div key={article.id} className="mobile-card-item">
+                    <div className="mobile-card-main">
+                      {article.coverUrl ? (
+                        <img 
+                          src={article.coverUrl} 
+                          alt="" 
+                          style={{ width: "44px", height: "44px", borderRadius: "6px", objectFit: "cover", flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div className="mobile-card-avatar" style={{ borderRadius: "6px", background: "var(--primary-light)", color: "var(--primary)" }}>
+                          📰
+                        </div>
+                      )}
+                      <div className="mobile-card-body">
+                        <div className="mobile-card-name" style={{ fontSize: "0.85rem", fontWeight: 600 }}>
                           {article.title}
                         </div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "450px", marginBottom: "4px" }}>
-                          {article.summary || (article.content ? article.content.replace(/<[^>]*>/g, '') : '')}
-                        </div>
-                        {article.zaloArticleId && (
-                          <div style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 500, display: "flex", alignItems: "center", gap: "4px" }}>
-                            <span>🔹 Zalo ID: {article.zaloArticleId}</span>
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: "16px 8px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                        {new Date(article.createdAt).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" })}
-                      </td>
-                      <td style={{ padding: "16px 8px" }}>
-                        {article.isPublished ? (
-                          <span className="badge badge-success">Đã xuất bản</span>
-                        ) : (
-                          <span className="badge badge-pending">Bản nháp</span>
-                        )}
-                      </td>
-                      <td style={{ padding: "16px 8px" }}>
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => handleOpenEdit(article)} style={{ padding: "4px 8px" }}>
-                            ✏️ Sửa
-                          </button>
-                          
-                          {/* Admin only actions */}
-                          {!isStaff && (
-                            <>
-                              <button
-                                className={`btn btn-sm ${article.isPublished ? "btn-outline" : "btn-primary"}`}
-                                onClick={() => handleTogglePublish(article)}
-                                style={{ padding: "4px 8px", fontSize: "0.75rem" }}
-                              >
-                                {article.isPublished ? "Hạ nháp" : "Xuất bản"}
-                              </button>
-                              
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handlePublishZalo(article)}
-                                style={{ padding: "4px 8px", fontSize: "0.75rem", background: "#0068ff", color: "white", border: "none" }}
-                                disabled={actionLoading}
-                              >
-                                🚀 Đăng Zalo OA
-                              </button>
-
-                              <button className="btn btn-outline btn-sm" onClick={() => handleDelete(article.id)} style={{ padding: "4px 8px", color: "var(--danger)", borderColor: "var(--danger)" }}>
-                                🗑️
-                              </button>
-                            </>
+                        <div className="mobile-card-meta">
+                          <span style={{ fontSize: "0.72rem", color: "var(--text-light)" }}>
+                            {new Date(article.createdAt).toLocaleDateString("vi-VN")}
+                          </span>
+                          {article.isPublished ? (
+                            <span className="user-badge user-badge-citizen" style={{ fontSize: "0.6rem", padding: "1px 5px" }}>Xuất bản</span>
+                          ) : (
+                            <span className="user-badge" style={{ fontSize: "0.6rem", padding: "1px 5px", background: "#fef3c7", color: "#d97706", border: "1px solid #fde68a" }}>Nháp</span>
+                          )}
+                          {article.zaloArticleId && (
+                            <span style={{ fontSize: "0.68rem", color: "var(--primary)", fontWeight: 500 }}>
+                              Zalo
+                            </span>
                           )}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                    <div className="mobile-card-actions">
+                      <button className="mobile-card-action-btn" onClick={() => handleOpenEdit(article)}>
+                        ✏️ Sửa
+                      </button>
+                      {!isStaff && (
+                        <>
+                          <button className="mobile-card-action-btn" onClick={() => handleTogglePublish(article)}>
+                            {article.isPublished ? "📁 Nháp" : "🌐 Đăng"}
+                          </button>
+                          <button className="mobile-card-action-btn primary" onClick={() => handlePublishZalo(article)}>
+                            🚀 Zalo
+                          </button>
+                          <button className="mobile-card-action-btn" onClick={() => handleDelete(article.id)} style={{ color: "var(--danger)", maxWidth: "44px" }}>
+                            🗑️
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

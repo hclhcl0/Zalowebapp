@@ -132,6 +132,48 @@ export default function UserManagementPage() {
 
   return (
     <div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .user-modal-box {
+          background: white;
+          padding: 30px;
+          border-radius: var(--radius-lg);
+          width: 90%;
+          max-width: 450px;
+          box-shadow: 0 20px 50px rgba(15, 23, 42, 0.15);
+          animation: scaleIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes scaleIn {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+          .user-modal-overlay {
+            align-items: flex-end !important;
+          }
+          .user-modal-box {
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+            padding: 24px 24px 32px 24px !important;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.15) !important;
+            animation: slideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1) !important;
+          }
+          @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
+          .user-modal-box::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin: -10px auto 20px auto;
+          }
+        }
+      `}} />
+
       {/* Header */}
       <div className="page-header">
         <div>
@@ -163,88 +205,158 @@ export default function UserManagementPage() {
             Đang tải danh sách tài khoản...
           </div>
         ) : (
-          <div className="table-responsive">
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
-                  <th style={{ padding: "12px 8px" }}>Họ và tên</th>
-                  <th style={{ padding: "12px 8px" }}>Tên đăng nhập</th>
-                  <th style={{ padding: "12px 8px", width: "150px" }}>Vai trò</th>
-                  <th style={{ padding: "12px 8px", width: "180px" }}>Ngày tạo</th>
-                  <th style={{ padding: "12px 8px", width: "180px" }}>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => {
-                  const isSelf = session?.user?.email === u.username;
-                  return (
-                    <tr key={u.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.2s" }}>
-                      <td style={{ padding: "16px 8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>
-                            {u.fullName}
-                          </span>
+          <div className="users-responsive-container">
+            {/* PC Desktop Table View */}
+            <div className="table-responsive desktop-only">
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                    <th style={{ padding: "12px 8px" }}>Họ và tên</th>
+                    <th style={{ padding: "12px 8px" }}>Tên đăng nhập</th>
+                    <th style={{ padding: "12px 8px", width: "150px" }}>Vai trò</th>
+                    <th style={{ padding: "12px 8px", width: "180px" }}>Ngày tạo</th>
+                    <th style={{ padding: "12px 8px", width: "180px" }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => {
+                    const isSelf = session?.user?.email === u.username;
+                    return (
+                      <tr key={u.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.2s" }}>
+                        <td style={{ padding: "16px 8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>
+                              {u.fullName}
+                            </span>
+                            {isSelf && (
+                              <span style={{ fontSize: "0.75rem", background: "var(--primary-light)", color: "var(--primary)", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>
+                                Bạn
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ padding: "16px 8px", fontSize: "0.9rem", color: "var(--text)" }}>
+                          <code>{u.username}</code>
+                        </td>
+                        <td style={{ padding: "16px 8px" }}>
+                          {u.role === "admin" ? (
+                            <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", backgroundColor: "#f3e8ff", color: "#6b21a8", fontSize: "0.75rem", fontWeight: "bold" }}>
+                              ⚙️ Quản trị viên
+                            </span>
+                          ) : (
+                            <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", backgroundColor: "#e0f2fe", color: "#0369a1", fontSize: "0.75rem", fontWeight: "bold" }}>
+                              👥 Nhân viên
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: "16px 8px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                          {new Date(u.createdAt).toLocaleDateString("vi-VN")}
+                        </td>
+                        <td style={{ padding: "16px 8px" }}>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => handleOpenEdit(u)}>
+                              ✏️ Sửa
+                            </button>
+                            {!isSelf && (
+                              <button
+                                className="btn btn-outline btn-sm"
+                                onClick={() => handleDelete(u)}
+                                style={{ color: "var(--danger)", borderColor: "var(--border)" }}
+                              >
+                                🗑️ Xóa
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="mobile-card-list mobile-only">
+              {users.map((u) => {
+                const isSelf = session?.user?.email === u.username;
+                const initials = u.fullName
+                  ?.split(" ")
+                  .slice(-2)
+                  .map((w) => w[0])
+                  .join("") || "A";
+
+                return (
+                  <div key={u.id} className="mobile-card-item">
+                    <div className="mobile-card-main">
+                      <div 
+                        className="mobile-card-avatar" 
+                        style={{ 
+                          background: u.role === "admin" 
+                            ? "linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)" 
+                            : "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)",
+                          color: "white",
+                          fontSize: "0.95rem",
+                          fontWeight: "700",
+                          borderRadius: "50%",
+                          width: "40px",
+                          height: "40px"
+                        }}
+                      >
+                        {initials.toUpperCase()}
+                      </div>
+                      <div className="mobile-card-body">
+                        <div className="mobile-card-name" style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.88rem" }}>
+                          <span>{u.fullName}</span>
                           {isSelf && (
-                            <span style={{ fontSize: "0.75rem", background: "var(--primary-light)", color: "var(--primary)", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>
+                            <span style={{ fontSize: "0.68rem", background: "var(--primary-light)", color: "var(--primary)", padding: "1px 4px", borderRadius: "3px", fontWeight: "bold" }}>
                               Bạn
                             </span>
                           )}
                         </div>
-                      </td>
-                      <td style={{ padding: "16px 8px", fontSize: "0.9rem", color: "var(--text)" }}>
-                        <code>{u.username}</code>
-                      </td>
-                      <td style={{ padding: "16px 8px" }}>
-                        {u.role === "admin" ? (
-                          <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", backgroundColor: "#f3e8ff", color: "#6b21a8", fontSize: "0.75rem", fontWeight: "bold" }}>
-                            ⚙️ Quản trị viên
-                          </span>
-                        ) : (
-                          <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", backgroundColor: "#e0f2fe", color: "#0369a1", fontSize: "0.75rem", fontWeight: "bold" }}>
-                            👥 Nhân viên
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: "16px 8px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                        {new Date(u.createdAt).toLocaleDateString("vi-VN")}
-                      </td>
-                      <td style={{ padding: "16px 8px" }}>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => handleOpenEdit(u)}>
-                            ✏️ Sửa
-                          </button>
-                          {!isSelf && (
-                            <button
-                              className="btn btn-outline btn-sm"
-                              onClick={() => handleDelete(u)}
-                              style={{ color: "var(--error)", borderColor: "var(--error-light)" }}
-                            >
-                              🗑️ Xóa
-                            </button>
+                        <div className="mobile-card-meta">
+                          <code style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>{u.username}</code>
+                          {u.role === "admin" ? (
+                            <span className="user-badge" style={{ background: "#f3e8ff", color: "#6b21a8", border: "1px solid #d8b4fe", fontSize: "0.65rem", padding: "1px 5px" }}>Admin</span>
+                          ) : (
+                            <span className="user-badge user-badge-staff" style={{ fontSize: "0.65rem", padding: "1px 5px" }}>Nhân viên</span>
                           )}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                    <div className="mobile-card-actions">
+                      <button className="mobile-card-action-btn" onClick={() => handleOpenEdit(u)}>
+                        ✏️ Chỉnh sửa
+                      </button>
+                      {!isSelf && (
+                        <button className="mobile-card-action-btn" onClick={() => handleDelete(u)} style={{ color: "var(--danger)" }}>
+                          🗑️ Xóa tài khoản
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 1000, backdropFilter: "blur(4px)"
-        }}>
-          <div style={{
-            background: "white", padding: "30px", borderRadius: "var(--radius)",
-            width: "100%", maxWidth: "450px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)"
-          }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "20px" }}>
+        <div 
+          className="modal-overlay user-modal-overlay"
+          style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.5)", display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000, backdropFilter: "blur(4px)"
+          }}
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div 
+            className="user-modal-box"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "20px", color: "var(--text)" }}>
               {editingUser ? "✏️ Cập nhật tài khoản" : "👥 Tạo tài khoản mới"}
             </h3>
 
@@ -309,7 +421,8 @@ export default function UserManagementPage() {
                 <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)} disabled={actionLoading}>
                   Hủy
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={actionLoading}>
+                <button type="submit" className="btn btn-primary" disabled={actionLoading} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                  {actionLoading && <span className="spinner" style={{ width: 12, height: 12 }} />}
                   {actionLoading ? "Đang xử lý..." : "Lưu tài khoản"}
                 </button>
               </div>

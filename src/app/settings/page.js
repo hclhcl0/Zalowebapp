@@ -276,7 +276,6 @@ function SettingsPageContent() {
     }
   }, [searchParams]);
 
-
   // Tạo URL OAuth để redirect Admin sang Zalo
   async function handleGenerateOAuthUrl() {
     setOauthLoading(true);
@@ -366,6 +365,56 @@ function SettingsPageContent() {
 
   return (
     <div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .settings-horizontal-menu {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .settings-vertical-menu {
+            display: none !important;
+          }
+          .settings-horizontal-menu {
+            display: flex !important;
+            overflow-x: auto;
+            gap: 6px;
+            padding: 6px 8px;
+            margin-bottom: 16px;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            box-sizing: border-box;
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+          }
+          .settings-horizontal-menu::-webkit-scrollbar {
+            display: none;
+          }
+          .settings-horizontal-tab-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            white-space: nowrap;
+            transition: all 0.15s;
+          }
+          .settings-horizontal-tab-pill.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+          }
+          .settings-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}} />
+
       {/* Header */}
       <div className="page-header">
         <div>
@@ -386,8 +435,8 @@ function SettingsPageContent() {
       </div>
 
       <div className="settings-grid">
-        {/* Tab menu dọc */}
-        <div className="card" style={{ padding: "8px" }}>
+        {/* PC Tab menu dọc */}
+        <div className="card settings-vertical-menu" style={{ padding: "8px" }}>
           {SETTING_GROUPS.map((group) => (
             <button
               key={group.id}
@@ -405,6 +454,20 @@ function SettingsPageContent() {
                 fontFamily: "Inter, sans-serif",
                 transition: "all 0.15s",
               }}
+            >
+              <span>{group.icon}</span>
+              {group.title.split(" ").slice(0, 3).join(" ")}
+            </button>
+          ))}
+        </div>
+
+        {/* Mobile Horizontal scroll tab menu */}
+        <div className="settings-horizontal-menu">
+          {SETTING_GROUPS.map((group) => (
+            <button
+              key={group.id}
+              onClick={() => setActiveTab(group.id)}
+              className={`settings-horizontal-tab-pill ${activeTab === group.id ? "active" : ""}`}
             >
               <span>{group.icon}</span>
               {group.title.split(" ").slice(0, 3).join(" ")}
@@ -525,9 +588,9 @@ function SettingsPageContent() {
                       </div>
 
                       {/* Add Form */}
-                      <div className="space-y-3" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px", marginBottom: "16px" }}>
-                        <div style={{ fontWeight: 600, fontSize: "0.8rem", marginBottom: "4px" }}>➕ Thêm Gmail mới</div>
-                        <div className="form-group" style={{ marginBottom: "8px" }}>
+                      <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px", marginBottom: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <div style={{ fontWeight: 600, fontSize: "0.8rem" }}>➕ Thêm Gmail mới</div>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
                           <input
                             type="email"
                             placeholder="Email gửi (ví dụ: cdc@gmail.com)"
@@ -537,7 +600,7 @@ function SettingsPageContent() {
                             style={{ height: "36px" }}
                           />
                         </div>
-                        <div className="form-group" style={{ marginBottom: "12px" }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
                           <input
                             type="password"
                             placeholder="Mật khẩu ứng dụng (16 ký tự)"
@@ -570,7 +633,7 @@ function SettingsPageContent() {
                           Chưa có tài khoản Gmail nào được cấu hình.
                         </div>
                       ) : (
-                        <div className="space-y-2" style={{ maxHeight: "250px", overflowY: "auto", paddingRight: "4px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "250px", overflowY: "auto", paddingRight: "4px" }}>
                           {accounts.map((acc, idx) => (
                             <div key={acc.id} style={{
                               display: "flex",
@@ -591,7 +654,7 @@ function SettingsPageContent() {
                                 fontWeight: "bold",
                                 display: "flex",
                                 alignItems: "center",
-                                justifyCenter: "center",
+                                justifyContent: "center",
                                 flexShrink: 0
                               }}>
                                 {idx + 1}
@@ -625,8 +688,8 @@ function SettingsPageContent() {
                     {/* Tốc độ gửi */}
                     <div>
                       <h3 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "12px" }}>⚙️ Tốc độ & Giãn cách</h3>
-                      <div className="space-y-4" style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px" }}>
-                        <div className="form-group">
+                      <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
                           <label className="form-label" style={{ fontSize: "0.8rem" }}>Số email mỗi đợt (Batch size)</label>
                           <input
                             type="number"
@@ -638,7 +701,7 @@ function SettingsPageContent() {
                             Gửi tuần tự từng đợt để tối ưu tài nguyên của Gmail.
                           </span>
                         </div>
-                        <div className="form-group">
+                        <div className="form-group" style={{ marginBottom: 0 }}>
                           <label className="form-label" style={{ fontSize: "0.8rem" }}>Thời gian giãn cách (ms)</label>
                           <input
                             type="number"
@@ -698,7 +761,7 @@ function SettingsPageContent() {
                   <div style={{ fontWeight: 600, marginBottom: "12px", fontSize: "0.9rem" }}>📋 Danh sách danh mục hiện tại:</div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
                     {categoriesList.map((cat) => (
-                      <div key={cat.id} style={{ display: "flex", alignItems: "center", justifyBetween: "space-between", padding: "12px 16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                      <div key={cat.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid var(--border)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                           <span style={{ fontSize: "1.4rem" }}>{cat.icon}</span>
                           <div>

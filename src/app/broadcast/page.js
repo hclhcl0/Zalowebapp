@@ -273,36 +273,17 @@ export default function BroadcastPage() {
               {/* Scope selector */}
               <div>
                 <label className="form-label">Phạm vi gửi tin</label>
-                <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                <div className="segmented-control" style={{ display: "flex", marginTop: "6px", width: "100%" }}>
                   {scopeOptions.map((opt) => (
-                    <label
+                    <button
                       key={opt.value}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        padding: "8px 12px",
-                        borderRadius: "var(--radius)",
-                        border: `1px solid ${scope === opt.value ? "var(--primary)" : "var(--border)"}`,
-                        background: scope === opt.value ? "var(--primary-light)" : "white",
-                        cursor: "pointer",
-                        fontSize: "0.85rem",
-                        fontWeight: scope === opt.value ? 600 : 400,
-                        transition: "all 0.15s",
-                        flex: 1,
-                        boxShadow: scope === opt.value ? "0 0 0 3px var(--primary-glow)" : "none"
-                      }}
+                      type="button"
+                      className={`segmented-btn ${scope === opt.value ? "active" : ""}`}
+                      onClick={() => { setScope(opt.value); setSelectedIds([]); }}
+                      style={{ flex: 1, padding: "8px 12px" }}
                     >
-                      <input
-                        type="radio"
-                        name="scope"
-                        value={opt.value}
-                        checked={scope === opt.value}
-                        onChange={() => { setScope(opt.value); setSelectedIds([]); }}
-                        style={{ accentColor: "var(--primary)" }}
-                      />
                       {opt.label}
-                    </label>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -310,7 +291,7 @@ export default function BroadcastPage() {
               {/* List selector */}
               {scope === "list" && (
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
                     <label className="form-label" style={{ marginBottom: 0 }}>
                       Chọn người nhận
                       {selectedIds.length > 0 && (
@@ -319,16 +300,16 @@ export default function BroadcastPage() {
                         </span>
                       )}
                     </label>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={{ display: "flex", gap: "8px", width: "100%", sm: "auto", flex: "1 1 200px", justifyContent: "flex-end" }}>
                       <input
                         type="text"
                         className="search-input"
                         placeholder="Tìm tên, SĐT..."
                         value={searchQ}
                         onChange={(e) => setSearchQ(e.target.value)}
-                        style={{ width: "180px", padding: "6px 10px", fontSize: "0.8rem" }}
+                        style={{ flex: 1, maxWidth: "180px", padding: "6px 10px", fontSize: "0.8rem" }}
                       />
-                      <button type="button" className="btn btn-outline btn-sm" onClick={selectAll}>
+                      <button type="button" className="btn btn-outline btn-sm" onClick={selectAll} style={{ fontSize: "0.78rem" }}>
                         {selectedIds.length === followers.length && followers.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả"}
                       </button>
                     </div>
@@ -382,31 +363,23 @@ export default function BroadcastPage() {
               {/* Message Type Selector */}
               <div>
                 <label className="form-label">Loại tin nhắn</label>
-                <div style={{ display: "flex", gap: "8px", marginTop: "8px", marginBottom: "12px" }}>
-                  <label
-                    style={{
-                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "var(--radius)",
-                      border: `1px solid ${messageType === "text" ? "var(--primary)" : "var(--border)"}`,
-                      background: messageType === "text" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.85rem", flex: 1,
-                      boxShadow: messageType === "text" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s",
-                      justifyContent: "center"
-                    }}
+                <div className="segmented-control" style={{ display: "flex", marginTop: "6px", marginBottom: "12px", width: "100%" }}>
+                  <button
+                    type="button"
+                    className={`segmented-btn ${messageType === "text" ? "active" : ""}`}
+                    onClick={() => setMessageType("text")}
+                    style={{ flex: 1, padding: "8px 12px" }}
                   >
-                    <input type="radio" name="messageType" value="text" checked={messageType === "text"} onChange={() => setMessageType("text")} style={{ accentColor: "var(--primary)" }} />
                     📄 Văn bản
-                  </label>
-                  <label
-                    style={{
-                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "var(--radius)",
-                      border: `1px solid ${messageType === "list" ? "var(--primary)" : "var(--border)"}`,
-                      background: messageType === "list" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.85rem", flex: 1,
-                      boxShadow: messageType === "list" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s",
-                      justifyContent: "center"
-                    }}
+                  </button>
+                  <button
+                    type="button"
+                    className={`segmented-btn ${messageType === "list" ? "active" : ""}`}
+                    onClick={() => setMessageType("list")}
+                    style={{ flex: 1, padding: "8px 12px" }}
                   >
-                    <input type="radio" name="messageType" value="list" checked={messageType === "list"} onChange={() => setMessageType("list")} style={{ accentColor: "var(--primary)" }} />
                     📑 Danh sách
-                  </label>
+                  </button>
                 </div>
               </div>
 
