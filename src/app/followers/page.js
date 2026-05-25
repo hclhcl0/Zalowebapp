@@ -665,7 +665,29 @@ export default function FollowersPage() {
                     </td>
                     <td style={{ padding: "12px 8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                        <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>{f.displayName}</span>
+                        {f.userType === "staff" && f.staffLink ? (
+                          <div style={{ display: "flex", flexDirection: "column" }}>
+                            <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text)" }}>
+                              {f.staffLink.staffNameRaw}
+                            </span>
+                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              Zalo: {f.displayName}
+                            </span>
+                          </div>
+                        ) : f.userType === "citizen" && f.fullName ? (
+                          <div style={{ display: "flex", flexDirection: "column" }}>
+                            <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text)" }}>
+                              {f.fullName}
+                            </span>
+                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              Zalo: {f.displayName}
+                            </span>
+                          </div>
+                        ) : (
+                          <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>
+                            {f.displayName}
+                          </span>
+                        )}
                         {f.userType === "staff" ? (
                           <span 
                             style={{ 
@@ -878,7 +900,18 @@ export default function FollowersPage() {
                     {selectedFollower.displayName ? selectedFollower.displayName.substring(0, 1) : "U"}
                   </div>
                 )}
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>{selectedFollower.displayName}</h3>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
+                  {selectedFollower.userType === "staff" && selectedFollower.staffLink 
+                    ? selectedFollower.staffLink.staffNameRaw 
+                    : selectedFollower.fullName 
+                      ? selectedFollower.fullName 
+                      : selectedFollower.displayName}
+                </h3>
+                {((selectedFollower.userType === "staff" && selectedFollower.staffLink) || selectedFollower.fullName) && (
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                    Zalo: {selectedFollower.displayName}
+                  </div>
+                )}
                 
                 <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px", marginBottom: "16px" }}>
                   Zalo ID: <code>{selectedFollower.zaloUserId}</code>

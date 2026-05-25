@@ -33,9 +33,15 @@ export async function GET(request, { params }) {
       console.warn("Could not fetch fresh profile from Zalo API:", e.message);
     }
 
+    // Kiểm tra xem có đang là Staff không
+    const staffLink = await prisma.staffZaloLink.findUnique({
+      where: { zaloUserId: follower.zaloUserId }
+    });
+
     return NextResponse.json({
       data: {
         ...follower,
+        staffLink: staffLink || null,
         zaloProfile: freshProfile?.data || null,
       },
     });

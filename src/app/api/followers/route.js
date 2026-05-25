@@ -51,8 +51,25 @@ export async function GET(request) {
       take: limit,
     });
 
+    // Lấy thông tin StaffZaloLink cho các followers là staff
+    const zaloUserIds = followers.map((f) => f.zaloUserId);
+    const staffLinks = await prisma.staffZaloLink.findMany({
+      where: { zaloUserId: { in: zaloUserIds } },
+    });
+
+    const staffLinkMap = {};
+    staffLinks.forEach((link) => {
+      staffLinkMap[link.zaloUserId] = link;
+    });
+
+    // Đính kèm staffLink vào follower object
+    const enrichedFollowers = followers.map((f) => ({
+      ...f,
+      staffLink: staffLinkMap[f.zaloUserId] || null,
+    }));
+
     return NextResponse.json({
-      data: followers,
+      data: enrichedFollowers,
       pagination: {
         total,
         page,
