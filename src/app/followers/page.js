@@ -1,7 +1,204 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
+
+// ============================================================
+// COMPONENT: Gửi thử link đăng ký cho 1 người cụ thể
+// ============================================================
+function SingleTestSend({ onSend, sendingSingle }) {
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  // Đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    const handler = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Tìm kiếm follower với debounce 300ms
+  useEffect(() => {
+    if (!search.trim()) { setResults([]); setIsOpen(false); return; }
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/followers?query=${encodeURIComponent(search)}&limit=10`);
+        const json = await res.json();
+        setResults(json.data || []);
+        setIsOpen(true);
+      } catch (e) { setResults([]); }
+      finally { setSearching(false); }
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [search]);
+
+  const handleSelect = (f) => {
+    setSelected(f);
+    setSearch(f.displayName + (f.phone ? ` (${f.phone})` : ""));
+    setIsOpen(false);
+    setResults([]);
+  };
+
+  const handleSend = () => {
+    if (!selected) return;
+    onSend(selected.zaloUserId, selected.displayName);
+  };
+
+  const isSending = sendingSingle === selected?.zaloUserId;
+
+  return (
+    <div className="card" style={{ padding: "20px 24px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%",
+          background: "linear-gradient(135deg, #f59e0b, #d97706)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 16, flexShrink: 0,
+        }}>🧪</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text)" }}>Gửi Thử 1 Người Cụ Thể</div>
+          <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Tìm và gửi link đăng ký đến một thành viên để kiểm tra</div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+        {/* Search box */}
+        <div ref={containerRef} style={{ position: "relative", flex: "1 1 240px", minWidth: "200px" }}>
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="🔍 Tìm theo tên, SĐT hoặc Zalo ID..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setSelected(null); }}
+              onFocus={() => results.length > 0 && setIsOpen(true)}
+              style={{ height: "38px", fontSize: "0.875rem", paddingRight: "32px" }}
+            />
+            {searching && (
+              <div style={{
+                position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                width: 14, height: 14, border: "2px solid #e2e8f0",
+                borderTop: "2px solid #1d4ed8", borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+              }} />
+            )}
+          </div>
+
+          {/* Dropdown kết quả */}
+          {isOpen && results.length > 0 && (
+            <div style={{
+              position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+              background: "white", border: "1px solid var(--border)",
+              borderRadius: "var(--radius)", boxShadow: "var(--shadow-lg)",
+              zIndex: 500, maxHeight: "220px", overflowY: "auto",
+            }}>
+              {results.map(f => (
+                <button
+                  key={f.zaloUserId}
+                  type="button"
+                  onClick={() => handleSelect(f)}
+                  style={{
+                    width: "100%", padding: "9px 12px", textAlign: "left",
+                    background: "transparent", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: "10px",
+                    borderBottom: "1px solid var(--border)",
+                    transition: "background 0.1s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = "var(--bg)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
+                  {f.avatarUrl ? (
+                    <img src={f.avatarUrl} alt="" style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{
+                      width: 30, height: 30, borderRadius: "50%",
+                      background: "var(--primary-light)", color: "var(--primary)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontWeight: 700, fontSize: "0.85rem", flexShrink: 0,
+                    }}>{f.displayName?.charAt(0) || "?"}</div>
+                  )}
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {f.displayName}
+                      {f.userType === "staff" && <span style={{ marginLeft: 6, fontSize: "0.7rem", color: "var(--primary)", background: "var(--primary-light)", padding: "1px 5px", borderRadius: 4 }}>Cán bộ</span>}
+                    </div>
+                    <div style={{ fontSize: "0.73rem", color: "var(--text-muted)" }}>
+                      {f.phone || "Chưa có SĐT"} · <code style={{ fontSize: "0.7rem" }}>{f.zaloUserId}</code>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          {isOpen && results.length === 0 && !searching && search.trim() && (
+            <div style={{
+              position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+              background: "white", border: "1px solid var(--border)",
+              borderRadius: "var(--radius)", boxShadow: "var(--shadow-lg)",
+              zIndex: 500, padding: "12px", textAlign: "center",
+              fontSize: "0.8rem", color: "var(--text-muted)",
+            }}>Không tìm thấy người dùng</div>
+          )}
+        </div>
+
+        {/* Nút gửi */}
+        <button
+          className="btn btn-primary"
+          onClick={handleSend}
+          disabled={!selected || isSending}
+          style={{
+            height: "38px", display: "flex", alignItems: "center",
+            gap: "8px", whiteSpace: "nowrap", opacity: !selected ? 0.5 : 1,
+          }}
+        >
+          {isSending ? (
+            <><div className="spinner" style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang gửi...</>
+          ) : <>📨 Gửi Link Thử</>}
+        </button>
+      </div>
+
+      {/* Hiển thị người đang được chọn */}
+      {selected && (
+        <div style={{
+          marginTop: "12px", padding: "10px 14px",
+          background: "var(--primary-light)", borderRadius: "var(--radius)",
+          display: "flex", alignItems: "center", gap: "10px",
+          border: "1px solid var(--border-focus)", fontSize: "0.85rem",
+        }}>
+          {selected.avatarUrl ? (
+            <img src={selected.avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />
+          ) : (
+            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.8rem" }}>
+              {selected.displayName?.charAt(0)}
+            </div>
+          )}
+          <div>
+            <span style={{ fontWeight: 600, color: "var(--primary)" }}>{selected.displayName}</span>
+            <span style={{ color: "var(--text-muted)", marginLeft: 8, fontSize: "0.78rem" }}>
+              {selected.phone || selected.zaloUserId}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setSelected(null); setSearch(""); }}
+            style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1rem" }}
+          >✕</button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function FollowersPage() {
   const { data: session } = useSession();
@@ -42,6 +239,33 @@ export default function FollowersPage() {
   const [sendScope, setSendScope] = useState("unregistered");
   const [sendResult, setSendResult] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  // Toast thông báo nhẹ (hiện thị 3 giây rồi tự ẩn)
+  const [toast, setToast] = useState(null); // { msg, type: "success"|"error" }
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Gửi link đăng ký cho một người cụ thể
+  const [sendingSingle, setSendingSingle] = useState(null); // zaloUserId đang gửi
+  const handleSendSingleRegistration = async (zaloUserId, displayName) => {
+    setSendingSingle(zaloUserId);
+    try {
+      const res = await fetch("/api/followers/send-registration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope: "list", userIds: [zaloUserId] }),
+      });
+      const json = await res.json();
+      if (json.error) showToast(`❌ ${json.error}`, "error");
+      else if (json.sent === 0) showToast(`⚠️ Không gửi được đến ${displayName}`, "error");
+      else showToast(`✅ Đã gửi link đến ${displayName}!`);
+    } catch (e) {
+      showToast(`❌ Lỗi: ${e.message}`, "error");
+    } finally {
+      setSendingSingle(null);
+    }
+  };
 
   const fetchRegStats = useCallback(async () => {
     setRegLoading(true);
@@ -210,6 +434,27 @@ export default function FollowersPage() {
 
   return (
     <div>
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: "fixed", bottom: "24px", right: "24px", zIndex: 9999,
+          background: toast.type === "error" ? "#1e293b" : "#0f172a",
+          color: "white", padding: "14px 20px", borderRadius: "12px",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+          display: "flex", alignItems: "center", gap: "10px",
+          fontSize: "0.875rem", fontWeight: 500, maxWidth: "360px",
+          borderLeft: `4px solid ${toast.type === "error" ? "#ef4444" : "#10b981"}`,
+          animation: "slideInUp 0.3s ease",
+        }}>
+          <style>{`
+            @keyframes slideInUp {
+              from { opacity: 0; transform: translateY(12px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+          {toast.msg}
+        </div>
+      )}
       {/* Page Header */}
       <div className="page-header">
         <div>
@@ -325,7 +570,7 @@ export default function FollowersPage() {
                   <th style={{ padding: "12px 8px", width: "200px" }}>Zalo User ID</th>
                   <th style={{ padding: "12px 8px", width: "150px" }}>Số điện thoại</th>
                   <th style={{ padding: "12px 8px", width: "150px" }}>Ngày quan tâm</th>
-                  <th style={{ padding: "12px 8px", width: "180px" }}>Thao tác</th>
+                  <th style={{ padding: "12px 8px", width: "230px" }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -406,9 +651,32 @@ export default function FollowersPage() {
                       {new Date(f.followedAt).toLocaleDateString("vi-VN")}
                     </td>
                     <td style={{ padding: "12px 8px" }}>
-                      <button className="btn btn-outline btn-sm" onClick={() => handleOpenDetail(f)}>
-                        💬 Chi tiết & Chat
-                      </button>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        <button className="btn btn-outline btn-sm" onClick={() => handleOpenDetail(f)}
+                          style={{ fontSize: "0.78rem", padding: "4px 8px", height: "28px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        >
+                          💬 Chi tiết
+                        </button>
+                        <button
+                          className="btn btn-sm"
+                          onClick={() => handleSendSingleRegistration(f.zaloUserId, f.displayName)}
+                          disabled={sendingSingle === f.zaloUserId}
+                          title={`Gửi link đăng ký cho ${f.displayName}`}
+                          style={{
+                            fontSize: "0.78rem", padding: "4px 8px", height: "28px",
+                            display: "inline-flex", alignItems: "center", gap: "4px",
+                            background: sendingSingle === f.zaloUserId ? "#f1f5f9" : "#eff6ff",
+                            color: "#1d4ed8", border: "1px solid #bfdbfe",
+                            cursor: sendingSingle === f.zaloUserId ? "not-allowed" : "pointer",
+                            borderRadius: "6px", whiteSpace: "nowrap",
+                          }}
+                        >
+                          {sendingSingle === f.zaloUserId ? (
+                            <><div style={{ width: 10, height: 10, border: "1.5px solid #93c5fd", borderTop: "1.5px solid #1d4ed8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />đang gửi</>
+                          ) : "📨 Gửi ĐK"}
+                        </button>
+                      </div>
+                      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                     </td>
                   </tr>
                 ))}
@@ -868,6 +1136,9 @@ export default function FollowersPage() {
               </div>
             )}
           </div>
+
+          {/* Gửi thử 1 người cụ thể */}
+          <SingleTestSend onSend={handleSendSingleRegistration} sendingSingle={sendingSingle} showToast={showToast} />
 
           {/* Bảng đã đăng ký */}
           <div className="card">
