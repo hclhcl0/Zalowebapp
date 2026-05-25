@@ -108,7 +108,7 @@ async function handleTextMessage(userId, text) {
   } else if (lowerText.includes("giá") || lowerText.includes("bảng giá")) {
     await sendTextMessage(
       userId,
-      "Bảng giá dịch vụ CDC Đà Nẵng:\n💊 Tiêm vắc xin cúm: 220.000đ\n🩺 Xét nghiệm HIV: 80.000đ\n🔬 Xét nghiệm viêm gan B: 65.000đ\n\nXem đầy đủ tại: https://zalooacdc.chuyendoisoquocgia.net/"
+      "Bảng giá dịch vụ CDC Đà Nẵng:\n💊 Tiêm vắc xin cúm: 220.000đ\n🩺 Xét nghiệm HIV: 80.000đ\n🔬 Xét nghiệm viêm gan B: 65.000đ\n\nXem đầy đủ tại: https://sender.ksbtdanang.vn/"
     );
   } else {
     // Tin nhắn không khớp từ khoá → trả lời mặc định
