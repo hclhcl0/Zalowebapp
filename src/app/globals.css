@@ -1097,7 +1097,93 @@ tbody tr:hover { background: #f8fafc; }
     border-top: 1px dashed var(--border);
     padding-top: 10px;
     margin-top: 4px;
-    justify-content: flex-end;
+  }
+  
+  .mobile-card-actions button,
+  .mobile-card-actions a {
+    flex: 1;
+    justify-content: center;
+    min-height: 38px !important;
+    font-size: 0.82rem !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    font-weight: 600 !important;
+  }
+
+  /* Followers Page Responsive Optimizations */
+  .followers-tabs {
+    gap: 6px !important;
+  }
+  .followers-tab-btn {
+    padding: 8px 10px !important;
+    border-radius: var(--radius) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .tab-label-mobile {
+    display: block !important;
+  }
+  .tab-label-desktop {
+    display: none !important;
+  }
+  .tab-desc {
+    display: none !important;
+  }
+
+  /* Filter & Search Responsive */
+  .filter-search-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .filter-tabs-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .filter-tabs-wrapper button {
+    font-size: 0.78rem !important;
+    padding: 8px 6px !important;
+  }
+  .search-box-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+    flex: none !important;
+  }
+  .search-box-wrapper input {
+    font-size: 16px !important;
+  }
+
+  /* Registration Panel Responsive */
+  .registration-send-wrapper {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .registration-send-wrapper > div {
+    width: 100% !important;
+  }
+  .registration-send-wrapper select {
+    width: 100% !important;
+    min-height: 42px !important;
+  }
+  .registration-send-wrapper button {
+    width: 100% !important;
+    min-height: 42px !important;
+    justify-content: center !important;
+  }
+
+  /* Registration Header Row */
+  .registration-header-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .registration-header-row button {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 40px !important;
   }
 }
 
@@ -1111,4 +1197,52 @@ tbody tr:hover { background: #f8fafc; }
 .mobile-card-list {
   display: none;
 }
+
+/* Followers Page Global Helpers */
+.tab-label-mobile {
+  display: none;
+}
+.tab-label-desktop {
+  display: block;
+}
+.tab-desc {
+  display: block;
+}
+.filter-search-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.filter-tabs-wrapper {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 520px;
+}
+.search-box-wrapper {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  max-width: 450px;
+}
+.registration-send-wrapper {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+.registration-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 

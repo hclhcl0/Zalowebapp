@@ -92,7 +92,7 @@ function SingleTestSend({ onSend, sendingSingle }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+      <div className="registration-send-wrapper" style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
         {/* Search box */}
         <div ref={containerRef} style={{ position: "relative", flex: "1 1 240px", minWidth: "200px" }}>
           <div style={{ position: "relative" }}>
@@ -604,25 +604,27 @@ export default function FollowersPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+      <div className="followers-tabs" style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
         {[
-          { id: "followers", label: "👥 Danh Sách Followers", desc: "Xem & phân loại" },
-          { id: "registration", label: "🔗 Đăng Ký Nhân Viên", desc: "Liên kết Zalo ID" },
+          { id: "followers", labelDesktop: "👥 Danh Sách Followers", labelMobile: "👥 Followers", desc: "Xem & phân loại" },
+          { id: "registration", labelDesktop: "🔗 Đăng Ký Nhân Viên", labelMobile: "🔗 Đăng ký", desc: "Liên kết Zalo ID" },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            className="followers-tab-btn"
             style={{
               display: "flex", flexDirection: "column", alignItems: "flex-start",
               gap: "2px", padding: "12px 18px", borderRadius: "var(--radius-lg)",
               border: `1px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
               background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
-              cursor: "pointer", flex: "0 0 auto", transition: "all 0.2s",
+              cursor: "pointer", flex: "1 1 0%", maxWidth: "280px", transition: "all 0.2s",
               boxShadow: activeTab === tab.id ? "0 0 0 3px var(--primary-glow)" : "none"
             }}
           >
-            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>{tab.label}</span>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{tab.desc}</span>
+            <span className="tab-label-desktop" style={{ fontSize: "0.9rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>{tab.labelDesktop}</span>
+            <span className="tab-label-mobile" style={{ fontSize: "0.85rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>{tab.labelMobile}</span>
+            <span className="tab-desc" style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{tab.desc}</span>
           </button>
         ))}
       </div>
@@ -630,34 +632,34 @@ export default function FollowersPage() {
       {/* Filter & Search — chỉ hiện ở tab followers */}
       {activeTab === "followers" && <>
       <div className="card" style={{ marginBottom: "20px", padding: "16px 24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+        <div className="filter-search-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
           {/* Tabs lọc theo userType */}
-          <div style={{ display: "flex", gap: "4px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+          <div className="filter-tabs-wrapper" style={{ display: "flex", gap: "4px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)", border: "1px solid var(--border)", width: "100%", maxWidth: "520px" }}>
             <button
               onClick={() => setUserTypeFilter("all")}
               className={`btn btn-sm ${userTypeFilter === "all" ? "btn-primary" : "btn-ghost"}`}
-              style={{ padding: "6px 12px", border: "none", borderRadius: "calc(var(--radius) - 2px)" }}
+              style={{ padding: "6px 8px", border: "none", borderRadius: "calc(var(--radius) - 2px)", flex: 1, fontSize: "0.8rem", whiteSpace: "nowrap", display: "inline-flex", justifyContent: "center", alignItems: "center" }}
             >
               👥 Tất cả
             </button>
             <button
               onClick={() => setUserTypeFilter("citizen")}
               className={`btn btn-sm ${userTypeFilter === "citizen" ? "btn-primary" : "btn-ghost"}`}
-              style={{ padding: "6px 12px", border: "none", borderRadius: "calc(var(--radius) - 2px)" }}
+              style={{ padding: "6px 8px", border: "none", borderRadius: "calc(var(--radius) - 2px)", flex: 1, fontSize: "0.8rem", whiteSpace: "nowrap", display: "inline-flex", justifyContent: "center", alignItems: "center" }}
             >
               🟢 Khách hàng
             </button>
             <button
               onClick={() => setUserTypeFilter("staff")}
               className={`btn btn-sm ${userTypeFilter === "staff" ? "btn-primary" : "btn-ghost"}`}
-              style={{ padding: "6px 12px", border: "none", borderRadius: "calc(var(--radius) - 2px)" }}
+              style={{ padding: "6px 8px", border: "none", borderRadius: "calc(var(--radius) - 2px)", flex: 1, fontSize: "0.8rem", whiteSpace: "nowrap", display: "inline-flex", justifyContent: "center", alignItems: "center" }}
             >
-              💼 Cán bộ cơ quan
+              💼 Cán bộ
             </button>
           </div>
 
           {/* Ô Tìm kiếm */}
-          <div style={{ display: "flex", gap: "10px", flex: 1, maxWidth: "450px" }}>
+          <div className="search-box-wrapper" style={{ display: "flex", gap: "10px", flex: 1, maxWidth: "450px" }}>
             <input
               type="text"
               className="search-input"
@@ -666,8 +668,8 @@ export default function FollowersPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ flex: 1 }}
             />
-            <button className="btn btn-primary" onClick={fetchFollowers}>
-              🔍 Tìm kiếm
+            <button className="btn btn-primary" onClick={fetchFollowers} style={{ whiteSpace: "nowrap" }}>
+              🔍 Tìm
             </button>
           </div>
         </div>
@@ -1362,37 +1364,39 @@ export default function FollowersPage() {
               Hệ thống sẽ gửi tin nhắn Zalo kèm link đăng ký cá nhân đến từng nhân viên.
               Họ chỉ cần bấm link và điền tên thật — hệ thống sẽ tự động liên kết.
             </p>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
-              <div>
+            <div className="registration-send-wrapper" style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
+              <div style={{ flex: "1 1 200px" }}>
                 <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>Phạm vi gửi</label>
                 <select
                   value={sendScope}
                   onChange={e => setSendScope(e.target.value)}
                   className="form-input"
-                  style={{ height: "38px", fontSize: "0.875rem", minWidth: "200px" }}
+                  style={{ height: "38px", fontSize: "0.875rem", minWidth: "200px", width: "100%" }}
                 >
                   <option value="unregistered">📋 Chỉ người chưa đăng ký ({regStats?.unregistered ?? "…"} người)</option>
                   <option value="all">👥 Tất cả followers ({regStats?.totalFollowers ?? "…"} người)</option>
                 </select>
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={handleSendRegistration}
-                disabled={sending || regLoading}
-                style={{ height: "38px", display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap" }}
-              >
-                {sending ? (
-                  <><div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang gửi...</>
-                ) : "📨 Gửi Link Đăng Ký"}
-              </button>
-              <button
-                className="btn btn-outline"
-                onClick={fetchRegStats}
-                disabled={regLoading}
-                style={{ height: "38px" }}
-              >
-                🔄 Làm mới
-              </button>
+              <div className="registration-send-actions" style={{ display: "flex", gap: "10px", flexWrap: "wrap", flex: "1 1 auto" }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSendRegistration}
+                  disabled={sending || regLoading}
+                  style={{ height: "38px", display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap", flex: "1" }}
+                >
+                  {sending ? (
+                    <><div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang gửi...</>
+                  ) : "📨 Gửi Link Đăng Ký"}
+                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={fetchRegStats}
+                  disabled={regLoading}
+                  style={{ height: "38px", flex: "1" }}
+                >
+                  🔄 Làm mới
+                </button>
+              </div>
             </div>
 
             {/* Kết quả gửi */}
@@ -1419,7 +1423,7 @@ export default function FollowersPage() {
 
           {/* Bảng đã đăng ký */}
           <div className="card">
-            <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+            <div className="registration-header-row" style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
               <div>
                 <div className="card-title">✅ Danh Sách Đã Đăng Ký ({regStats?.totalRegistered ?? 0})</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã tự xác nhận tên thật qua link đăng ký</div>
