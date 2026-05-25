@@ -34,7 +34,14 @@ async function findZaloUserId(record) {
     return record.zaloUserId || null;
   }
 
-  // 1. Tìm theo số điện thoại dự phòng
+  // 1. [ƯU TIÊN CAO] Tra StaffZaloLink theo tên chuẩn hóa (nhân viên đã tự đăng ký)
+  const normName = normalizeName(record.tenNhanVien);
+  if (normName) {
+    const staffLink = await prisma.staffZaloLink.findUnique({ where: { staffName: normName } });
+    if (staffLink) return staffLink.zaloUserId;
+  }
+
+  // 2. Tìm theo số điện thoại dự phòng
   const phone = cleanPhone(record.phone || record.sdt);
   if (phone) {
     const possibleFormats = [phone];
@@ -48,8 +55,7 @@ async function findZaloUserId(record) {
     if (follower) return follower.zaloUserId;
   }
 
-  // 2. Tìm theo tên nhân viên (không dấu, chữ thường)
-  const normName = normalizeName(record.tenNhanVien);
+  // 3. Tìm theo displayName (fallback)
   if (normName) {
     const followers = await prisma.follower.findMany();
     const match = followers.find(f => normalizeName(f.displayName) === normName);
@@ -58,6 +64,7 @@ async function findZaloUserId(record) {
 
   return null;
 }
+
 
 export async function POST(req) {
   try {

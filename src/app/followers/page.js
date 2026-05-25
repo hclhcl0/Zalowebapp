@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 
 export default function FollowersPage() {
   const { data: session } = useSession();
+  const [activeTab, setActiveTab] = useState("followers"); // "followers" | "registration"
   const [followers, setFollowers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,6 +34,52 @@ export default function FollowersPage() {
   
   // Sync state
   const [syncing, setSyncing] = useState(false);
+
+  // ── Registration panel state ──────────────────────────────────────────────
+  const [regStats, setRegStats] = useState(null);
+  const [regLoading, setRegLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendScope, setSendScope] = useState("unregistered");
+  const [sendResult, setSendResult] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const fetchRegStats = useCallback(async () => {
+    setRegLoading(true);
+    try {
+      const res = await fetch("/api/followers/send-registration");
+      const json = await res.json();
+      if (!json.error) setRegStats(json);
+    } catch (e) { console.error(e); }
+    finally { setRegLoading(false); }
+  }, []);
+
+  useEffect(() => { if (activeTab === "registration") fetchRegStats(); }, [activeTab, fetchRegStats]);
+
+  const handleSendRegistration = async () => {
+    if (!confirm(`Gửi link đăng ký đến "${sendScope === "all" ? "tất cả" : "người chưa đăng ký"}"?`)) return;
+    setSending(true); setSendResult(null);
+    try {
+      const res = await fetch("/api/followers/send-registration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope: sendScope }),
+      });
+      const json = await res.json();
+      setSendResult(json);
+      fetchRegStats();
+    } catch (e) { setSendResult({ error: e.message }); }
+    finally { setSending(false); }
+  };
+
+  const handleDeleteLink = async (id) => {
+    if (!confirm("Xóa liên kết này? Nhân viên sẽ không còn được nhận biết tự động.")) return;
+    setDeletingId(id);
+    try {
+      await fetch(`/api/followers/staff-links/${id}`, { method: "DELETE" });
+      fetchRegStats();
+    } catch (e) { alert("Lỗi: " + e.message); }
+    finally { setDeletingId(null); }
+  };
 
   const handleSyncFollowers = async () => {
     setSyncing(true);
@@ -166,27 +213,53 @@ export default function FollowersPage() {
       {/* Page Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">👥 Người quan tâm Zalo OA</h1>
-          <p className="page-desc">Danh sách người dân đã nhấn quan tâm trang Zalo OA của CDC Đà Nẵng.</p>
+          <h1 className="page-title">👥 Quản lý Người quan tâm Zalo OA</h1>
+          <p className="page-desc">Danh sách người dân đã nhấn quan tâm, và công cụ đăng ký liên kết nhân viên.</p>
         </div>
-        <div>
-          <button 
-            className="btn btn-outline" 
-            onClick={handleSyncFollowers} 
-            disabled={syncing || loading}
-            style={{ display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            {syncing ? (
-              <>
-                <div className="spinner" style={{ width: "14px", height: "14px", border: "1.5px solid var(--text-muted)", borderTopColor: "var(--primary)" }} />
-                Đang đồng bộ...
-              </>
-            ) : "🔄 Đồng bộ từ Zalo OA"}
-          </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          {activeTab === "followers" && (
+            <button
+              className="btn btn-outline"
+              onClick={handleSyncFollowers}
+              disabled={syncing || loading}
+              style={{ display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              {syncing ? (
+                <>
+                  <div className="spinner" style={{ width: "14px", height: "14px", border: "1.5px solid var(--text-muted)", borderTopColor: "var(--primary)" }} />
+                  Đang đồng bộ...
+                </>
+              ) : "🔄 Đồng bộ từ Zalo OA"}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Filter & Search */}
+      {/* Tab Navigation */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+        {[
+          { id: "followers", label: "👥 Danh Sách Followers", desc: "Xem & phân loại" },
+          { id: "registration", label: "🔗 Đăng Ký Nhân Viên", desc: "Liên kết Zalo ID" },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "flex-start",
+              gap: "2px", padding: "12px 18px", borderRadius: "var(--radius-lg)",
+              border: `2px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
+              background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
+              cursor: "pointer", flex: "0 0 auto", transition: "all 0.2s",
+            }}
+          >
+            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>{tab.label}</span>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{tab.desc}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Filter & Search — chỉ hiện ở tab followers */}
+      {activeTab === "followers" && <>
       <div className="card" style={{ marginBottom: "20px", padding: "16px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
           {/* Tabs lọc theo userType */}
@@ -431,9 +504,10 @@ export default function FollowersPage() {
           </div>
         )}
       </div>
+      </>}
 
-      {/* Detail & Chat Modal */}
-      {isModalOpen && selectedFollower && (
+      {/* Detail & Chat Modal — chỉ hiện ở tab followers */}
+      {activeTab === "followers" && isModalOpen && selectedFollower && (
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
@@ -714,6 +788,164 @@ export default function FollowersPage() {
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* ── TAB: ĐĂNG KÝ NHÂN VIÊN ──────────────────────────────── */}
+      {activeTab === "registration" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+          {/* Thống kê */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+            {[
+              { label: "Tổng Followers", value: regStats?.totalFollowers ?? "…", icon: "👥", color: "#1d4ed8" },
+              { label: "Đã Đăng Ký", value: regStats?.totalRegistered ?? "…", icon: "✅", color: "#10b981" },
+              { label: "Chưa Đăng Ký", value: regStats?.unregistered ?? "…", icon: "⏳", color: "#f59e0b" },
+            ].map(s => (
+              <div key={s.label} className="card" style={{ padding: "16px 20px" }}>
+                <div style={{ fontSize: "1.6rem", marginBottom: "4px" }}>{s.icon}</div>
+                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: s.color }}>{regLoading ? "…" : s.value}</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 500 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Công cụ gửi link */}
+          <div className="card" style={{ padding: "24px" }}>
+            <div className="card-title" style={{ marginBottom: "16px" }}>📤 Gửi Link Đăng Ký Qua Zalo</div>
+            <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", marginBottom: "16px", lineHeight: 1.6 }}>
+              Hệ thống sẽ gửi tin nhắn Zalo kèm link đăng ký cá nhân đến từng nhân viên.
+              Họ chỉ cần bấm link và điền tên thật — hệ thống sẽ tự động liên kết.
+            </p>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
+              <div>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>Phạm vi gửi</label>
+                <select
+                  value={sendScope}
+                  onChange={e => setSendScope(e.target.value)}
+                  className="form-input"
+                  style={{ height: "38px", fontSize: "0.875rem", minWidth: "200px" }}
+                >
+                  <option value="unregistered">📋 Chỉ người chưa đăng ký ({regStats?.unregistered ?? "…"} người)</option>
+                  <option value="all">👥 Tất cả followers ({regStats?.totalFollowers ?? "…"} người)</option>
+                </select>
+              </div>
+              <button
+                className="btn btn-primary"
+                onClick={handleSendRegistration}
+                disabled={sending || regLoading}
+                style={{ height: "38px", display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap" }}
+              >
+                {sending ? (
+                  <><div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang gửi...</>
+                ) : "📨 Gửi Link Đăng Ký"}
+              </button>
+              <button
+                className="btn btn-outline"
+                onClick={fetchRegStats}
+                disabled={regLoading}
+                style={{ height: "38px" }}
+              >
+                🔄 Làm mới
+              </button>
+            </div>
+
+            {/* Kết quả gửi */}
+            {sendResult && (
+              <div style={{
+                marginTop: "16px", padding: "12px 16px", borderRadius: "var(--radius)",
+                background: sendResult.error ? "#fef2f2" : "#f0fdf4",
+                border: `1px solid ${sendResult.error ? "#fecaca" : "#bbf7d0"}`,
+                color: sendResult.error ? "#dc2626" : "#15803d",
+                fontSize: "0.875rem",
+              }}>
+                {sendResult.error ? `❌ Lỗi: ${sendResult.error}` : `✅ ${sendResult.message}`}
+                {sendResult.errors?.length > 0 && (
+                  <ul style={{ marginTop: "6px", paddingLeft: "16px", fontSize: "0.8rem" }}>
+                    {sendResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Bảng đã đăng ký */}
+          <div className="card">
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div className="card-title">✅ Danh Sách Đã Đăng Ký ({regStats?.totalRegistered ?? 0})</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã tự xác nhận tên thật qua link đăng ký</div>
+              </div>
+            </div>
+
+            {regLoading ? (
+              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                <div className="spinner" style={{ width: 28, height: 28, border: "3px solid var(--border)", borderTopColor: "var(--primary)", margin: "0 auto 12px" }} />
+                Đang tải...
+              </div>
+            ) : !regStats?.links?.length ? (
+              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📭</div>
+                <div style={{ fontWeight: 600 }}>Chưa có nhân viên nào đăng ký</div>
+                <div style={{ fontSize: "0.85rem", marginTop: "4px" }}>Hãy gửi link đăng ký ở trên để bắt đầu.</div>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                      <th style={{ padding: "12px 16px" }}>Ảnh</th>
+                      <th style={{ padding: "12px 16px" }}>Tên Thật (Đã Đăng Ký)</th>
+                      <th style={{ padding: "12px 16px" }}>Tên Zalo</th>
+                      <th style={{ padding: "12px 16px" }}>Phòng / Khoa</th>
+                      <th style={{ padding: "12px 16px" }}>Ngày ĐK</th>
+                      <th style={{ padding: "12px 16px" }}>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {regStats.links.map(link => (
+                      <tr key={link.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                        <td style={{ padding: "10px 16px" }}>
+                          {link.avatarUrl ? (
+                            <img src={link.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid var(--border)" }} />
+                          ) : (
+                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
+                              {link.staffNameRaw?.charAt(0) || "?"}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: "10px 16px" }}>
+                          <div style={{ fontWeight: 700, color: "var(--text)" }}>{link.staffNameRaw}</div>
+                          {link.phone && <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>📞 {link.phone}</div>}
+                        </td>
+                        <td style={{ padding: "10px 16px" }}>
+                          <div style={{ fontSize: "0.875rem", color: "var(--text)" }}>{link.displayName || "—"}</div>
+                          <code style={{ fontSize: "0.7rem", color: "var(--text-muted)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>{link.zaloUserId}</code>
+                        </td>
+                        <td style={{ padding: "10px 16px", fontSize: "0.875rem", color: "var(--text-muted)" }}>
+                          {link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn</em>}
+                        </td>
+                        <td style={{ padding: "10px 16px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                          {new Date(link.registeredAt).toLocaleDateString("vi-VN")}
+                        </td>
+                        <td style={{ padding: "10px 16px" }}>
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => handleDeleteLink(link.id)}
+                            disabled={deletingId === link.id}
+                            style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.78rem" }}
+                          >
+                            {deletingId === link.id ? "…" : "🗑️ Xóa"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
         </div>
       )}
     </div>
