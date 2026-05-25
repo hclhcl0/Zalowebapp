@@ -736,26 +736,16 @@ export default function FollowersPage() {
                     {/* Cột Tên đã đăng ký */}
                     <td style={{ padding: "12px 8px" }}>
                       {f.userType === "staff" && f.staffLink ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                          <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "#065f46" }}>
-                            {f.staffLink.staffNameRaw}
-                          </span>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.7rem", color: "#059669", fontWeight: 600 }}>
-                            ✅ Nhân viên đã đăng ký
-                          </span>
-                        </div>
+                        <span className="badge badge-approved" style={{ fontSize: "0.75rem", padding: "4px 10px", border: "1px solid #bbf7d0" }}>
+                          ✅ {f.staffLink.staffNameRaw}
+                        </span>
                       ) : f.fullName ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                          <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "#1e40af" }}>
-                            {f.fullName}
-                          </span>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.7rem", color: "#3b82f6", fontWeight: 600 }}>
-                            ✅ Khách hàng đã đăng ký
-                          </span>
-                        </div>
+                        <span className="badge badge-info" style={{ fontSize: "0.75rem", padding: "4px 10px", border: "1px solid var(--border-focus)" }}>
+                          ✅ {f.fullName}
+                        </span>
                       ) : (
-                        <span style={{ fontSize: "0.78rem", color: "var(--text-light)", fontStyle: "italic" }}>
-                          ⏳ Chưa đăng ký tên
+                        <span className="badge" style={{ background: "var(--bg)", color: "var(--text-muted)", fontSize: "0.75rem", padding: "4px 10px", border: "1px solid var(--border)" }}>
+                          ⏳ Chưa đăng ký
                         </span>
                       )}
                     </td>
