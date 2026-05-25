@@ -192,11 +192,18 @@ async function handleFollow(userId, data) {
     },
   });
 
-  // Gửi tin chào mừng
-  await sendTextMessage(
-    userId,
-    "Xin chào! Cảm ơn bạn đã quan tâm đến Zalo OA của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng) 🏥\n\nChúng tôi có thể hỗ trợ bạn:\n✅ Đặt lịch tiêm chủng\n✅ Tra cứu kết quả xét nghiệm\n✅ Thông tin bảng giá dịch vụ\n✅ Cập nhật tin tức dịch bệnh\n\nGõ bất kỳ nội dung để bắt đầu!"
-  );
+  // Gửi tin chào mừng kèm link phân loại
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://zalo-cdc-test.vercel.app";
+  const staffLink = `${appUrl}/register?uid=${userId}`;
+  const patientLink = `${appUrl}/patient-register?uid=${userId}`;
+
+  const welcomeMessage = `Xin chào! Cảm ơn bạn đã quan tâm đến Zalo OA của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng) 🏥\n\n` + 
+    `Để chúng tôi phục vụ tốt nhất, vui lòng xác nhận bạn là Khách hàng hay Nhân viên CDC bằng cách bấm vào 1 trong 2 link dưới đây:\n\n` +
+    `▶️ DÀNH CHO KHÁCH HÀNG (Nhận kết quả xét nghiệm, tiêm chủng):\n${patientLink}\n\n` +
+    `▶️ DÀNH CHO NHÂN VIÊN CDC (Nhận bảng lương, thuế):\n${staffLink}\n\n` +
+    `Lưu ý: Chỉ cần đăng ký 1 lần duy nhất để hệ thống tự động nhận diện.`;
+
+  await sendTextMessage(userId, welcomeMessage);
 }
 
 // ============================================================

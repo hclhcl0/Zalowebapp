@@ -41,6 +41,11 @@ model Follower {
   department  String?  // Phòng ban của cán bộ cơ quan
   notes       String?  // Ghi chú nhanh
 
+  // Thông tin sức khỏe / cá nhân (Dành cho bệnh nhân)
+  fullName    String?  // Tên thật
+  dob         String?  // Ngày sinh
+  cccd        String?  // CMND/CCCD hoặc Mã BN
+
   // Quan hệ
   appointments Appointment[]
   testResults  TestResult[]

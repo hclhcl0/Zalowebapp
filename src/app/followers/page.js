@@ -246,6 +246,9 @@ export default function FollowersPage() {
   const [newUserType, setNewUserType] = useState("citizen");
   const [newDept, setNewDept] = useState("");
   const [newNotes, setNewNotes] = useState("");
+  const [newFullName, setNewFullName] = useState("");
+  const [newDob, setNewDob] = useState("");
+  const [newCccd, setNewCccd] = useState("");
   const [updatingMeta, setUpdatingMeta] = useState(false);
   
   // Sync state
@@ -389,6 +392,9 @@ export default function FollowersPage() {
         setNewUserType(jsonDetails.data.userType || "citizen");
         setNewDept(jsonDetails.data.department || "");
         setNewNotes(jsonDetails.data.notes || "");
+        setNewFullName(jsonDetails.data.fullName || "");
+        setNewDob(jsonDetails.data.dob || "");
+        setNewCccd(jsonDetails.data.cccd || "");
       }
 
       // Fetch chat history from MessageLog table
@@ -427,6 +433,9 @@ export default function FollowersPage() {
           userType: newUserType,
           department: newDept,
           notes: newNotes,
+          fullName: newFullName,
+          dob: newDob,
+          cccd: newCccd,
         }),
       });
       const json = await res.json();
@@ -883,6 +892,46 @@ export default function FollowersPage() {
                         ))}
                       </select>
                     </div>
+                  )}
+
+                  {/* Thông tin Bệnh nhân (nếu là citizen) */}
+                  {newUserType === "citizen" && (
+                    <>
+                      <div>
+                        <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>👤 Họ và tên thật</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="Tên khai báo..."
+                          value={newFullName}
+                          onChange={(e) => setNewFullName(e.target.value)}
+                          style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem" }}
+                        />
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                        <div>
+                          <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>💳 CCCD/Mã BN</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Số CCCD..."
+                            value={newCccd}
+                            onChange={(e) => setNewCccd(e.target.value)}
+                            style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🎂 Ngày sinh</label>
+                          <input
+                            type="date"
+                            className="form-input"
+                            value={newDob}
+                            onChange={(e) => setNewDob(e.target.value)}
+                            style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem" }}
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   {/* Ghi chú */}
