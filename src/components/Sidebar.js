@@ -7,7 +7,7 @@ import { CDC_LOGO_BASE64 } from "@/lib/logo";
 import { 
   LayoutDashboard, Users, Megaphone, Mail, 
   Newspaper, CalendarDays, AlertTriangle, 
-  Settings, UserCog, LogOut, ChevronRight
+  Settings, UserCog, LogOut, ChevronRight, Download
 } from "lucide-react";
 
 // Helper to map string/emoji to Lucide icon component
@@ -106,9 +106,32 @@ export default function Sidebar() {
   });
 
   const [activeTabParam, setActiveTabParam] = useState("");
+  
+  // PWA Install State
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showIOSModal, setShowIOSModal] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    
+    // Detect iOS
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isIosDevice);
+
+    // Detect standalone mode (already installed)
+    const isStandAloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    setIsStandalone(!!isStandAloneMode);
+
+    // Capture install prompt
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
     const handleUrlChange = () => {
       const params = new URLSearchParams(window.location.search);
       setActiveTabParam(params.get("tab") || "");
@@ -118,9 +141,26 @@ export default function Sidebar() {
     const interval = setInterval(handleUrlChange, 200);
     return () => {
       window.removeEventListener("popstate", handleUrlChange);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       clearInterval(interval);
     };
   }, []);
+
+  const handleInstallClick = async () => {
+    if (isIOS) {
+      setShowIOSModal(true);
+      return;
+    }
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      alert("Trình duyệt của bạn không hỗ trợ cài đặt tự động hoặc ứng dụng đã được cài đặt.");
+    }
+  };
 
   const isActive = (item) => {
     if (item.href.includes("?")) {
@@ -183,6 +223,22 @@ export default function Sidebar() {
               ))}
             </div>
           ))}
+          
+        {/* PWA Install Button */}
+        {!isStandalone && (deferredPrompt || isIOS) && (
+          <div className="menu-group" style={{ marginTop: "1rem" }}>
+            <button 
+              onClick={handleInstallClick}
+              className="menu-item" 
+              style={{ background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", width: "100%", textAlign: "left", cursor: "pointer", fontWeight: 600, padding: "10px 12px" }}
+            >
+              <span className="menu-item-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Download size={18} />
+              </span>
+              Cài đặt App (Lưu ĐT)
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* User info & logout */}
@@ -206,6 +262,56 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
+
+      {/* iOS Install Instruction Modal */}
+      {showIOSModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.6)", zIndex: 99999,
+          display: "flex", alignItems: "flex-end", justifyContent: "center",
+          backdropFilter: "blur(2px)"
+        }} onClick={() => setShowIOSModal(false)}>
+          <div style={{
+            background: "white", padding: "24px", borderRadius: "20px 20px 0 0",
+            width: "100%", maxWidth: "450px", textAlign: "center",
+            boxShadow: "0 -4px 12px rgba(0,0,0,0.15)",
+            animation: "slideUp 0.3s ease-out"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: "40px", height: "5px", background: "#e2e8f0", borderRadius: "10px", margin: "0 auto 20px" }}></div>
+            <h3 style={{ margin: "0 0 10px 0", fontSize: "1.2rem", color: "var(--text)" }}>Cài đặt ZCDC vào iPhone</h3>
+            <p style={{ margin: "0 0 20px 0", fontSize: "0.95rem", color: "var(--text-muted)" }}>
+              Để lưu ứng dụng ra màn hình chính, vui lòng làm theo hướng dẫn:
+            </p>
+            <div style={{ textAlign: "left", fontSize: "0.95rem", lineHeight: 1.6, background: "var(--bg)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border)" }}>
+              <div style={{display: "flex", gap: "10px", marginBottom: "12px"}}>
+                <span style={{fontSize: "1.2rem"}}>1️⃣</span>
+                <span>Chạm vào biểu tượng <strong>Chia sẻ (Share)</strong> <span style={{fontSize:"1.1rem"}}>⍐</span> ở thanh công cụ Safari dưới cùng.</span>
+              </div>
+              <div style={{display: "flex", gap: "10px", marginBottom: "12px"}}>
+                <span style={{fontSize: "1.2rem"}}>2️⃣</span>
+                <span>Cuộn xuống và chọn <strong>"Thêm vào MH chính"</strong> (Add to Home Screen) <span style={{fontSize:"1.1rem"}}>➕</span>.</span>
+              </div>
+              <div style={{display: "flex", gap: "10px"}}>
+                <span style={{fontSize: "1.2rem"}}>3️⃣</span>
+                <span>Nhấn <strong>Thêm</strong> ở góc trên bên phải màn hình.</span>
+              </div>
+            </div>
+            <button 
+              className="btn btn-primary" 
+              style={{ width: "100%", marginTop: "24px", padding: "12px", fontSize: "1rem", borderRadius: "10px" }}
+              onClick={() => setShowIOSModal(false)}
+            >
+              Đã hiểu
+            </button>
+          </div>
+          <style dangerouslySetInnerHTML={{__html: `
+            @keyframes slideUp {
+              from { transform: translateY(100%); }
+              to { transform: translateY(0); }
+            }
+          `}} />
+        </div>
+      )}
     </aside>
   );
 }
