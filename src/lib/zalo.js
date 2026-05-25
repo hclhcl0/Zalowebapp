@@ -20,29 +20,92 @@ async function getAccessToken() {
 }
 
 // ============================================================
+// TỰ ĐỘNG LÀM MỚI TOKEN KHI HẾT HẠN
+// Kiểm tra updatedAt của token; nếu > 23 giờ thì refresh trước khi dùng
+// ============================================================
+async function getValidToken() {
+  const config = await prisma.systemConfig.findUnique({
+    where: { key: "zalo_access_token" },
+  });
+
+  if (!config?.value) {
+    return process.env.ZALO_ACCESS_TOKEN ?? "";
+  }
+
+  // Nếu token đã tồn tại hơn 23 giờ → refresh trước
+  const ageMs = Date.now() - new Date(config.updatedAt).getTime();
+  const TWENTY_THREE_HOURS = 23 * 60 * 60 * 1000;
+
+  if (ageMs > TWENTY_THREE_HOURS) {
+    console.log("[Zalo] Token cũ hơn 23 giờ, đang tự động làm mới...");
+    try {
+      const refreshed = await refreshZaloAccessToken();
+      if (refreshed?.access_token) {
+        console.log("[Zalo] Token đã được làm mới tự động thành công.");
+        return refreshed.access_token;
+      }
+    } catch (err) {
+      console.error("[Zalo] Tự động làm mới token thất bại:", err.message);
+    }
+  }
+
+  return config.value;
+}
+
+// ============================================================
+// HÀM GỌI ZALO API VỚI TỰ ĐỘNG THỬ LẠI KHI TOKEN HẾT HẠN
+// Nếu API trả về error -216 (token expired), tự refresh token và thử lại 1 lần
+// ============================================================
+async function callZaloAPI(url, options = {}) {
+  let token = await getValidToken();
+  const makeRequest = (t) => fetch(url, {
+    ...options,
+    headers: { ...options.headers, access_token: t },
+  });
+
+  let res = await makeRequest(token);
+  let data = await res.json();
+
+  // Nếu token hết hạn → refresh và thử lại 1 lần
+  if (data.error === -216) {
+    console.log("[Zalo] Token hết hạn (error -216), đang làm mới và thử lại...");
+    try {
+      const refreshed = await refreshZaloAccessToken();
+      if (refreshed?.access_token) {
+        token = refreshed.access_token;
+        res = await makeRequest(token);
+        data = await res.json();
+        console.log("[Zalo] Đã làm mới token và gọi lại API thành công.");
+      }
+    } catch (err) {
+      console.error("[Zalo] Làm mới token thất bại:", err.message);
+    }
+  }
+
+  return data;
+}
+
+// ============================================================
 // GỬI TIN NHẮN VĂN BẢN
 // ============================================================
 export async function sendTextMessage(toUserId, text) {
-  const token = await getAccessToken();
-  const res = await fetch("https://openapi.zalo.me/v2.0/oa/message", {
+  return callZaloAPI("https://openapi.zalo.me/v2.0/oa/message", {
     method: "POST",
-    headers: { "Content-Type": "application/json", access_token: token },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       recipient: { user_id: toUserId },
       message: { text },
     }),
   });
-  return res.json();
 }
 
 // ============================================================
 // GỬI ZNS (Tin nhắn mẫu)
 // ============================================================
 export async function sendZNS({ phone, templateId, templateData }) {
-  const token = await getAccessToken();
-  const res = await fetch(ZALO_ZNS_API, {
+  return callZaloAPI(ZALO_ZNS_API, {
     method: "POST",
-    headers: { "Content-Type": "application/json", access_token: token },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       phone,
       template_id: templateId,
@@ -50,7 +113,6 @@ export async function sendZNS({ phone, templateId, templateData }) {
       tracking_id: `cdc_${Date.now()}`,
     }),
   });
-  return res.json();
 }
 
 // ============================================================
@@ -136,24 +198,18 @@ export async function sendListMessage(userId, elementsData) {
 // LẤY DANH SÁCH NGƯỜI THEO DÕI
 // ============================================================
 export async function getFollowers(offset = 0, count = 50) {
-  const token = await getAccessToken();
-  const res = await fetch(
-    `${ZALO_OA_API}/getfollowers?data=${encodeURIComponent(JSON.stringify({ offset, count }))}`,
-    { headers: { access_token: token } }
+  return callZaloAPI(
+    `${ZALO_OA_API}/getfollowers?data=${encodeURIComponent(JSON.stringify({ offset, count }))}`
   );
-  return res.json();
 }
 
 // ============================================================
 // LẤY THÔNG TIN NGƯỜI DÙNG ZALO
 // ============================================================
 export async function getUserProfile(userId) {
-  const token = await getAccessToken();
-  const res = await fetch(
-    `${ZALO_OA_API}/getprofile?data=${encodeURIComponent(JSON.stringify({ user_id: userId }))}`,
-    { headers: { access_token: token } }
+  return callZaloAPI(
+    `${ZALO_OA_API}/getprofile?data=${encodeURIComponent(JSON.stringify({ user_id: userId }))}`
   );
-  return res.json();
 }
 
 // Lấy đường dẫn tệp video cục bộ hoặc tải xuống tệp tạm thời nếu từ URL ngoài
