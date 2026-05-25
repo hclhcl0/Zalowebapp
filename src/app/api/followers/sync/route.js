@@ -121,12 +121,18 @@ export async function POST() {
           if (existing.userType === "citizen" && userType === "staff") {
             finalUserType = "staff";
           }
+          
+          // Chỉ ghi đè nếu API lấy được tên hợp lệ, nếu không giữ nguyên tên cũ
+          const newDisplayName = displayName !== "Người dùng Zalo" ? displayName : existing.displayName;
+          const newAvatarUrl = avatarUrl ? avatarUrl : existing.avatarUrl;
+          const newPhone = phone ? phone : existing.phone;
+
           await prisma.follower.update({
             where: { zaloUserId },
             data: {
-              displayName,
-              avatarUrl,
-              phone,
+              displayName: newDisplayName,
+              avatarUrl: newAvatarUrl,
+              phone: newPhone,
               userType: finalUserType,
             },
           });
