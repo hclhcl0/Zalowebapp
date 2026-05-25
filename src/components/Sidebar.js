@@ -4,31 +4,54 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { CDC_LOGO_BASE64 } from "@/lib/logo";
+import { 
+  LayoutDashboard, Users, Megaphone, Mail, 
+  Newspaper, CalendarDays, AlertTriangle, 
+  Settings, UserCog, LogOut, ChevronRight
+} from "lucide-react";
+
+// Helper to map string/emoji to Lucide icon component
+const IconMapper = ({ iconName, size = 18 }) => {
+  switch (iconName) {
+    case "LayoutDashboard": return <LayoutDashboard size={size} />;
+    case "Users": return <Users size={size} />;
+    case "Megaphone": return <Megaphone size={size} />;
+    case "Mail": return <Mail size={size} />;
+    case "📰":
+    case "Newspaper": return <Newspaper size={size} />;
+    case "📅":
+    case "CalendarDays": return <CalendarDays size={size} />;
+    case "🚨":
+    case "AlertTriangle": return <AlertTriangle size={size} />;
+    case "Settings": return <Settings size={size} />;
+    case "UserCog": return <UserCog size={size} />;
+    default: return <ChevronRight size={size} />; // fallback
+  }
+};
 
 const menuGroups = [
   {
     title: "Tổng quan",
     items: [
-      { icon: "📊", label: "Dashboard", href: "/" },
-      { icon: "👤", label: "Người quan tâm Zalo", href: "/followers" },
-      { icon: "📣", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
-      { icon: "📧", label: "Gửi Email Báo Lương", href: "/salary-email" },
+      { icon: "LayoutDashboard", label: "Dashboard", href: "/" },
+      { icon: "Users", label: "Người quan tâm Zalo", href: "/followers" },
+      { icon: "Megaphone", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
+      { icon: "Mail", label: "Gửi Email Báo Lương", href: "/salary-email" },
     ],
   },
-
   {
     title: "Tin tức & Cảnh báo",
     items: [
-      { icon: "📰", label: "Tin vắn dịch bệnh", href: "/news/daily" },
-      { icon: "📅", label: "Lịch tiêm chủng", href: "/news/vaccination-schedule" },
-      { icon: "🚨", label: "Thông báo khẩn", href: "/news/alerts" },
+      { icon: "Newspaper", label: "Tin vắn dịch bệnh", href: "/news/daily" },
+      { icon: "CalendarDays", label: "Lịch tiêm chủng", href: "/news/vaccination-schedule" },
+      { icon: "AlertTriangle", label: "Thông báo khẩn", href: "/news/alerts" },
     ],
   },
   {
     title: "Hệ thống",
     items: [
-      { icon: "⚙️", label: "Cài đặt & Zalo API", href: "/settings" },
-      { icon: "👥", label: "Quản lý tài khoản", href: "/settings/users" },
+      { icon: "Settings", label: "Cài đặt & Zalo API", href: "/settings" },
+      { icon: "UserCog", label: "Quản lý tài khoản", href: "/settings/users" },
     ],
   },
 ];
@@ -38,9 +61,9 @@ export default function Sidebar() {
   const { data: session } = useSession();
 
   const [categories, setCategories] = useState([
-    { id: "daily_news", name: "Tin vắn dịch bệnh", icon: "📰" },
-    { id: "vac_schedule", name: "Lịch tiêm chủng", icon: "📅" },
-    { id: "alert", name: "Thông báo khẩn", icon: "🚨" }
+    { id: "daily_news", name: "Tin vắn dịch bệnh", icon: "Newspaper" },
+    { id: "vac_schedule", name: "Lịch tiêm chủng", icon: "CalendarDays" },
+    { id: "alert", name: "Thông báo khẩn", icon: "AlertTriangle" }
   ]);
 
   useEffect(() => {
@@ -152,7 +175,9 @@ export default function Sidebar() {
                   href={item.href}
                   className={`menu-item ${isActive(item) ? "active" : ""}`}
                 >
-                  <span className="menu-item-icon">{item.icon}</span>
+                  <span className="menu-item-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <IconMapper iconName={item.icon} />
+                  </span>
                   {item.label}
                 </Link>
               ))}
@@ -177,7 +202,7 @@ export default function Sidebar() {
             title="Đăng xuất"
             onClick={() => signOut({ callbackUrl: "/login" })}
           >
-            ↩
+            <LogOut size={18} />
           </button>
         </div>
       </div>

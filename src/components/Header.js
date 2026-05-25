@@ -1,5 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
+import { Menu, Bell } from "lucide-react";
 
 export default function Header({ title = "Dashboard", breadcrumb = "Tổng quan", onMenuToggle }) {
   const { data: session } = useSession();
@@ -14,8 +15,9 @@ export default function Header({ title = "Dashboard", breadcrumb = "Tổng quan"
           className="menu-toggle-btn" 
           onClick={onMenuToggle}
           title="Mở menu"
+          style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", color: "var(--text)" }}
         >
-          ☰
+          <Menu size={20} />
         </button>
         <div className="header-left">
           <span className="header-title">{title}</span>
@@ -24,6 +26,10 @@ export default function Header({ title = "Dashboard", breadcrumb = "Tổng quan"
       </div>
       <div className="header-right">
         <span className="header-time">{now}</span>
+        <div className="header-badge" title="Thông báo">
+          <Bell size={18} color="var(--text-muted)" />
+          <div className="badge-dot" />
+        </div>
       </div>
     </header>
   );

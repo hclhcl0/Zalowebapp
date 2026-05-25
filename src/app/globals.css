@@ -4,33 +4,33 @@
    DESIGN SYSTEM - CSS VARIABLES
    ============================================================ */
 :root {
-  --primary: #1d4ed8;
-  --primary-hover: #1e40af;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
   --primary-light: #eff6ff;
-  --primary-glow: rgba(29, 78, 216, 0.15);
+  --primary-glow: rgba(37, 99, 235, 0.12);
 
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
 
-  --bg: #f1f5f9;
+  --bg: #f8fafc;
   --sidebar-bg: #ffffff;
-  --card-bg: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.85);
 
   --text: #0f172a;
-  --text-muted: #64748b;
+  --text-muted: #475569;
   --text-light: #94a3b8;
 
   --border: #e2e8f0;
-  --border-focus: #93c5fd;
+  --border-focus: #bfdbfe;
 
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
-
-  --radius: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.06), 0 4px 6px -4px rgba(0,0,0,0.03);
+  
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
 
 /* ============================================================
@@ -220,7 +220,9 @@ a { text-decoration: none; color: inherit; }
 /* --- Header --- */
 .header {
   height: 64px;
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -229,7 +231,6 @@ a { text-decoration: none; color: inherit; }
   position: sticky;
   top: 0;
   z-index: 40;
-  box-shadow: var(--shadow-sm);
 }
 
 .header-left { display: flex; flex-direction: column; }
@@ -285,10 +286,15 @@ a { text-decoration: none; color: inherit; }
    ============================================================ */
 .card {
   background: var(--card-bg);
+  backdrop-filter: blur(8px);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(226, 232, 240, 0.7);
   box-shadow: var(--shadow-sm);
   padding: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .card + .card { margin-top: 20px; }

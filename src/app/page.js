@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { Users, UserCheck, Stethoscope, Clock, Megaphone, Mail, UserCog, Settings, Activity } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -17,16 +18,23 @@ function formatRelativeTime(date) {
 }
 
 export default async function Dashboard() {
-  // 1. Truy vấn số liệu thực tế từ cơ sở dữ liệu qua Prisma
   const totalFollowers = await prisma.follower.count();
-  const totalStaff = await prisma.staffZaloLink.count();
+  const totalStaff = await prisma.follower.count({
+    where: { userType: "staff" }
+  });
   const totalCitizens = await prisma.follower.count({
     where: {
       userType: "citizen",
       NOT: { fullName: null }
     }
   });
-  const totalMessages = await prisma.messageLog.count();
+  // Số lượng Followers chưa khai báo thông tin
+  const totalUnregistered = await prisma.follower.count({
+    where: {
+      userType: "citizen",
+      fullName: null
+    }
+  });
 
   // 2. Truy vấn 5 tương tác/hoạt động gần đây từ MessageLog
   const logs = await prisma.messageLog.findMany({
@@ -86,7 +94,9 @@ export default async function Dashboard() {
           <h1 className="page-title">Tổng quan hệ thống</h1>
           <p className="page-desc">Hệ thống quản trị Zalo OA & Quản lý thông tin gửi lương tự động CDC Đà Nẵng.</p>
         </div>
-        <Link href="/broadcast" className="btn btn-primary">📢 Gửi Tin Truyền Thông</Link>
+        <Link href="/broadcast" className="btn btn-primary">
+          <Megaphone size={18} /> Gửi Tin Truyền Thông
+        </Link>
       </div>
       
       {/* Real-time Stat cards */}
@@ -94,21 +104,21 @@ export default async function Dashboard() {
         {/* Card 1: Followers */}
         <div className="stat-card">
           <div className="stat-info">
-            <div className="stat-label">Tổng người quan tâm Zalo</div>
+            <div className="stat-label">Tổng người quan tâm</div>
             <div className="stat-value">{totalFollowers.toLocaleString("vi-VN")}</div>
-            <div className="stat-change" style={{ color: "var(--text-muted)" }}>Người dùng quan tâm OA</div>
+            <div className="stat-change" style={{ color: "var(--text-muted)" }}>Số lượng Follower Zalo OA</div>
           </div>
-          <div className="stat-icon blue">👥</div>
+          <div className="stat-icon blue"><Users size={24} color="#2563eb" /></div>
         </div>
 
         {/* Card 2: Staff links */}
         <div className="stat-card">
           <div className="stat-info">
-            <div className="stat-label">Cán bộ đã liên kết Zalo</div>
+            <div className="stat-label">Cán bộ đã liên kết</div>
             <div className="stat-value">{totalStaff.toLocaleString("vi-VN")}</div>
             <div className="stat-change" style={{ color: "var(--success)" }}>Đã xác thực nhận lương &amp; thuế</div>
           </div>
-          <div className="stat-icon green">💼</div>
+          <div className="stat-icon green"><UserCheck size={24} color="#10b981" /></div>
         </div>
 
         {/* Card 3: Registered citizens */}
@@ -116,25 +126,26 @@ export default async function Dashboard() {
           <div className="stat-info">
             <div className="stat-label">Khách hàng đăng ký</div>
             <div className="stat-value">{totalCitizens.toLocaleString("vi-VN")}</div>
-            <div className="stat-change" style={{ color: "var(--warning)" }}>Đăng ký nhận kết quả y tế</div>
+            <div className="stat-change" style={{ color: "#3b82f6" }}>Đăng ký nhận kết quả y tế</div>
           </div>
-          <div className="stat-icon yellow">🩺</div>
+          <div className="stat-icon purple" style={{ background: "#eff6ff" }}><Stethoscope size={24} color="#3b82f6" /></div>
         </div>
 
-        {/* Card 4: Total logs */}
+        {/* Card 4: Unregistered */}
         <div className="stat-card">
           <div className="stat-info">
-            <div className="stat-label">Tin nhắn/Giao dịch hệ thống</div>
-            <div className="stat-value">{totalMessages.toLocaleString("vi-VN")}</div>
-            <div className="stat-change" style={{ color: "#7c3aed" }}>Nhật ký hoạt động tự động</div>
+            <div className="stat-label">Chưa phân loại</div>
+            <div className="stat-value">{totalUnregistered.toLocaleString("vi-VN")}</div>
+            <div className="stat-change" style={{ color: "var(--warning)" }}>Chưa khai báo thông tin</div>
           </div>
-          <div className="stat-icon purple">📨</div>
+          <div className="stat-icon yellow"><Clock size={24} color="#d97706" /></div>
         </div>
       </div>
 
-      {/* Bottom grid */}
-      <div className="dashboard-grid">
-        {/* Recent activity (Live from Prisma) */}
+      {/* Bottom grid: 60/40 Split */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "24px" }}>
+        
+        {/* Left Column: Recent activity (Live from Prisma) */}
         <div className="card">
           <div className="card-header">
             <div>
@@ -146,10 +157,10 @@ export default async function Dashboard() {
           
           {!hasActivities ? (
             <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--text-muted)" }}>
-              <span style={{ fontSize: "2.2rem", marginBottom: "8px", display: "block" }}>🤖</span>
+              <Activity size={48} color="var(--text-light)" style={{ marginBottom: "12px", opacity: 0.5 }} />
               <div style={{ fontSize: "0.875rem", fontWeight: 600 }}>Hệ thống đang chạy ổn định</div>
               <div style={{ fontSize: "0.78rem", color: "var(--text-light)", marginTop: "4px" }}>
-                Chưa ghi nhận hoạt động tương tác hay tin nhắn nào hôm nay.
+                Chưa ghi nhận hoạt động tương tác hay tin nhắn nào gần đây.
               </div>
             </div>
           ) : (
@@ -167,34 +178,31 @@ export default async function Dashboard() {
           )}
         </div>
 
-        {/* Optimized Quick actions */}
-        <div className="card">
+        {/* Right Column: Quick actions */}
+        <div className="card" style={{ alignSelf: "start" }}>
           <div className="card-header">
-            <div className="card-title">Thao tác nhanh hệ thống</div>
+            <div className="card-title">Thao tác nhanh</div>
           </div>
-          <div className="quick-actions">
+          <div className="quick-actions" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
             <Link href="/broadcast" className="quick-action-btn">
-              <span className="quick-action-icon">📢</span>
-              <strong>Gửi Tin Broadcast</strong>
-              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "2px" }}>Tin truyền thông hàng loạt</span>
+              <Megaphone size={28} strokeWidth={1.5} color="var(--primary)" />
+              <strong>Gửi Tin Truyền Thông</strong>
             </Link>
             <Link href="/salary-email" className="quick-action-btn">
-              <span className="quick-action-icon">📧</span>
+              <Mail size={28} strokeWidth={1.5} color="var(--success)" />
               <strong>Gửi Lương &amp; Thuế</strong>
-              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "2px" }}>Báo lương tự động qua Email</span>
             </Link>
             <Link href="/followers" className="quick-action-btn">
-              <span className="quick-action-icon">👥</span>
+              <Users size={28} strokeWidth={1.5} color="#3b82f6" />
               <strong>Quản Lý Đăng Ký</strong>
-              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "2px" }}>Xem liên kết Zalo nhân sự</span>
             </Link>
             <Link href="/settings" className="quick-action-btn">
-              <span className="quick-action-icon">⚙️</span>
+              <Settings size={28} strokeWidth={1.5} color="var(--text-muted)" />
               <strong>Cài Đặt Hệ Thống</strong>
-              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "2px" }}>Cấu hình Zalo API &amp; Webhook</span>
             </Link>
           </div>
         </div>
+
       </div>
     </div>
   );
