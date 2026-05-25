@@ -8,6 +8,7 @@ import { sendTextMessage } from "@/lib/zalo";
 import { generateCustomZaloMessage } from "@/lib/zaloMessageTemplates";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
