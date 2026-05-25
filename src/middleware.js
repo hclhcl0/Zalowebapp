@@ -13,7 +13,13 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        const path = req?.nextUrl?.pathname;
+        if (path && (path.includes("zalo_verifier") || path.startsWith("/zalo_verifier"))) {
+          return true;
+        }
+        return !!token;
+      },
     },
     secret: process.env.NEXTAUTH_SECRET || "fallback_nextauth_secret_key_cdc_danang_2026_change_in_production",
   }
