@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { CDC_LOGO_BASE64 } from "@/lib/logo";
 
 // ============================================================
 // SVG LOGO CDC
@@ -17,7 +18,7 @@ function CDCLogo() {
       padding: "6px",
       flexShrink: 0,
     }}>
-      <img src="/cdc-logo.png" alt="CDC Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+      <img src={CDC_LOGO_BASE64} alt="CDC Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
     </div>
   );
 }

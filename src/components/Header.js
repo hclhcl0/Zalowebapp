@@ -24,11 +24,6 @@ export default function Header({ title = "Dashboard", breadcrumb = "Tổng quan"
       </div>
       <div className="header-right">
         <span className="header-time">{now}</span>
-        <div className="header-badge" title="Thông báo">
-          🔔
-          <span className="badge-dot" />
-        </div>
-        <div className="header-badge" title="Cài đặt">⚙️</div>
       </div>
     </header>
   );

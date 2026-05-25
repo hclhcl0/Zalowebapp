@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { CDC_LOGO_BASE64 } from "@/lib/logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function LoginPage() {
         <div className="login-banner-content">
           <div className="login-logo">
             <div className="login-logo-icon" style={{ background: "#ffffff", padding: "6px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.8)" }}>
-              <img src="/cdc-logo.png" alt="CDC Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              <img src={CDC_LOGO_BASE64} alt="CDC Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </div>
           </div>
           <h1 className="login-banner-title">CDC Đà Nẵng</h1>
