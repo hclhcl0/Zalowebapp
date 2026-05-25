@@ -436,15 +436,15 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               const excelZaloId = r.zaloUserId || r.zaloId || r.idZalo || r.zalo;
               if (excelZaloId) {
                 const cleanId = String(excelZaloId).trim();
-                matchedFollower = followers.find(f => f.zaloUserId === cleanId);
+                if (cleanId) matchedFollower = followers.find(f => f.zaloUserId === cleanId);
               }
               if (!matchedFollower && (r.phone || r.sdt)) {
                 const cleanedR = cleanPhone(r.phone || r.sdt);
-                matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
               }
               if (!matchedFollower) {
                 const normR = normalizeName(r.tenNhanVien);
-                matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                if (normR) matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
               }
             }
 
@@ -1272,17 +1272,17 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
             if (followers && followers.length > 0) {
               if (columnMapping.zaloIdCol && r[columnMapping.zaloIdCol]) {
                 const cleanId = String(r[columnMapping.zaloIdCol]).trim();
-                matchedFollower = followers.find(f => f.zaloUserId === cleanId);
+                if (cleanId) matchedFollower = followers.find(f => f.zaloUserId === cleanId);
               }
               if (!matchedFollower && columnMapping.phoneCol && r[columnMapping.phoneCol]) {
                 const cleanedR = cleanPhone(r[columnMapping.phoneCol]);
-                matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
               }
               if (!matchedFollower) {
                 const nameVal = r[columnMapping.nameCol];
                 if (nameVal) {
                   const normR = normalizeName(nameVal);
-                  matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                  if (normR) matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
                 }
               }
             }
@@ -2223,15 +2223,15 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               const excelZaloId = r.zaloUserId || r.zaloId || r.idZalo || r.zalo;
               if (excelZaloId) {
                 const cleanId = String(excelZaloId).trim();
-                matchedFollower = followers.find(f => f.zaloUserId === cleanId);
+                if (cleanId) matchedFollower = followers.find(f => f.zaloUserId === cleanId);
               }
               if (!matchedFollower && (r.phone || r.sdt)) {
                 const cleanedR = cleanPhone(r.phone || r.sdt);
-                matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
+                if (cleanedR) matchedFollower = followers.find(f => f.phone && cleanPhone(f.phone).includes(cleanedR));
               }
               if (!matchedFollower) {
                 const normR = normalizeName(r.tenNhanVien);
-                matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                if (normR) matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
               }
             }
 
