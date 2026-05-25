@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendTextMessage } from "@/lib/zalo";
+import { createRegToken } from "@/lib/regToken";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,9 @@ export async function POST(request) {
 
     for (const target of targets) {
       const { zaloUserId, displayName } = target;
-      const regLink = `${baseUrl}/register?uid=${encodeURIComponent(zaloUserId)}`;
+      // Tạo token có chữ ký HMAC, thời hạn 7 ngày — không lộ Zalo ID
+      const regToken = createRegToken(zaloUserId);
+      const regLink = `${baseUrl}/register?token=${encodeURIComponent(regToken)}`;
 
       const name = displayName || "bạn";
       const message =

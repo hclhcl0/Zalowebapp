@@ -64,16 +64,27 @@ function LoadingState() {
 // ============================================================
 // TRẠNG THÁI: LỖI (không có uid)
 // ============================================================
-function InvalidLinkState() {
+function InvalidLinkState({ errorMsg }) {
+  const isExpired = errorMsg?.includes("hết hạn");
   return (
     <div style={{ textAlign: "center", padding: "40px 20px" }}>
-      <div style={{ fontSize: 64, marginBottom: 16 }}>🔗</div>
+      <div style={{ fontSize: 64, marginBottom: 16 }}>{isExpired ? "⏰" : "🔗"}</div>
       <h2 style={{ color: "#0f172a", fontSize: "1.3rem", fontWeight: 700, marginBottom: 8 }}>
-        Đường dẫn không hợp lệ
+        {isExpired ? "Link đăng ký đã hết hạn" : "Đường dẫn không hợp lệ"}
       </h2>
-      <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: 1.6 }}>
-        Vui lòng sử dụng đường dẫn được gửi từ Zalo OA của CDC Đà Nẵng.
-        <br />Liên hệ Phòng Kế Hoạch - Nghiệp vụ nếu bạn cần hỗ trợ.
+      {errorMsg ? (
+        <p style={{ color: "#dc2626", fontSize: "0.875rem", lineHeight: 1.6, marginBottom: 16,
+          background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "12px 16px",
+          textAlign: "left" }}>
+          ⚠️ {errorMsg}
+        </p>
+      ) : (
+        <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: 1.6 }}>
+          Vui lòng sử dụng đường dẫn được gửi từ Zalo OA của CDC Đà Nẵng.
+        </p>
+      )}
+      <p style={{ color: "#64748b", fontSize: "0.85rem", lineHeight: 1.6 }}>
+        Liên hệ <strong>Phòng Kế Hoạch - Nghiệp vụ</strong> để được cấp link mới.
       </p>
     </div>
   );
@@ -120,7 +131,9 @@ function SuccessState({ staffNameRaw, displayName }) {
 // ============================================================
 function RegisterForm() {
   const searchParams = useSearchParams();
-  const uid = searchParams.get("uid");
+  // Hỗ trợ cả ?token= (mới, có HMAC) và ?uid= (cũ, backward compat)
+  const token = searchParams.get("token");
+  const uidLegacy = searchParams.get("uid");
 
   const [phase, setPhase] = useState("loading"); // loading | invalid | form | already | submitting | success | error
   const [follower, setFollower] = useState(null);
@@ -128,14 +141,27 @@ function RegisterForm() {
   const [formData, setFormData] = useState({ staffNameRaw: "", department: "", phone: "" });
   const [errorMsg, setErrorMsg] = useState("");
   const [successData, setSuccessData] = useState(null);
+  const [tokenErrorMsg, setTokenErrorMsg] = useState("");
 
-  // Tải thông tin follower theo uid
+  // Tải thông tin follower — dùng token (mới) hoặc uid (cũ)
   useEffect(() => {
-    if (!uid) { setPhase("invalid"); return; }
-    fetch(`/api/followers/register?uid=${encodeURIComponent(uid)}`)
+    if (!token && !uidLegacy) { setPhase("invalid"); return; }
+    const qs = token
+      ? `token=${encodeURIComponent(token)}`
+      : `uid=${encodeURIComponent(uidLegacy)}`;
+    fetch(`/api/followers/register?${qs}`)
       .then(r => r.json())
       .then(json => {
-        if (json.error || !json.follower) { setPhase("invalid"); return; }
+        if (json.error || !json.follower) {
+          // Phân biệt lỗi token hết hạn vs link không hợp lệ
+          if (json.error?.includes("hết hạn") || json.error?.includes("chữ ký")) {
+            setTokenErrorMsg(json.error);
+            setPhase("invalid");
+          } else {
+            setPhase("invalid");
+          }
+          return;
+        }
         setFollower(json.follower);
         if (json.existing) {
           setExistingLink(json.existing);
@@ -150,7 +176,7 @@ function RegisterForm() {
         }
       })
       .catch(() => setPhase("invalid"));
-  }, [uid]);
+  }, [token, uidLegacy]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -158,10 +184,12 @@ function RegisterForm() {
     setPhase("submitting");
     setErrorMsg("");
     try {
+      // Gửi token (mới) hoặc uid (cũ) tùy luồng
+      const authPayload = token ? { token } : { uid: uidLegacy };
       const res = await fetch("/api/followers/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid, ...formData }),
+        body: JSON.stringify({ ...authPayload, ...formData }),
       });
       const json = await res.json();
       if (!res.ok || json.error) {
@@ -263,7 +291,7 @@ function RegisterForm() {
 
         {/* Nội dung theo phase */}
         {phase === "loading" && <LoadingState />}
-        {phase === "invalid" && <InvalidLinkState />}
+        {phase === "invalid" && <InvalidLinkState errorMsg={tokenErrorMsg} />}
         {phase === "success" && <SuccessState {...successData} />}
 
         {(phase === "form" || phase === "already" || phase === "submitting") && (

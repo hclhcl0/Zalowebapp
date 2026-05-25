@@ -68,12 +68,26 @@ export async function POST(request) {
       return NextResponse.json({ error: "Người dùng Zalo chưa quan tâm OA" }, { status: 404 });
     }
 
-    // [BẢO VỆ] Kiểm tra xem có đang là Staff không
+    // [BẢO VỆ] Kiểm tra xem tài khoản này có đang là Staff không
     const isStaff = await prisma.staffZaloLink.findUnique({
       where: { zaloUserId: uid }
     });
     if (isStaff) {
       return NextResponse.json({ error: "Tài khoản của bạn đang là Nhân viên CDC. Không thể đăng ký làm Khách hàng." }, { status: 400 });
+    }
+
+    // [BẢO VỆ] Kiểm tra SĐT — nếu SĐT đã được dùng bởi nhân viên (qua tài khoản Zalo khác)
+    if (phone) {
+      const staffWithSamePhone = await prisma.staffZaloLink.findFirst({
+        where: { phone: phone.trim() }
+      });
+      if (staffWithSamePhone && staffWithSamePhone.zaloUserId !== uid) {
+        return NextResponse.json({
+          error: `Số điện thoại ${phone.trim()} đã được nhân viên "${staffWithSamePhone.staffNameRaw}" đăng ký qua tài khoản Zalo khác. Nếu đây là bạn, hãy dùng tài khoản Zalo đã đăng ký nhân viên để đăng nhập OA.`,
+          isStaffPhone: true,
+          staffName: staffWithSamePhone.staffNameRaw,
+        }, { status: 409 });
+      }
     }
 
     // Cập nhật thông tin bệnh nhân trực tiếp vào bảng Follower

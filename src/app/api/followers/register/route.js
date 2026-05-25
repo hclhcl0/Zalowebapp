@@ -5,6 +5,7 @@
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyRegToken } from "@/lib/regToken";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +24,23 @@ function normalizeName(name) {
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const uid = searchParams.get("uid");
+    const token = searchParams.get("token");
+    const uidParam = searchParams.get("uid"); // backward compat (link cũ)
 
-    if (!uid) {
-      return NextResponse.json({ error: "Thiếu uid" }, { status: 400 });
+    let uid;
+
+    if (token) {
+      // ── Luồng mới: xác minh token có chữ ký ──
+      const result = verifyRegToken(token);
+      if (!result.ok) {
+        return NextResponse.json({ error: result.reason }, { status: 401 });
+      }
+      uid = result.zaloUserId;
+    } else if (uidParam) {
+      // ── Luồng cũ: uid trực tiếp — vẫn chấp nhận để không gãy link đã gửi ──
+      uid = uidParam;
+    } else {
+      return NextResponse.json({ error: "Thiếu token hoặc uid" }, { status: 400 });
     }
 
     const follower = await prisma.follower.findUnique({
@@ -61,9 +75,22 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { uid, staffNameRaw, department, phone } = body;
+    const { token, uid: uidBody, staffNameRaw, department, phone } = body;
 
-    if (!uid) return NextResponse.json({ error: "Thiếu uid" }, { status: 400 });
+    // Ưu tiên xác minh token (luồng mới); fallback uid (luồng cũ)
+    let uid;
+    if (token) {
+      const result = verifyRegToken(token);
+      if (!result.ok) {
+        return NextResponse.json({ error: result.reason }, { status: 401 });
+      }
+      uid = result.zaloUserId;
+    } else if (uidBody) {
+      uid = uidBody;
+    } else {
+      return NextResponse.json({ error: "Thiếu token xác thực" }, { status: 400 });
+    }
+
     if (!staffNameRaw?.trim()) return NextResponse.json({ error: "Vui lòng nhập họ và tên" }, { status: 400 });
 
     // Kiểm tra follower tồn tại
