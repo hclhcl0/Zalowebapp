@@ -5,6 +5,11 @@ import DashboardShell from "@/components/DashboardShell";
 export const metadata = {
   title: "CDC Đà Nẵng | Zalo OA Admin",
   description: "Hệ thống quản trị Zalo OA - Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng",
+  icons: {
+    icon: "/cdc-logo.png",
+    shortcut: "/cdc-logo.png",
+    apple: "/cdc-logo.png",
+  }
 };
 
 export default function RootLayout({ children }) {

@@ -9,6 +9,11 @@ import "@/app/globals.css";
 export const metadata = {
   title: "Đăng Ký Nhân Viên CDC | Liên Kết Zalo",
   description: "Đăng ký liên kết tài khoản Zalo với danh sách nhân viên CDC Đà Nẵng",
+  icons: {
+    icon: "/cdc-logo.png",
+    shortcut: "/cdc-logo.png",
+    apple: "/cdc-logo.png",
+  }
 };
 
 export default function RegisterLayout({ children }) {
