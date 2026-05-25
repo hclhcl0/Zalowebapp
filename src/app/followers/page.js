@@ -262,6 +262,55 @@ export default function FollowersPage() {
   const [sendScope, setSendScope] = useState("unregistered");
   const [sendResult, setSendResult] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  
+  // ── Sửa liên kết nhân viên state ──
+  const [editingLink, setEditingLink] = useState(null);
+  const [isEditLinkModalOpen, setIsEditLinkModalOpen] = useState(false);
+  const [updatingLink, setUpdatingLink] = useState(false);
+  const [editStaffNameRaw, setEditStaffNameRaw] = useState("");
+  const [editDept, setEditDept] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+
+  const handleOpenEditLink = (link) => {
+    setEditingLink(link);
+    setEditStaffNameRaw(link.staffNameRaw || "");
+    setEditDept(link.department || "");
+    setEditPhone(link.phone || "");
+    setIsEditLinkModalOpen(true);
+  };
+
+  const handleUpdateLink = async (e) => {
+    e.preventDefault();
+    if (!editingLink) return;
+    if (!editStaffNameRaw.trim()) {
+      alert("Vui lòng nhập họ và tên nhân viên");
+      return;
+    }
+    setUpdatingLink(true);
+    try {
+      const res = await fetch(`/api/followers/staff-links/${editingLink.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          staffNameRaw: editStaffNameRaw.trim(),
+          department: editDept || null,
+          phone: editPhone?.trim() || null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Thao tác thất bại");
+      
+      showToast("🎉 Cập nhật thông tin nhân viên thành công!");
+      setIsEditLinkModalOpen(false);
+      setEditingLink(null);
+      fetchRegStats(); // Làm mới danh sách đã đăng ký
+      fetchFollowers(); // Làm mới danh sách chung để cập nhật tên
+    } catch (err) {
+      alert("Lỗi: " + err.message);
+    } finally {
+      setUpdatingLink(false);
+    }
+  };
   // Toast thông báo nhẹ (hiện thị 3 giây rồi tự ẩn)
   const [toast, setToast] = useState(null); // { msg, type: "success"|"error" }
   const showToast = (msg, type = "success") => {
@@ -1359,14 +1408,23 @@ export default function FollowersPage() {
                           {new Date(link.registeredAt).toLocaleDateString("vi-VN")}
                         </td>
                         <td style={{ padding: "10px 16px" }}>
-                          <button
-                            className="btn btn-sm"
-                            onClick={() => handleDeleteLink(link.id)}
-                            disabled={deletingId === link.id}
-                            style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.78rem" }}
-                          >
-                            {deletingId === link.id ? "…" : "🗑️ Xóa"}
-                          </button>
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <button
+                              className="btn btn-sm btn-outline"
+                              onClick={() => handleOpenEditLink(link)}
+                              style={{ fontSize: "0.78rem", padding: "4px 8px", height: "28px" }}
+                            >
+                              ✏️ Sửa
+                            </button>
+                            <button
+                              className="btn btn-sm"
+                              onClick={() => handleDeleteLink(link.id)}
+                              disabled={deletingId === link.id}
+                              style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.78rem", padding: "4px 8px", height: "28px" }}
+                            >
+                              {deletingId === link.id ? "…" : "🗑️ Xóa"}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1376,6 +1434,124 @@ export default function FollowersPage() {
             )}
           </div>
 
+        </div>
+      )}
+      {/* Modal Sửa liên kết nhân viên */}
+      {isEditLinkModalOpen && editingLink && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1001, backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "white", borderRadius: "var(--radius-lg)",
+            width: "90%", maxWidth: "450px", padding: "28px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+            animation: "fadeUp 0.3s ease"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
+                ✏️ Sửa Thông Tin Cán Bộ
+              </h3>
+              <button
+                type="button"
+                onClick={() => { setIsEditLinkModalOpen(false); setEditingLink(null); }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.2rem" }}
+              >✕</button>
+            </div>
+
+            {/* Profile Zalo Mini Panel */}
+            <div style={{
+              background: "var(--primary-light)", border: "1px solid var(--border-focus)",
+              borderRadius: "12px", padding: "12px 14px", marginBottom: "18px",
+              display: "flex", alignItems: "center", gap: "10px"
+            }}>
+              {editingLink.avatarUrl ? (
+                <img src={editingLink.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%" }} />
+              ) : (
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.9rem" }}>
+                  {editingLink.staffNameRaw?.charAt(0) || "?"}
+                </div>
+              )}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, color: "var(--primary)", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  Zalo: {editingLink.displayName || "Người dùng Zalo"}
+                </div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                  ID: <code>{editingLink.zaloUserId}</code>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdateLink} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {/* Họ tên */}
+              <div>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>👤 Họ và Tên <span style={{ color: "red" }}>*</span></label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Họ và tên..."
+                  value={editStaffNameRaw}
+                  onChange={(e) => setEditStaffNameRaw(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", fontSize: "0.9rem" }}
+                  required
+                />
+              </div>
+
+              {/* Số điện thoại */}
+              <div>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>📞 Số điện thoại</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="SĐT..."
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", fontSize: "0.9rem" }}
+                />
+              </div>
+
+              {/* Phòng ban */}
+              <div>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏢 Khoa / Phòng ban</label>
+                <select
+                  className="form-input"
+                  value={editDept}
+                  onChange={(e) => setEditDept(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", fontSize: "0.9rem", cursor: "pointer" }}
+                >
+                  <option value="">-- Chọn đơn vị công tác --</option>
+                  {DEPARTMENTS.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => { setIsEditLinkModalOpen(false); setEditingLink(null); }}
+                  style={{ flex: 1, height: "38px" }}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={updatingLink}
+                  style={{ flex: 1, height: "38px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                >
+                  {updatingLink ? (
+                    <>
+                      <div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />
+                      Đang lưu...
+                    </>
+                  ) : "Lưu"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
