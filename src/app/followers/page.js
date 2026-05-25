@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
+import * as XLSX from "xlsx";
 
 const DEPARTMENTS = [
   "Phòng chống bệnh truyền nhiễm",
@@ -325,6 +326,51 @@ export default function FollowersPage() {
       fetchRegStats();
     } catch (e) { alert("Lỗi: " + e.message); }
     finally { setDeletingId(null); }
+  };
+
+  const handleExportExcel = () => {
+    if (!regStats?.links || regStats.links.length === 0) {
+      alert("Không có dữ liệu để xuất!");
+      return;
+    }
+
+    try {
+      // Chuẩn bị dữ liệu xuất
+      const exportData = regStats.links.map((link, index) => ({
+        "STT": index + 1,
+        "Họ và Tên": link.staffNameRaw,
+        "Phòng / Khoa / Bộ phận": link.department || "Chưa chọn",
+        "Số điện thoại": link.phone || "Chưa đăng ký",
+        "Tên Zalo hiển thị": link.displayName || "—",
+        "Zalo User ID (zaloUserId)": link.zaloUserId,
+        "Ngày đăng ký": new Date(link.registeredAt).toLocaleDateString("vi-VN") + " " + new Date(link.registeredAt).toLocaleTimeString("vi-VN"),
+      }));
+
+      // Tạo workbook & worksheet
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Danh sach Dang Ky");
+
+      // Cấu hình chiều rộng các cột
+      const maxColWidths = [
+        { wch: 6 },   // STT
+        { wch: 25 },  // Họ và Tên
+        { wch: 30 },  // Phòng / Khoa
+        { wch: 15 },  // SĐT
+        { wch: 25 },  // Tên Zalo
+        { wch: 28 },  // Zalo ID
+        { wch: 20 },  // Ngày ĐK
+      ];
+      worksheet["!cols"] = maxColWidths;
+
+      // Xuất file
+      const fileName = `Danh_Sach_Nhan_Vien_Dang_Ky_Zalo_CDC_${new Date().toISOString().slice(0,10)}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      showToast("📥 Xuất file Excel thành công!");
+    } catch (err) {
+      console.error("Lỗi xuất file Excel:", err);
+      alert("Đã xảy ra lỗi khi xuất file Excel: " + err.message);
+    }
   };
 
   const handleSyncFollowers = async () => {
@@ -1213,11 +1259,20 @@ export default function FollowersPage() {
 
           {/* Bảng đã đăng ký */}
           <div className="card">
-            <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
               <div>
                 <div className="card-title">✅ Danh Sách Đã Đăng Ký ({regStats?.totalRegistered ?? 0})</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã tự xác nhận tên thật qua link đăng ký</div>
               </div>
+              {regStats?.links?.length > 0 && (
+                <button
+                  className="btn btn-success btn-sm"
+                  onClick={handleExportExcel}
+                  style={{ display: "flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", borderRadius: "8px", padding: "8px 16px", fontWeight: "bold", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(16,185,129,0.2)" }}
+                >
+                  📥 Xuất Excel
+                </button>
+              )}
             </div>
 
             {regLoading ? (
