@@ -13,7 +13,7 @@ export default function DashboardShell({ children }) {
     setSidebarOpen(false);
   }, [pathname]);
 
-  const isNoLayoutPage = pathname === "/login" || pathname.startsWith("/news/view/");
+  const isNoLayoutPage = pathname === "/login" || pathname === "/register" || pathname === "/patient-register" || pathname.startsWith("/news/view/");
 
   if (isNoLayoutPage) {
     return <main>{children}</main>;
