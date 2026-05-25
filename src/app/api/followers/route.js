@@ -33,8 +33,26 @@ export async function GET(request) {
       });
     }
 
-    if (userType !== "all") {
-      whereClause.AND.push({ userType });
+    // Lấy tất cả zaloUserId của nhân viên đã liên kết để đối chiếu chéo (chánh lỗi lệch data)
+    const allStaffLinks = await prisma.staffZaloLink.findMany({
+      select: { zaloUserId: true, department: true, phone: true }
+    });
+    const staffZaloUserIds = allStaffLinks.map((link) => link.zaloUserId);
+
+    if (userType === "staff") {
+      // Cán bộ cơ quan: Có userType là 'staff' HOẶC có trong bảng liên kết nhân viên
+      whereClause.AND.push({
+        OR: [
+          { userType: "staff" },
+          { zaloUserId: { in: staffZaloUserIds } }
+        ]
+      });
+    } else if (userType === "citizen") {
+      // Khách hàng: Có userType là 'citizen' VÀ KHÔNG có trong bảng liên kết nhân viên
+      whereClause.AND.push({
+        userType: "citizen",
+        zaloUserId: { notIn: staffZaloUserIds }
+      });
     }
 
     // Lấy tổng số lượng để tính phân trang
@@ -51,22 +69,58 @@ export async function GET(request) {
       take: limit,
     });
 
-    // Lấy thông tin StaffZaloLink cho các followers là staff
-    const zaloUserIds = followers.map((f) => f.zaloUserId);
-    const staffLinks = await prisma.staffZaloLink.findMany({
-      where: { zaloUserId: { in: zaloUserIds } },
-    });
-
     const staffLinkMap = {};
-    staffLinks.forEach((link) => {
+    allStaffLinks.forEach((link) => {
       staffLinkMap[link.zaloUserId] = link;
     });
 
-    // Đính kèm staffLink vào follower object
-    const enrichedFollowers = followers.map((f) => ({
-      ...f,
-      staffLink: staffLinkMap[f.zaloUserId] || null,
-    }));
+    // Đính kèm staffLink và chuẩn hóa hiển thị đồng bộ
+    const enrichedFollowers = followers.map((f) => {
+      const staffLink = staffLinkMap[f.zaloUserId] || null;
+      return {
+        ...f,
+        userType: staffLink ? "staff" : f.userType,
+        department: staffLink ? (staffLink.department || f.department) : f.department,
+        phone: staffLink ? (staffLink.phone || f.phone) : f.phone,
+        staffLink,
+      };
+    });
+
+    // Tự động sửa chữa dữ liệu (Self-healing) bất đồng bộ đối với các bản ghi bị lệch userType
+    const mismatchedUserIds = staffZaloUserIds.filter(uid => {
+      const found = followers.find(f => f.zaloUserId === uid);
+      return found && found.userType !== "staff";
+    });
+
+    if (mismatchedUserIds.length > 0 || (userType === "all" && allStaffLinks.length > 0)) {
+      // Chạy nền sửa chữa dữ liệu lệch
+      (async () => {
+        try {
+          const targets = await prisma.follower.findMany({
+            where: {
+              zaloUserId: { in: staffZaloUserIds },
+              userType: { not: "staff" }
+            }
+          });
+          if (targets.length > 0) {
+            console.log(`[Self-Healing] Phát hiện ${targets.length} cán bộ bị lệch phân loại. Đang tự động sửa...`);
+            for (const t of targets) {
+              const link = staffLinkMap[t.zaloUserId];
+              await prisma.follower.update({
+                where: { id: t.id },
+                data: {
+                  userType: "staff",
+                  department: link.department || t.department,
+                  phone: link.phone || t.phone
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.error("[Self-Healing Error]", e);
+        }
+      })();
+    }
 
     return NextResponse.json({
       data: enrichedFollowers,

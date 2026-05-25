@@ -38,6 +38,21 @@ export async function GET(request, { params }) {
       where: { zaloUserId: follower.zaloUserId }
     });
 
+    // Self-healing: Nếu có liên kết nhân viên nhưng phân loại trong bảng Follower chưa cập nhật
+    if (staffLink && follower.userType !== "staff") {
+      await prisma.follower.update({
+        where: { id },
+        data: {
+          userType: "staff",
+          department: staffLink.department || follower.department,
+          phone: staffLink.phone || follower.phone,
+        }
+      }).catch(e => console.error("[Self-Healing Detail Error]", e));
+      follower.userType = "staff";
+      follower.department = staffLink.department || follower.department;
+      follower.phone = staffLink.phone || follower.phone;
+    }
+
     return NextResponse.json({
       data: {
         ...follower,

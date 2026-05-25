@@ -97,6 +97,8 @@ export async function POST() {
       // 3. Upsert vào Database của CDC với kiểm tra khớp cán bộ y tế
       try {
         let userType = "citizen";
+        
+        // 1. Kiểm tra SĐT xem có khớp với tài khoản Admin/Cán bộ hệ thống không
         if (phone) {
           const normalized = normalizePhone(phone);
           const matchedAdmin = await prisma.admin.findFirst({
@@ -110,6 +112,14 @@ export async function POST() {
           if (matchedAdmin) {
             userType = "staff";
           }
+        }
+
+        // 2. Kiểm tra chéo xem có trong bảng StaffZaloLink không (Ưu tiên tuyệt đối)
+        const matchedStaffLink = await prisma.staffZaloLink.findUnique({
+          where: { zaloUserId }
+        });
+        if (matchedStaffLink) {
+          userType = "staff";
         }
 
         const existing = await prisma.follower.findUnique({
