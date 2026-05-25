@@ -198,8 +198,9 @@ export async function sendListMessage(userId, elementsData) {
 // LẤY DANH SÁCH NGƯỜI THEO DÕI
 // ============================================================
 export async function getFollowers(offset = 0, count = 50) {
+  // Chuyển sang API v3.0
   return callZaloAPI(
-    `${ZALO_OA_API}/getfollowers?data=${encodeURIComponent(JSON.stringify({ offset, count }))}`
+    `https://openapi.zalo.me/v3.0/oa/user/getlist?data=${encodeURIComponent(JSON.stringify({ offset, count }))}`
   );
 }
 
@@ -207,8 +208,9 @@ export async function getFollowers(offset = 0, count = 50) {
 // LẤY THÔNG TIN NGƯỜI DÙNG ZALO
 // ============================================================
 export async function getUserProfile(userId) {
+  // Chuyển sang API v3.0 theo chuẩn mới nhất của Zalo
   return callZaloAPI(
-    `${ZALO_OA_API}/getprofile?data=${encodeURIComponent(JSON.stringify({ user_id: userId }))}`
+    `https://openapi.zalo.me/v3.0/oa/user/detail?data=${encodeURIComponent(JSON.stringify({ user_id: userId }))}`
   );
 }
 

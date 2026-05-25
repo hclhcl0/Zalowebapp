@@ -31,7 +31,7 @@ export async function POST() {
         );
       }
 
-      const batch = followersRes.data?.followers || [];
+      const batch = followersRes.data?.users || followersRes.data?.followers || [];
       followersList = [...followersList, ...batch];
 
       const total = followersRes.data?.total || 0;
