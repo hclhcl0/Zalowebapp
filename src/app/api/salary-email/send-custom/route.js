@@ -58,10 +58,14 @@ async function findZaloUserId(record, columnMapping) {
       possibleFormats.push("84" + phone.slice(1));
       possibleFormats.push("+84" + phone.slice(1));
     }
-    const follower = await prisma.follower.findFirst({
+    const followers = await prisma.follower.findMany({
       where: { phone: { in: possibleFormats } }
     });
-    if (follower) return follower.zaloUserId;
+    if (followers.length > 0) {
+      const staffFollower = followers.find(f => f.userType === "staff");
+      if (staffFollower) return staffFollower.zaloUserId;
+      return followers[0].zaloUserId;
+    }
   }
 
   // 3. Tìm theo displayName (fallback)
