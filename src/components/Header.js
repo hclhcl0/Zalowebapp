@@ -10,19 +10,8 @@ export default function Header({ title = "Dashboard", breadcrumb = "Tổng quan"
 
   return (
     <header className="header">
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <button 
-          className="menu-toggle-btn" 
-          onClick={onMenuToggle}
-          title="Mở menu"
-          style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", color: "var(--text)" }}
-        >
-          <Menu size={20} />
-        </button>
-        <div className="header-left">
-          <span className="header-title">{title}</span>
-          <span className="header-breadcrumb">CDC Đà Nẵng · {breadcrumb}</span>
-        </div>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        {/* Empty left side for premium minimal look */}
       </div>
       <div className="header-right">
         <span className="header-time">{now}</span>

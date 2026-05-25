@@ -257,35 +257,18 @@ export default function BroadcastPage() {
         </div>
       </div>
 
-      {/* Hướng dẫn tương thích Zalo API v2.0 */}
-      <div style={{
-        background: "#eff6ff",
-        border: "1px solid #bfdbfe",
-        borderRadius: "var(--radius)",
-        padding: "16px 20px",
-        marginBottom: "24px",
-        color: "#1e3a8a",
-        fontSize: "0.875rem",
-        lineHeight: "1.6"
-      }}>
-        <h4 style={{ fontWeight: 700, margin: "0 0 6px 0", display: "flex", alignItems: "center", gap: "6px" }}>
-          💡 Hệ thống sử dụng Zalo API v2.0 Compatibility Layer
-        </h4>
-        <p style={{ margin: 0 }}>
-          Hệ thống được cấu hình tự động tương thích với API v2.0 legacy của Zalo, cho phép gửi tin nhắn danh sách và tin nhắn thường thành công trực tiếp cho tài khoản Cơ quan Nhà nước (CDC Đà Nẵng) mà không gặp lỗi <code>-233</code>.
-        </p>
-      </div>
+
 
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "24px", alignItems: "flex-start" }}>
 
         {/* === LEFT: Compose Form === */}
         <form onSubmit={handleSend}>
-          <div className="card" style={{ marginBottom: "20px" }}>
-            <div className="card-header">
+          <div className="card" style={{ marginBottom: "20px", padding: "16px" }}>
+            <div className="card-header" style={{ marginBottom: "12px", paddingBottom: "8px", borderBottom: "1px solid var(--border)" }}>
               <div className="card-title">📝 Soạn tin nhắn</div>
             </div>
-            <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ padding: "0", display: "flex", flexDirection: "column", gap: "12px" }}>
 
               {/* Scope selector */}
               <div>
@@ -298,15 +281,16 @@ export default function BroadcastPage() {
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
-                        padding: "10px 16px",
+                        padding: "8px 12px",
                         borderRadius: "var(--radius)",
-                        border: `2px solid ${scope === opt.value ? "var(--primary)" : "var(--border)"}`,
+                        border: `1px solid ${scope === opt.value ? "var(--primary)" : "var(--border)"}`,
                         background: scope === opt.value ? "var(--primary-light)" : "white",
                         cursor: "pointer",
-                        fontSize: "0.875rem",
+                        fontSize: "0.85rem",
                         fontWeight: scope === opt.value ? 600 : 400,
                         transition: "all 0.15s",
-                        flex: 1
+                        flex: 1,
+                        boxShadow: scope === opt.value ? "0 0 0 3px var(--primary-glow)" : "none"
                       }}
                     >
                       <input
@@ -398,36 +382,39 @@ export default function BroadcastPage() {
               {/* Message Type Selector */}
               <div>
                 <label className="form-label">Loại tin nhắn</label>
-                <div style={{ display: "flex", gap: "12px", marginTop: "8px", marginBottom: "16px" }}>
+                <div style={{ display: "flex", gap: "8px", marginTop: "8px", marginBottom: "12px" }}>
                   <label
                     style={{
-                      display: "flex", alignItems: "center", gap: "8px", padding: "10px 16px", borderRadius: "var(--radius)",
-                      border: `2px solid ${messageType === "text" ? "var(--primary)" : "var(--border)"}`,
-                      background: messageType === "text" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.875rem", flex: 1
+                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "var(--radius)",
+                      border: `1px solid ${messageType === "text" ? "var(--primary)" : "var(--border)"}`,
+                      background: messageType === "text" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.82rem", flex: 1,
+                      boxShadow: messageType === "text" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s"
                     }}
                   >
                     <input type="radio" name="messageType" value="text" checked={messageType === "text"} onChange={() => setMessageType("text")} style={{ accentColor: "var(--primary)" }} />
-                    📄 Tin văn bản thường
+                    📄 Tin văn bản
                   </label>
                   <label
                     style={{
-                      display: "flex", alignItems: "center", gap: "8px", padding: "10px 16px", borderRadius: "var(--radius)",
-                      border: `2px solid ${messageType === "list" ? "var(--primary)" : "var(--border)"}`,
-                      background: messageType === "list" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.875rem", flex: 1
+                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "var(--radius)",
+                      border: `1px solid ${messageType === "list" ? "var(--primary)" : "var(--border)"}`,
+                      background: messageType === "list" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.82rem", flex: 1,
+                      boxShadow: messageType === "list" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s"
                     }}
                   >
                     <input type="radio" name="messageType" value="list" checked={messageType === "list"} onChange={() => setMessageType("list")} style={{ accentColor: "var(--primary)" }} />
-                    📑 Tin nhắn danh sách (Carousel)
+                    📑 Tin danh sách
                   </label>
                   <label
                     style={{
-                      display: "flex", alignItems: "center", gap: "8px", padding: "10px 16px", borderRadius: "var(--radius)",
-                      border: `2px solid ${messageType === "video" ? "var(--primary)" : "var(--border)"}`,
-                      background: messageType === "video" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.875rem", flex: 1
+                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "var(--radius)",
+                      border: `1px solid ${messageType === "video" ? "var(--primary)" : "var(--border)"}`,
+                      background: messageType === "video" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.82rem", flex: 1,
+                      boxShadow: messageType === "video" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s"
                     }}
                   >
                     <input type="radio" name="messageType" value="video" checked={messageType === "video"} onChange={() => setMessageType("video")} style={{ accentColor: "var(--primary)" }} />
-                    🎥 Tin nhắn Video
+                    🎥 Tin Video
                   </label>
                 </div>
               </div>
