@@ -300,13 +300,13 @@ export default function SalaryEmailPage() {
               gap: "4px",
               padding: "14px 18px",
               borderRadius: "var(--radius-lg)",
-              border: `2px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
+              border: `1px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
               background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
               cursor: "pointer",
               flex: "1 1 200px",
               textAlign: "left",
               transition: "all 0.2s",
-              boxShadow: activeTab === tab.id ? "var(--shadow-md)" : "var(--shadow-sm)"
+              boxShadow: activeTab === tab.id ? "var(--shadow-md), 0 0 0 3px var(--primary-glow)" : "var(--shadow-sm)"
             }}
           >
             <span style={{ fontSize: "0.95rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>

@@ -35,7 +35,7 @@ function CDCLogo() {
       background: "#ffffff",
       display: "flex", alignItems: "center", justifyContent: "center",
       boxShadow: "0 8px 32px rgba(29,78,216,0.15)",
-      border: "2px solid #1d4ed8",
+      border: "1px solid #1d4ed8",
       margin: "0 auto 20px",
       padding: "6px",
       flexShrink: 0,
@@ -238,7 +238,7 @@ function RegisterForm() {
         }
         .form-input {
           width: 100%; padding: 12px 16px;
-          border: 2px solid #e2e8f0; border-radius: 10px;
+          border: 1px solid #e2e8f0; border-radius: 10px;
           font-size: 0.95rem; font-family: inherit;
           transition: border-color 0.2s, box-shadow 0.2s;
           outline: none; color: #0f172a;
@@ -266,7 +266,7 @@ function RegisterForm() {
         .btn-outline {
           width: 100%; padding: 12px;
           background: transparent; color: #1d4ed8;
-          border: 2px solid #1d4ed8; border-radius: 10px;
+          border: 1px solid #1d4ed8; border-radius: 10px;
           font-size: 0.9rem; font-weight: 600; font-family: inherit;
           cursor: pointer; transition: all 0.15s;
         }
@@ -306,7 +306,7 @@ function RegisterForm() {
                 {follower.avatarUrl ? (
                   <img src={follower.avatarUrl} alt="" style={{
                     width: 44, height: 44, borderRadius: "50%",
-                    border: "2px solid #0ea5e9", flexShrink: 0,
+                    border: "1px solid #0ea5e9", flexShrink: 0,
                   }} />
                 ) : (
                   <div style={{

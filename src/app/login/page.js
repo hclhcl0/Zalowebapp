@@ -47,7 +47,7 @@ export default function LoginPage() {
       <div className="login-banner">
         <div className="login-banner-content">
           <div className="login-logo">
-            <div className="login-logo-icon" style={{ background: "#ffffff", padding: "6px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.8)" }}>
+            <div className="login-logo-icon" style={{ background: "#ffffff", padding: "6px", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.8)" }}>
               <img src={CDC_LOGO_BASE64} alt="CDC Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </div>
           </div>

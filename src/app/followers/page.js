@@ -615,9 +615,10 @@ export default function FollowersPage() {
             style={{
               display: "flex", flexDirection: "column", alignItems: "flex-start",
               gap: "2px", padding: "12px 18px", borderRadius: "var(--radius-lg)",
-              border: `2px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
+              border: `1px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
               background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
               cursor: "pointer", flex: "0 0 auto", transition: "all 0.2s",
+              boxShadow: activeTab === tab.id ? "0 0 0 3px var(--primary-glow)" : "none"
             }}
           >
             <span style={{ fontSize: "0.9rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>{tab.label}</span>
@@ -1019,7 +1020,7 @@ export default function FollowersPage() {
                   <img
                     src={selectedFollower.avatarUrl}
                     alt={selectedFollower.displayName}
-                    style={{ width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover", marginBottom: "12px", border: "2px solid var(--primary-light)" }}
+                    style={{ width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover", marginBottom: "12px", border: "1px solid var(--primary-light)" }}
                   />
                 ) : (
                   <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "2rem", margin: "0 auto 12px" }}>
@@ -1450,7 +1451,7 @@ export default function FollowersPage() {
                 <div className="table-responsive desktop-only">
                   <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                     <thead>
-                      <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                      <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
                         <th style={{ padding: "12px 16px" }}>Ảnh</th>
                         <th style={{ padding: "12px 16px" }}>Tên Thật (Đã Đăng Ký)</th>
                         <th style={{ padding: "12px 16px" }}>Tên Zalo</th>

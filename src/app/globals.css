@@ -377,7 +377,7 @@ table {
 
 thead tr {
   background: var(--bg);
-  border-bottom: 2px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 th {
@@ -429,7 +429,7 @@ tbody tr:hover { background: #f8fafc; }
 .form-input, .form-select, .form-textarea {
   width: 100%;
   padding: 10px 14px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.875rem;
   font-family: 'Inter', sans-serif;
@@ -476,7 +476,7 @@ tbody tr:hover { background: #f8fafc; }
 
 .search-input {
   padding: 9px 14px 9px 38px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.875rem;
   color: var(--text);
@@ -510,7 +510,7 @@ tbody tr:hover { background: #f8fafc; }
   font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.15s;
-  border: 1.5px solid transparent;
+  border: 1px solid transparent;
   white-space: nowrap;
 }
 
@@ -568,7 +568,7 @@ tbody tr:hover { background: #f8fafc; }
   gap: 8px;
   padding: 16px;
   background: var(--bg);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   cursor: pointer;
   font-family: 'Inter', sans-serif;

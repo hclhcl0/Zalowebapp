@@ -253,7 +253,7 @@ export default function NewsManager({ category, title, description }) {
             <div className="table-responsive">
               <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                 <thead>
-                  <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                  <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
                     <th style={{ padding: "12px 8px" }}>Bài viết</th>
                     <th style={{ padding: "12px 8px", width: "150px" }}>Ngày tạo</th>
                     <th style={{ padding: "12px 8px", width: "120px" }}>Trạng thái</th>

@@ -166,7 +166,7 @@ export default function UserManagementPage() {
           <div className="table-responsive">
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
-                <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
                   <th style={{ padding: "12px 8px" }}>Họ và tên</th>
                   <th style={{ padding: "12px 8px" }}>Tên đăng nhập</th>
                   <th style={{ padding: "12px 8px", width: "150px" }}>Vai trò</th>

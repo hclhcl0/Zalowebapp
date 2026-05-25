@@ -15,7 +15,7 @@ export default function Vaccination() {
       <div className="card">
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid var(--border)' }}>
+            <tr style={{ borderBottom: '1px solid var(--border)' }}>
               <th style={{ padding: '12px 8px' }}>Họ tên</th>
               <th style={{ padding: '12px 8px' }}>Số điện thoại</th>
               <th style={{ padding: '12px 8px' }}>Loại vắc xin</th>
