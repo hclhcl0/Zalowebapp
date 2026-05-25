@@ -689,11 +689,12 @@ export default function FollowersPage() {
               <thead>
                 <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
                   <th style={{ padding: "12px 8px", width: "60px" }}>Avatar</th>
-                  <th style={{ padding: "12px 8px" }}>Tên người dùng</th>
+                  <th style={{ padding: "12px 8px" }}>Tên Zalo</th>
+                  <th style={{ padding: "12px 8px", minWidth: "160px" }}>Tên đã đăng ký</th>
                   <th style={{ padding: "12px 8px", width: "200px" }}>Zalo User ID</th>
-                  <th style={{ padding: "12px 8px", width: "150px" }}>Số điện thoại</th>
-                  <th style={{ padding: "12px 8px", width: "150px" }}>Ngày quan tâm</th>
-                  <th style={{ padding: "12px 8px", width: "230px" }}>Thao tác</th>
+                  <th style={{ padding: "12px 8px", width: "130px" }}>Số điện thoại</th>
+                  <th style={{ padding: "12px 8px", width: "120px" }}>Ngày quan tâm</th>
+                  <th style={{ padding: "12px 8px", width: "180px" }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -714,55 +715,15 @@ export default function FollowersPage() {
                     </td>
                     <td style={{ padding: "12px 8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                        {f.userType === "staff" && f.staffLink ? (
-                          <div style={{ display: "flex", flexDirection: "column" }}>
-                            <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text)" }}>
-                              {f.staffLink.staffNameRaw}
-                            </span>
-                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              Zalo: {f.displayName}
-                            </span>
-                          </div>
-                        ) : f.userType === "citizen" && f.fullName ? (
-                          <div style={{ display: "flex", flexDirection: "column" }}>
-                            <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--text)" }}>
-                              {f.fullName}
-                            </span>
-                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              Zalo: {f.displayName}
-                            </span>
-                          </div>
-                        ) : (
-                          <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>
-                            {f.displayName}
-                          </span>
-                        )}
+                        <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>
+                          {f.displayName || "Người dùng Zalo"}
+                        </span>
                         {f.userType === "staff" ? (
-                          <span 
-                            style={{ 
-                              fontSize: "0.7rem", 
-                              padding: "2px 6px", 
-                              background: "var(--primary-light)", 
-                              color: "var(--primary)",
-                              border: "1px solid var(--border-focus)",
-                              borderRadius: "4px",
-                              fontWeight: 500
-                            }}
-                          >
+                          <span style={{ fontSize: "0.7rem", padding: "2px 6px", background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
                             💼 Cơ quan {f.department ? `· ${f.department}` : ""}
                           </span>
                         ) : (
-                          <span 
-                            style={{ 
-                              fontSize: "0.7rem", 
-                              padding: "2px 6px", 
-                              background: "#f0fdf4", 
-                              color: "var(--success)",
-                              border: "1px solid #bbf7d0",
-                              borderRadius: "4px",
-                              fontWeight: 500
-                            }}
-                          >
+                          <span style={{ fontSize: "0.7rem", padding: "2px 6px", background: "#f0fdf4", color: "var(--success)", border: "1px solid #bbf7d0", borderRadius: "4px", fontWeight: 500 }}>
                             🟢 Khách hàng
                           </span>
                         )}
@@ -770,6 +731,33 @@ export default function FollowersPage() {
                       <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
                         {f.appointments.length} lịch hẹn | {f.testResults.length} kết quả
                       </div>
+                    </td>
+
+                    {/* Cột Tên đã đăng ký */}
+                    <td style={{ padding: "12px 8px" }}>
+                      {f.userType === "staff" && f.staffLink ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                          <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "#065f46" }}>
+                            {f.staffLink.staffNameRaw}
+                          </span>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.7rem", color: "#059669", fontWeight: 600 }}>
+                            ✅ Nhân viên đã đăng ký
+                          </span>
+                        </div>
+                      ) : f.fullName ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                          <span style={{ fontWeight: 700, fontSize: "0.88rem", color: "#1e40af" }}>
+                            {f.fullName}
+                          </span>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.7rem", color: "#3b82f6", fontWeight: 600 }}>
+                            ✅ Khách hàng đã đăng ký
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: "0.78rem", color: "var(--text-light)", fontStyle: "italic" }}>
+                          ⏳ Chưa đăng ký tên
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: "12px 8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
