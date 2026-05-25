@@ -140,7 +140,8 @@ const normalizeName = (n) => {
                 cursor: "pointer",
                 borderRadius: "4px",
                 color: "var(--danger)",
-                fontWeight: 600
+                fontWeight: 600,
+                lineHeight: "1.5"
               }}
               onMouseEnter={(e) => e.target.style.background = "#fef2f2"}
               onMouseLeave={(e) => e.target.style.background = "transparent"}
@@ -172,7 +173,8 @@ const normalizeName = (n) => {
                     borderRadius: "4px",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
-                    whiteSpace: "nowrap"
+                    whiteSpace: "nowrap",
+                    lineHeight: "1.5"
                   }}
                   onMouseEnter={(e) => {
                     if (f.zaloUserId !== value) e.target.style.background = "var(--bg)";
