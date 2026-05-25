@@ -198,8 +198,8 @@ export default function BroadcastPage() {
       return;
     }
 
-    const previewText = messageType === "text" ? content.substring(0, 80) : messageType === "video" ? `Video: ${url}` : `${listElements.length} thẻ tham số`;
-    const previewTitle = messageType === "text" ? title : messageType === "video" ? "Gửi tin nhắn Video" : listElements[0].title;
+    const previewText = messageType === "text" ? content.substring(0, 80) : `${listElements.length} thẻ tham số`;
+    const previewTitle = messageType === "text" ? title : listElements[0].title;
     const confirmed = window.confirm(
       scope === "all"
         ? `Bạn có chắc muốn gửi tin đến TẤT CẢ người quan tâm Zalo OA?\n\nTiêu đề: "${previewTitle}"\nNội dung: "${previewText}..."`
@@ -241,8 +241,8 @@ export default function BroadcastPage() {
   };
 
   const scopeOptions = [
-    { value: "all", label: "📢 Gửi đến tất cả người quan tâm" },
-    { value: "list", label: "🎯 Gửi đến danh sách chọn lọc" },
+    { value: "all", label: "📢 Tất cả" },
+    { value: "list", label: "🎯 Chọn lọc" },
   ];
 
   return (
@@ -387,34 +387,25 @@ export default function BroadcastPage() {
                     style={{
                       display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "var(--radius)",
                       border: `1px solid ${messageType === "text" ? "var(--primary)" : "var(--border)"}`,
-                      background: messageType === "text" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.82rem", flex: 1,
-                      boxShadow: messageType === "text" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s"
+                      background: messageType === "text" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.85rem", flex: 1,
+                      boxShadow: messageType === "text" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s",
+                      justifyContent: "center"
                     }}
                   >
                     <input type="radio" name="messageType" value="text" checked={messageType === "text"} onChange={() => setMessageType("text")} style={{ accentColor: "var(--primary)" }} />
-                    📄 Tin văn bản
+                    📄 Văn bản
                   </label>
                   <label
                     style={{
                       display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "var(--radius)",
                       border: `1px solid ${messageType === "list" ? "var(--primary)" : "var(--border)"}`,
-                      background: messageType === "list" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.82rem", flex: 1,
-                      boxShadow: messageType === "list" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s"
+                      background: messageType === "list" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.85rem", flex: 1,
+                      boxShadow: messageType === "list" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s",
+                      justifyContent: "center"
                     }}
                   >
                     <input type="radio" name="messageType" value="list" checked={messageType === "list"} onChange={() => setMessageType("list")} style={{ accentColor: "var(--primary)" }} />
-                    📑 Tin danh sách
-                  </label>
-                  <label
-                    style={{
-                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "var(--radius)",
-                      border: `1px solid ${messageType === "video" ? "var(--primary)" : "var(--border)"}`,
-                      background: messageType === "video" ? "var(--primary-light)" : "white", cursor: "pointer", fontSize: "0.82rem", flex: 1,
-                      boxShadow: messageType === "video" ? "0 0 0 3px var(--primary-glow)" : "none", transition: "all 0.15s"
-                    }}
-                  >
-                    <input type="radio" name="messageType" value="video" checked={messageType === "video"} onChange={() => setMessageType("video")} style={{ accentColor: "var(--primary)" }} />
-                    🎥 Tin Video
+                    📑 Danh sách
                   </label>
                 </div>
               </div>
@@ -468,76 +459,7 @@ export default function BroadcastPage() {
                 </>
               )}
 
-              {messageType === "video" && (
-                <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <h4 style={{ margin: "0 0 4px 0", fontSize: "0.95rem", fontWeight: 700 }}>🎥 Cấu hình Tin nhắn Video</h4>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "8px" }}>
-                    Zalo OA yêu cầu đường dẫn Video phải là liên kết trực tiếp (MP4, AVI) và có thể truy cập công khai từ bên ngoài.
-                  </div>
-                  <div>
-                    <label className="form-label">Đường dẫn Video (URL)</label>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Nhập link video trực tiếp (ví dụ: https://example.com/video.mp4) hoặc tải lên..."
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        required={messageType === "video"}
-                        style={{ flex: 1 }}
-                      />
-                      <label 
-                        htmlFor="video-file-upload" 
-                        style={{ 
-                          display: "inline-flex", 
-                          alignItems: "center", 
-                          justifyContent: "center", 
-                          cursor: "pointer", 
-                          padding: "8px 16px", 
-                          fontSize: "0.85rem", 
-                          margin: 0,
-                          background: "var(--primary)", 
-                          color: "white", 
-                          borderRadius: "var(--radius)",
-                          fontWeight: 600,
-                          whiteSpace: "nowrap",
-                          transition: "background-color 0.15s"
-                        }}
-                      >
-                        📤 Tải video lên
-                      </label>
-                      <input 
-                        type="file" 
-                        id="video-file-upload" 
-                        accept="video/*" 
-                        style={{ display: "none" }} 
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          if (!file.type.startsWith("video/")) {
-                            alert("Chỉ chấp nhận tệp tin video.");
-                            return;
-                          }
-                          const formData = new FormData();
-                          formData.append("file", file);
-                          try {
-                            const res = await fetch("/api/upload", {
-                              method: "POST",
-                              body: formData,
-                            });
-                            const data = await res.json();
-                            if (!res.ok) throw new Error(data.error || "Tải video thất bại");
-                            setUrl(data.url);
-                            alert("Tải lên video thành công!");
-                          } catch (err) {
-                            alert(err.message);
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+
 
               {messageType === "list" && (
                 <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid var(--border)" }}>
