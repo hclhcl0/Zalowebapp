@@ -1,0 +1,22 @@
+{
+  "name": "Zalo OA Admin - CDC Đà Nẵng",
+  "short_name": "ZCDC",
+  "description": "Hệ thống quản trị Zalo OA và thông tin nhận lương y tế CDC Đà Nẵng",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/cdc-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/cdc-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

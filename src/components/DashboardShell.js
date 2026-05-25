@@ -13,6 +13,16 @@ export default function DashboardShell({ children }) {
     setSidebarOpen(false);
   }, [pathname]);
 
+  // Register PWA Service Worker
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").then(
+        (registration) => console.log("Service Worker registered with scope:", registration.scope),
+        (error) => console.error("Service Worker registration failed:", error)
+      );
+    }
+  }, []);
+
   const isNoLayoutPage = pathname === "/login" || pathname === "/register" || pathname === "/patient-register" || pathname.startsWith("/news/view/");
 
   if (isNoLayoutPage) {
