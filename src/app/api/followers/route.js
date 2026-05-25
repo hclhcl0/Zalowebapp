@@ -19,17 +19,19 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
 
     const whereClause = {
-      AND: [
-        {
-          OR: [
-            { displayName: { contains: query } },
-            { phone: { contains: query } },
-            { zaloUserId: { contains: query } },
-            { department: { contains: query } },
-          ],
-        },
-      ],
+      AND: [],
     };
+
+    if (query) {
+      whereClause.AND.push({
+        OR: [
+          { displayName: { contains: query, mode: "insensitive" } },
+          { phone: { contains: query, mode: "insensitive" } },
+          { zaloUserId: { contains: query, mode: "insensitive" } },
+          { department: { contains: query, mode: "insensitive" } },
+        ],
+      });
+    }
 
     if (userType !== "all") {
       whereClause.AND.push({ userType });
