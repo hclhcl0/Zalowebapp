@@ -77,7 +77,7 @@ export async function POST(request) {
 
           // Người dùng mới theo dõi OA
           case "follow":
-            await handleFollow(user_id_by_app, body);
+            await handleFollow(user_id_by_app, body, request);
             break;
 
           // Người dùng bỏ theo dõi OA
@@ -162,7 +162,7 @@ async function handleTextMessage(userId, text) {
 // ============================================================
 // Xử lý: Người dùng mới theo dõi OA
 // ============================================================
-async function handleFollow(userId, data) {
+async function handleFollow(userId, data, request) {
   // Zalo webhook đôi khi không có sẵn display_name trong payload, cần gọi API lấy profile
   let displayName = data.follower?.display_name || "Người dùng Zalo";
   let avatarUrl = data.follower?.avatar || null;
@@ -192,10 +192,20 @@ async function handleFollow(userId, data) {
     },
   });
 
-  // Gửi tin chào mừng kèm link phân loại
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://zalo-cdc-test.vercel.app";
-  const staffLink = `${appUrl}/register?uid=${userId}`;
-  const patientLink = `${appUrl}/patient-register?uid=${userId}`;
+  // Lấy base URL từ request headers để đảm bảo link luôn trỏ về đúng domain đang chạy
+  // Nếu có biến môi trường NEXT_PUBLIC_APP_URL thì ưu tiên dùng
+  // (Vì request.headers đôi khi trong webhook không chứa port chuẩn nếu config qua Nginx/Ngrok)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  let baseUrl = "https://zalo-cdc-test.vercel.app";
+  if (appUrl) {
+    baseUrl = appUrl;
+  } else if (request && request.headers.get("host")) {
+    const proto = request.headers.get("x-forwarded-proto") || "https";
+    baseUrl = `${proto}://${request.headers.get("host")}`;
+  }
+
+  const staffLink = `${baseUrl}/register?uid=${userId}`;
+  const patientLink = `${baseUrl}/patient-register?uid=${userId}`;
 
   const welcomeMessage = `Xin chào! Cảm ơn bạn đã quan tâm đến Zalo OA của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng) 🏥\n\n` + 
     `Để chúng tôi phục vụ tốt nhất, vui lòng xác nhận bạn là Khách hàng hay Nhân viên CDC bằng cách bấm vào 1 trong 2 link dưới đây:\n\n` +
