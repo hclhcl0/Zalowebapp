@@ -21,6 +21,11 @@ export async function GET(request) {
       return NextResponse.json({ error: "Không tìm thấy người dùng" }, { status: 404 });
     }
 
+    // Kiểm tra xem có đang là Staff không
+    const staffLink = await prisma.staffZaloLink.findUnique({
+      where: { zaloUserId: uid }
+    });
+
     // Nếu đã có thông tin fullName, tức là đã đăng ký rồi
     const existing = follower.fullName ? {
       fullName: follower.fullName,
@@ -34,7 +39,7 @@ export async function GET(request) {
         zaloUserId: follower.zaloUserId,
         displayName: follower.displayName,
         avatarUrl: follower.avatarUrl,
-        userType: follower.userType,
+        userType: staffLink ? "staff" : follower.userType,
       },
       existing
     });
@@ -61,6 +66,14 @@ export async function POST(request) {
 
     if (!follower) {
       return NextResponse.json({ error: "Người dùng Zalo chưa quan tâm OA" }, { status: 404 });
+    }
+
+    // [BẢO VỆ] Kiểm tra xem có đang là Staff không
+    const isStaff = await prisma.staffZaloLink.findUnique({
+      where: { zaloUserId: uid }
+    });
+    if (isStaff) {
+      return NextResponse.json({ error: "Tài khoản của bạn đang là Nhân viên CDC. Không thể đăng ký làm Khách hàng." }, { status: 400 });
     }
 
     // Cập nhật thông tin bệnh nhân trực tiếp vào bảng Follower

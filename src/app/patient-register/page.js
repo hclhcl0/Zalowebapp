@@ -102,6 +102,10 @@ function PatientRegisterForm() {
       .then(json => {
         if (json.error || !json.follower) { setPhase("invalid"); return; }
         setFollower(json.follower);
+        if (json.follower.userType === "staff") {
+          setPhase("is_staff");
+          return;
+        }
         if (json.existing) {
           setFormData({
             fullName: json.existing.fullName || "",
@@ -222,6 +226,26 @@ function PatientRegisterForm() {
         {phase === "loading" && <LoadingState />}
         {phase === "invalid" && <InvalidLinkState />}
         {phase === "success" && <SuccessState {...successData} />}
+
+        {phase === "is_staff" && (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: 64, marginBottom: 16, animation: "popIn 0.4s ease" }}>⚠️</div>
+            <h2 style={{ color: "#b45309", fontSize: "1.3rem", fontWeight: 700, marginBottom: 12 }}>
+              Tài Khoản Nhân Viên
+            </h2>
+            <p style={{ color: "#475569", fontSize: "0.92rem", lineHeight: 1.6, marginBottom: 20 }}>
+              Tài khoản Zalo này hiện đang liên kết với hồ sơ **Cán bộ/Nhân viên CDC**. Bạn không cần đăng ký tài khoản Khách hàng.
+            </p>
+            <div style={{
+              background: "#fffbeb", border: "1px solid #fef3c7",
+              borderRadius: 12, padding: "16px 20px", textAlign: "left",
+            }}>
+              <p style={{ color: "#b45309", fontSize: "0.82rem", lineHeight: 1.7, margin: 0 }}>
+                💡 Nếu đây là nhầm lẫn hoặc bạn muốn cập nhật, vui lòng liên hệ **Phòng Kế Hoạch - Nghiệp vụ** để được hỗ trợ điều chỉnh.
+              </p>
+            </div>
+          </div>
+        )}
 
         {(phase === "form" || phase === "already" || phase === "submitting") && (
           <>
