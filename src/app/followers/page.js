@@ -684,129 +684,228 @@ export default function FollowersPage() {
             📭 Không tìm thấy người dùng nào phù hợp.
           </div>
         ) : (
-          <div className="table-responsive">
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead>
-                <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
-                  <th style={{ padding: "12px 8px", width: "50px" }}>Avatar</th>
-                  <th style={{ padding: "12px 8px", minWidth: "150px" }}>Tên Zalo</th>
-                  <th style={{ padding: "12px 8px", width: "170px" }}>Zalo User ID</th>
-                  <th style={{ padding: "12px 8px", width: "120px" }}>Số điện thoại</th>
-                  <th style={{ padding: "12px 8px", width: "110px" }}>Ngày QT</th>
-                  <th style={{ padding: "12px 8px", width: "160px" }}>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {followers.map((f) => (
-                  <tr key={f.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.2s" }}>
-                    <td style={{ padding: "12px 8px" }}>
-                      <div style={{ position: "relative", display: "inline-flex" }}>
+          <>
+            <div className="table-responsive desktop-only">
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                    <th style={{ padding: "12px 8px", width: "50px" }}>Avatar</th>
+                    <th style={{ padding: "12px 8px", minWidth: "150px" }}>Tên Zalo</th>
+                    <th style={{ padding: "12px 8px", width: "170px" }}>Zalo User ID</th>
+                    <th style={{ padding: "12px 8px", width: "120px" }}>Số điện thoại</th>
+                    <th style={{ padding: "12px 8px", width: "110px" }}>Ngày QT</th>
+                    <th style={{ padding: "12px 8px", width: "160px" }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {followers.map((f) => (
+                    <tr key={f.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.2s" }}>
+                      <td style={{ padding: "12px 8px" }}>
+                        <div style={{ position: "relative", display: "inline-flex" }}>
+                          {f.avatarUrl ? (
+                            <img
+                              src={f.avatarUrl}
+                              alt={f.displayName}
+                              style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)" }}
+                            />
+                          ) : (
+                            <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.9rem" }}>
+                              {f.displayName ? f.displayName.substring(0, 1) : "U"}
+                            </div>
+                          )}
+                          {/* Dấu check xanh cho người đã đăng ký */}
+                          {((f.userType === "staff" && f.staffLink) || f.fullName) && (
+                            <div style={{
+                              position: "absolute", bottom: "-2px", right: "-2px",
+                              background: "white", borderRadius: "50%", padding: "2px",
+                              boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
+                            }}>
+                              <div style={{
+                                background: "var(--success)", color: "white",
+                                width: "12px", height: "12px", borderRadius: "50%",
+                                display: "flex", alignItems: "center", justifyContent: "center"
+                              }}>
+                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: "12px 8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)" }}>
+                            {f.displayName || "Người dùng Zalo"}
+                          </span>
+                          {f.userType === "staff" ? (
+                            <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
+                              💼 Cơ quan
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "#f0fdf4", color: "var(--success)", border: "1px solid #bbf7d0", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
+                              🟢 Khách hàng
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                          {f.appointments.length} hẹn | {f.testResults.length} KQ
+                        </div>
+                      </td>
+                      <td style={{ padding: "12px 8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <code style={{ fontSize: "0.75rem", background: "var(--bg)", padding: "2px 6px", borderRadius: "4px" }}>
+                            {f.zaloUserId}
+                          </code>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(f.zaloUserId)}
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", color: "var(--text-muted)" }}
+                            title="Copy ID"
+                          >
+                            📋
+                          </button>
+                        </div>
+                      </td>
+                      <td style={{ padding: "12px 8px", fontSize: "0.9rem" }}>
+                        {f.phone ? (
+                          <span style={{ fontWeight: 500 }}>{f.phone}</span>
+                        ) : (
+                          <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>Chưa có SĐT</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "12px 8px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                        {new Date(f.followedAt).toLocaleDateString("vi-VN")}
+                      </td>
+                      <td style={{ padding: "12px 8px" }}>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          <button className="btn btn-outline btn-sm" onClick={() => handleOpenDetail(f)}
+                            style={{ fontSize: "0.78rem", padding: "4px 8px", height: "28px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                          >
+                            💬 Chi tiết
+                          </button>
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => handleSendSingleRegistration(f.zaloUserId, f.displayName)}
+                            disabled={sendingSingle === f.zaloUserId}
+                            title={`Gửi link đăng ký cho ${f.displayName}`}
+                            style={{
+                              fontSize: "0.78rem", padding: "4px 8px", height: "28px",
+                              display: "inline-flex", alignItems: "center", gap: "4px",
+                              background: sendingSingle === f.zaloUserId ? "#f1f5f9" : "#eff6ff",
+                              color: "#1d4ed8", border: "1px solid #bfdbfe",
+                              cursor: sendingSingle === f.zaloUserId ? "not-allowed" : "pointer",
+                              borderRadius: "6px", whiteSpace: "nowrap",
+                            }}
+                          >
+                            {sendingSingle === f.zaloUserId ? (
+                              <><div style={{ width: 10, height: 10, border: "1.5px solid #93c5fd", borderTop: "1.5px solid #1d4ed8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />đang gửi</>
+                            ) : "📨 Gửi ĐK"}
+                          </button>
+                        </div>
+                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile view: list of cards */}
+            <div className="mobile-card-list mobile-only">
+              {followers.map((f) => {
+                const initials = f.displayName ? f.displayName.substring(0, 1) : "U";
+                const hasRegistered = (f.userType === "staff" && f.staffLink) || f.fullName;
+                return (
+                  <div key={f.id} className="mobile-card-item">
+                    <div className="mobile-card-header">
+                      <div className="mobile-card-avatar">
                         {f.avatarUrl ? (
                           <img
                             src={f.avatarUrl}
                             alt={f.displayName}
-                            style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)" }}
+                            style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }}
                           />
                         ) : (
-                          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.9rem" }}>
-                            {f.displayName ? f.displayName.substring(0, 1) : "U"}
-                          </div>
+                          initials
                         )}
-                        {/* Dấu check xanh cho người đã đăng ký */}
-                        {((f.userType === "staff" && f.staffLink) || f.fullName) && (
-                          <div style={{
-                            position: "absolute", bottom: "-2px", right: "-2px",
-                            background: "white", borderRadius: "50%", padding: "2px",
-                            boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
-                          }}>
-                            <div style={{
-                              background: "var(--success)", color: "white",
-                              width: "12px", height: "12px", borderRadius: "50%",
-                              display: "flex", alignItems: "center", justifyContent: "center"
-                            }}>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            </div>
+                        {hasRegistered && (
+                          <div className="mobile-card-avatar-badge">
+                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td style={{ padding: "12px 8px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                        <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)" }}>
-                          {f.displayName || "Người dùng Zalo"}
-                        </span>
-                        {f.userType === "staff" ? (
-                          <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
-                            💼 Cơ quan
+                      <div className="mobile-card-info">
+                        <div className="mobile-card-title-row">
+                          <span className="mobile-card-name">
+                            {f.userType === "staff" && f.staffLink 
+                              ? f.staffLink.staffNameRaw 
+                              : f.fullName 
+                                ? f.fullName 
+                                : f.displayName || "Người dùng Zalo"}
                           </span>
-                        ) : (
-                          <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "#f0fdf4", color: "var(--success)", border: "1px solid #bbf7d0", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
-                            🟢 Khách hàng
+                        </div>
+                        <div className="mobile-card-badge-row">
+                          {f.userType === "staff" ? (
+                            <span style={{ fontSize: "0.65rem", padding: "1px 5px", background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", borderRadius: "4px", fontWeight: 600 }}>
+                              💼 Cơ quan
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: "0.65rem", padding: "1px 5px", background: "#f0fdf4", color: "var(--success)", border: "1px solid #bbf7d0", borderRadius: "4px", fontWeight: 600 }}>
+                              🟢 Khách hàng
+                            </span>
+                          )}
+                          <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", background: "var(--bg)", padding: "1px 5px", borderRadius: "4px", border: "1px solid var(--border)" }}>
+                            {f.appointments.length} hẹn · {f.testResults.length} KQ
                           </span>
-                        )}
+                        </div>
                       </div>
-                      <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                        {f.appointments.length} hẹn | {f.testResults.length} KQ
-                      </div>
-                    </td>
-                    <td style={{ padding: "12px 8px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <code style={{ fontSize: "0.75rem", background: "var(--bg)", padding: "2px 6px", borderRadius: "4px" }}>
-                          {f.zaloUserId}
-                        </code>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(f.zaloUserId)}
-                          style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", color: "var(--text-muted)" }}
-                          title="Copy ID"
-                        >
-                          📋
-                        </button>
-                      </div>
-                    </td>
-                    <td style={{ padding: "12px 8px", fontSize: "0.9rem" }}>
-                      {f.phone ? (
-                        <span style={{ fontWeight: 500 }}>{f.phone}</span>
-                      ) : (
-                        <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>Chưa có SĐT</span>
+                    </div>
+                    
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.78rem", color: "var(--text-muted)", padding: "0 2px" }}>
+                      {((f.userType === "staff" && f.staffLink) || f.fullName) && (
+                        <div>
+                          <strong>Zalo:</strong> {f.displayName}
+                        </div>
                       )}
-                    </td>
-                    <td style={{ padding: "12px 8px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                      {new Date(f.followedAt).toLocaleDateString("vi-VN")}
-                    </td>
-                    <td style={{ padding: "12px 8px" }}>
-                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                        <button className="btn btn-outline btn-sm" onClick={() => handleOpenDetail(f)}
-                          style={{ fontSize: "0.78rem", padding: "4px 8px", height: "28px", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                        >
-                          💬 Chi tiết
-                        </button>
-                        <button
-                          className="btn btn-sm"
-                          onClick={() => handleSendSingleRegistration(f.zaloUserId, f.displayName)}
-                          disabled={sendingSingle === f.zaloUserId}
-                          title={`Gửi link đăng ký cho ${f.displayName}`}
-                          style={{
-                            fontSize: "0.78rem", padding: "4px 8px", height: "28px",
-                            display: "inline-flex", alignItems: "center", gap: "4px",
-                            background: sendingSingle === f.zaloUserId ? "#f1f5f9" : "#eff6ff",
-                            color: "#1d4ed8", border: "1px solid #bfdbfe",
-                            cursor: sendingSingle === f.zaloUserId ? "not-allowed" : "pointer",
-                            borderRadius: "6px", whiteSpace: "nowrap",
-                          }}
-                        >
-                          {sendingSingle === f.zaloUserId ? (
-                            <><div style={{ width: 10, height: 10, border: "1.5px solid #93c5fd", borderTop: "1.5px solid #1d4ed8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />đang gửi</>
-                          ) : "📨 Gửi ĐK"}
-                        </button>
+                      <div>
+                        <strong>SĐT:</strong> {f.phone ? <span style={{ color: "var(--text)", fontWeight: 600 }}>{f.phone}</span> : <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>Chưa đăng ký</span>}
                       </div>
-                      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      {f.userType === "staff" && f.department && (
+                        <div>
+                          <strong>Khoa / Phòng:</strong> <span style={{ color: "var(--text)", fontWeight: 500 }}>{f.department}</span>
+                        </div>
+                      )}
+                      <div>
+                        <strong>ID Zalo:</strong> <code style={{ fontSize: "0.72rem", background: "var(--bg)", padding: "1px 4px", borderRadius: "3px" }}>{f.zaloUserId}</code>
+                      </div>
+                      <div>
+                        <strong>Ngày QT:</strong> {new Date(f.followedAt).toLocaleDateString("vi-VN")}
+                      </div>
+                    </div>
+                    
+                    <div className="mobile-card-actions">
+                      <button className="btn btn-outline btn-sm" onClick={() => handleOpenDetail(f)} style={{ fontSize: "0.75rem", padding: "4px 8px", height: "28px" }}>
+                        💬 Chi tiết
+                      </button>
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => handleSendSingleRegistration(f.zaloUserId, f.displayName)}
+                        disabled={sendingSingle === f.zaloUserId}
+                        style={{
+                          fontSize: "0.75rem", padding: "4px 8px", height: "28px",
+                          background: sendingSingle === f.zaloUserId ? "#f1f5f9" : "#eff6ff",
+                          color: "#1d4ed8", border: "1px solid #bfdbfe",
+                          borderRadius: "6px",
+                        }}
+                      >
+                        {sendingSingle === f.zaloUserId ? "đang gửi" : "📨 Gửi ĐK"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
+
 
         {/* Pagination Controls */}
         {!loading && followers.length > 0 && (
@@ -1347,68 +1446,131 @@ export default function FollowersPage() {
                 <div style={{ fontSize: "0.85rem", marginTop: "4px" }}>Hãy gửi link đăng ký ở trên để bắt đầu.</div>
               </div>
             ) : (
-              <div className="table-responsive">
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
-                      <th style={{ padding: "12px 16px" }}>Ảnh</th>
-                      <th style={{ padding: "12px 16px" }}>Tên Thật (Đã Đăng Ký)</th>
-                      <th style={{ padding: "12px 16px" }}>Tên Zalo</th>
-                      <th style={{ padding: "12px 16px" }}>Phòng / Khoa</th>
-                      <th style={{ padding: "12px 16px" }}>Ngày ĐK</th>
-                      <th style={{ padding: "12px 16px" }}>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {regStats.links.map(link => (
-                      <tr key={link.id} style={{ borderBottom: "1px solid var(--border)" }}>
-                        <td style={{ padding: "10px 16px" }}>
-                          {link.avatarUrl ? (
-                            <img src={link.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid var(--border)" }} />
-                          ) : (
-                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
-                              {link.staffNameRaw?.charAt(0) || "?"}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ padding: "10px 16px" }}>
-                          <div style={{ fontWeight: 700, color: "var(--text)" }}>{link.staffNameRaw}</div>
-                          {link.phone && <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>📞 {link.phone}</div>}
-                        </td>
-                        <td style={{ padding: "10px 16px" }}>
-                          <div style={{ fontSize: "0.875rem", color: "var(--text)" }}>{link.displayName || "—"}</div>
-                          <code style={{ fontSize: "0.7rem", color: "var(--text-muted)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>{link.zaloUserId}</code>
-                        </td>
-                        <td style={{ padding: "10px 16px", fontSize: "0.875rem", color: "var(--text-muted)" }}>
-                          {link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn</em>}
-                        </td>
-                        <td style={{ padding: "10px 16px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                          {new Date(link.registeredAt).toLocaleDateString("vi-VN")}
-                        </td>
-                        <td style={{ padding: "10px 16px" }}>
-                          <div style={{ display: "flex", gap: "6px" }}>
-                            <button
-                              className="btn btn-sm btn-outline"
-                              onClick={() => handleOpenEditLink(link)}
-                              style={{ fontSize: "0.78rem", padding: "4px 8px", height: "28px" }}
-                            >
-                              ✏️ Sửa
-                            </button>
-                            <button
-                              className="btn btn-sm"
-                              onClick={() => handleDeleteLink(link.id)}
-                              disabled={deletingId === link.id}
-                              style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.78rem", padding: "4px 8px", height: "28px" }}
-                            >
-                              {deletingId === link.id ? "…" : "🗑️ Xóa"}
-                            </button>
-                          </div>
-                        </td>
+              <>
+                <div className="table-responsive desktop-only">
+                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                        <th style={{ padding: "12px 16px" }}>Ảnh</th>
+                        <th style={{ padding: "12px 16px" }}>Tên Thật (Đã Đăng Ký)</th>
+                        <th style={{ padding: "12px 16px" }}>Tên Zalo</th>
+                        <th style={{ padding: "12px 16px" }}>Phòng / Khoa</th>
+                        <th style={{ padding: "12px 16px" }}>Ngày ĐK</th>
+                        <th style={{ padding: "12px 16px" }}>Thao tác</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {regStats.links.map(link => (
+                        <tr key={link.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                          <td style={{ padding: "10px 16px" }}>
+                            {link.avatarUrl ? (
+                              <img src={link.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid var(--border)" }} />
+                            ) : (
+                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
+                                {link.staffNameRaw?.charAt(0) || "?"}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ padding: "10px 16px" }}>
+                            <div style={{ fontWeight: 700, color: "var(--text)" }}>{link.staffNameRaw}</div>
+                            {link.phone && <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>📞 {link.phone}</div>}
+                          </td>
+                          <td style={{ padding: "10px 16px" }}>
+                            <div style={{ fontSize: "0.875rem", color: "var(--text)" }}>{link.displayName || "—"}</div>
+                            <code style={{ fontSize: "0.7rem", color: "var(--text-muted)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>{link.zaloUserId}</code>
+                          </td>
+                          <td style={{ padding: "10px 16px", fontSize: "0.875rem", color: "var(--text-muted)" }}>
+                            {link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn</em>}
+                          </td>
+                          <td style={{ padding: "10px 16px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                            {new Date(link.registeredAt).toLocaleDateString("vi-VN")}
+                          </td>
+                          <td style={{ padding: "10px 16px" }}>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              <button
+                                className="btn btn-sm btn-outline"
+                                onClick={() => handleOpenEditLink(link)}
+                                style={{ fontSize: "0.78rem", padding: "4px 8px", height: "28px" }}
+                              >
+                                ✏️ Sửa
+                              </button>
+                              <button
+                                className="btn btn-sm"
+                                onClick={() => handleDeleteLink(link.id)}
+                                disabled={deletingId === link.id}
+                                style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.78rem", padding: "4px 8px", height: "28px" }}
+                              >
+                                {deletingId === link.id ? "…" : "🗑️ Xóa"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile view for staff links: list of cards */}
+                <div className="mobile-card-list mobile-only">
+                  {regStats.links.map(link => {
+                    const initials = link.staffNameRaw?.charAt(0) || "?";
+                    return (
+                      <div key={link.id} className="mobile-card-item">
+                        <div className="mobile-card-header">
+                          <div className="mobile-card-avatar">
+                            {link.avatarUrl ? (
+                              <img src={link.avatarUrl} alt="" style={{ width: "42px", height: "42px", borderRadius: "50%" }} />
+                            ) : (
+                              initials
+                            )}
+                          </div>
+                          <div className="mobile-card-info">
+                            <div className="mobile-card-title-row">
+                              <span className="mobile-card-name">{link.staffNameRaw}</span>
+                            </div>
+                            <div className="mobile-card-subtext" style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                              {link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn khoa/phòng</em>}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.78rem", color: "var(--text-muted)", padding: "0 2px" }}>
+                          <div>
+                            <strong>Tên Zalo:</strong> {link.displayName || "—"}
+                          </div>
+                          <div>
+                            <strong>Số điện thoại:</strong> {link.phone ? <span style={{ color: "var(--text)", fontWeight: 500 }}>{link.phone}</span> : <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>Chưa có SĐT</span>}
+                          </div>
+                          <div>
+                            <strong>ID Zalo:</strong> <code style={{ fontSize: "0.72rem", background: "var(--bg)", padding: "1px 4px", borderRadius: "3px" }}>{link.zaloUserId}</code>
+                          </div>
+                          <div>
+                            <strong>Ngày ĐK:</strong> {new Date(link.registeredAt).toLocaleDateString("vi-VN")}
+                          </div>
+                        </div>
+                        
+                        <div className="mobile-card-actions">
+                          <button
+                            className="btn btn-sm btn-outline"
+                            onClick={() => handleOpenEditLink(link)}
+                            style={{ fontSize: "0.75rem", padding: "4px 8px", height: "28px" }}
+                          >
+                            ✏️ Sửa
+                          </button>
+                          <button
+                            className="btn btn-sm"
+                            onClick={() => handleDeleteLink(link.id)}
+                            disabled={deletingId === link.id}
+                            style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.75rem", padding: "4px 8px", height: "28px" }}
+                          >
+                            {deletingId === link.id ? "…" : "🗑️ Xóa"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
 

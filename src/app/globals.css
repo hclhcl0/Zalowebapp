@@ -946,4 +946,169 @@ tbody tr:hover { background: #f8fafc; }
   .settings-grid {
     grid-template-columns: 1fr;
   }
+
+  /* --- MOBILE OPTIMIZATIONS (ZCDC) --- */
+  .header {
+    height: 56px !important;
+    padding: 0 16px;
+  }
+  
+  .header-breadcrumb {
+    display: none !important;
+  }
+  
+  .card {
+    padding: 16px !important;
+    border-radius: var(--radius-lg);
+  }
+  
+  /* Tap highlight prevention & Safe areas */
+  body {
+    -webkit-tap-highlight-color: transparent;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  button, a, .menu-item {
+    touch-action: manipulation;
+  }
+  
+  /* IOS Autocompletion Zoom Fix */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  
+  .btn, .form-input, .form-select, .search-input {
+    min-height: 42px;
+  }
+  
+  /* Responsive view toggles */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: block !important;
+  }
+  
+  /* Mobile Card List Styles */
+  .mobile-card-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  
+  .mobile-card-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  
+  .mobile-card-item:active {
+    transform: scale(0.985);
+    background: #f8fafc;
+  }
+  
+  .mobile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .mobile-card-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    position: relative;
+  }
+  
+  .mobile-card-avatar-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: var(--success);
+    color: white;
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+  }
+  
+  .mobile-card-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .mobile-card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .mobile-card-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .mobile-card-subtext {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .mobile-card-badge-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  
+  .mobile-card-actions {
+    display: flex;
+    gap: 8px;
+    border-top: 1px dashed var(--border);
+    padding-top: 10px;
+    margin-top: 4px;
+    justify-content: flex-end;
+  }
 }
+
+/* Global utility classes for responsive views */
+.mobile-only {
+  display: none;
+}
+.desktop-only {
+  display: block;
+}
+.mobile-card-list {
+  display: none;
+}
+
