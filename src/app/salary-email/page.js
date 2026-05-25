@@ -218,8 +218,8 @@ export default function SalaryEmailPage() {
     if (savedDelay) setDelayMs(Number(savedDelay));
     setIsLoaded(true);
 
-    // Tải người quan tâm Zalo
-    fetch("/api/followers")
+    // Tải người quan tâm Zalo (lấy tối đa 5000 để map đủ danh sách)
+    fetch("/api/followers?limit=5000")
       .then(res => res.json())
       .then(json => {
         if (json.data) setFollowers(json.data);
@@ -230,7 +230,7 @@ export default function SalaryEmailPage() {
   const refreshFollowers = async () => {
     setIsRefreshingFollowers(true);
     try {
-      const res = await fetch("/api/followers");
+      const res = await fetch("/api/followers?limit=5000");
       const json = await res.json();
       if (json.data) {
         setFollowers(json.data);
@@ -727,7 +727,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               </div>
 
               {/* Table list */}
-              <div className="table-wrapper">
+              <div className="table-wrapper" style={{ minHeight: "350px" }}>
                 <table>
                   <thead>
                     <tr>
@@ -1764,7 +1764,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
               </div>
 
               {/* Records preview table */}
-              <div className="table-wrapper">
+              <div className="table-wrapper" style={{ minHeight: "350px" }}>
                 <table>
                   <thead>
                     <tr>
@@ -2513,7 +2513,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               </div>
 
               {/* Table check list */}
-              <div className="table-wrapper">
+              <div className="table-wrapper" style={{ minHeight: "350px" }}>
                 <table>
                   <thead>
                     <tr>
