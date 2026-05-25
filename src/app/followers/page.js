@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -578,759 +578,459 @@ export default function FollowersPage() {
           {toast.msg}
         </div>
       )}
-      {/* Page Header */}
+
+      {/* ── PAGE HEADER ──────────────────────────────────────── */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">👥 Quản lý Người quan tâm Zalo OA</h1>
-          <p className="page-desc">Danh sách người dân đã nhấn quan tâm, và công cụ đăng ký liên kết nhân viên.</p>
+          <h1 className="page-title">👥 Người quan tâm Zalo OA</h1>
+          <p className="page-desc">Danh sách người dân đã nhấn quan tâm và công cụ đăng ký liên kết nhân viên.</p>
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          {activeTab === "followers" && (
-            <button
-              className="btn btn-outline"
-              onClick={handleSyncFollowers}
-              disabled={syncing || loading}
-              style={{ display: "flex", alignItems: "center", gap: "6px" }}
-            >
-              {syncing ? (
-                <>
-                  <div className="spinner" style={{ width: "14px", height: "14px", border: "1.5px solid var(--text-muted)", borderTopColor: "var(--primary)" }} />
-                  Đang đồng bộ...
-                </>
-              ) : "🔄 Đồng bộ từ Zalo OA"}
-            </button>
-          )}
-        </div>
+        {activeTab === "followers" && (
+          <button
+            className="btn btn-outline"
+            onClick={handleSyncFollowers}
+            disabled={syncing || loading}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            {syncing ? (
+              <>
+                <div className="spinner" style={{ width: "14px", height: "14px", border: "1.5px solid var(--text-muted)", borderTopColor: "var(--primary)" }} />
+                Đang đồng bộ...
+              </>
+            ) : "🔄 Đồng bộ"}
+          </button>
+        )}
       </div>
 
-      {/* Tab Navigation */}
-      <div className="followers-tabs" style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+      {/* ── TAB NAVIGATION (PILL STYLE) ─────────────────────── */}
+      <div className="followers-tabs">
         {[
-          { id: "followers", labelDesktop: "👥 Danh Sách Followers", labelMobile: "👥 Followers", desc: "Xem & phân loại" },
-          { id: "registration", labelDesktop: "🔗 Đăng Ký Nhân Viên", labelMobile: "🔗 Đăng ký", desc: "Liên kết Zalo ID" },
+          { id: "followers", label: "👥 Danh sách" },
+          { id: "registration", label: "🔗 Đăng ký NV" },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className="followers-tab-btn"
-            style={{
-              display: "flex", flexDirection: "column", alignItems: "flex-start",
-              gap: "2px", padding: "12px 18px", borderRadius: "var(--radius-lg)",
-              border: `1px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
-              background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
-              cursor: "pointer", flex: "1 1 0%", maxWidth: "280px", transition: "all 0.2s",
-              boxShadow: activeTab === tab.id ? "0 0 0 3px var(--primary-glow)" : "none"
-            }}
+            className={`followers-tab-pill${activeTab === tab.id ? " active" : ""}`}
           >
-            <span className="tab-label-desktop" style={{ fontSize: "0.9rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>{tab.labelDesktop}</span>
-            <span className="tab-label-mobile" style={{ fontSize: "0.85rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>{tab.labelMobile}</span>
-            <span className="tab-desc" style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{tab.desc}</span>
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Filter & Search — chỉ hiện ở tab followers */}
+      {/* ══════════════════════════════════════════════════════════
+          TAB: FOLLOWERS
+          ══════════════════════════════════════════════════════════ */}
       {activeTab === "followers" && <>
-      <div className="card" style={{ marginBottom: "20px", padding: "16px 24px" }}>
-        <div className="filter-search-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-          {/* Tabs lọc theo userType */}
-          <div className="filter-tabs-wrapper" style={{ display: "flex", gap: "4px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)", border: "1px solid var(--border)", width: "100%", maxWidth: "520px" }}>
-            <button
-              onClick={() => setUserTypeFilter("all")}
-              className={`btn btn-sm ${userTypeFilter === "all" ? "btn-primary" : "btn-ghost"}`}
-              style={{ padding: "6px 8px", border: "none", borderRadius: "calc(var(--radius) - 2px)", flex: 1, fontSize: "0.8rem", whiteSpace: "nowrap", display: "inline-flex", justifyContent: "center", alignItems: "center" }}
-            >
-              👥 Tất cả
-            </button>
-            <button
-              onClick={() => setUserTypeFilter("citizen")}
-              className={`btn btn-sm ${userTypeFilter === "citizen" ? "btn-primary" : "btn-ghost"}`}
-              style={{ padding: "6px 8px", border: "none", borderRadius: "calc(var(--radius) - 2px)", flex: 1, fontSize: "0.8rem", whiteSpace: "nowrap", display: "inline-flex", justifyContent: "center", alignItems: "center" }}
-            >
-              🟢 Khách hàng
-            </button>
-            <button
-              onClick={() => setUserTypeFilter("staff")}
-              className={`btn btn-sm ${userTypeFilter === "staff" ? "btn-primary" : "btn-ghost"}`}
-              style={{ padding: "6px 8px", border: "none", borderRadius: "calc(var(--radius) - 2px)", flex: 1, fontSize: "0.8rem", whiteSpace: "nowrap", display: "inline-flex", justifyContent: "center", alignItems: "center" }}
-            >
-              💼 Cán bộ
-            </button>
-          </div>
 
-          {/* Ô Tìm kiếm */}
-          <div className="search-box-wrapper" style={{ display: "flex", gap: "10px", flex: 1, maxWidth: "450px" }}>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Tìm theo tên, SĐT, ID hoặc phòng ban..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ flex: 1 }}
-            />
-            <button className="btn btn-primary" onClick={fetchFollowers} style={{ whiteSpace: "nowrap" }}>
-              🔍 Tìm
-            </button>
+        {/* Filter & Search */}
+        <div className="card" style={{ marginBottom: "16px", padding: "14px 20px" }}>
+          <div className="filter-search-bar">
+            {/* Segmented control lọc loại */}
+            <div className="segmented-control">
+              {[
+                { value: "all",     label: "👥 Tất cả" },
+                { value: "citizen", label: "🟢 Khách hàng" },
+                { value: "staff",   label: "💼 Cán bộ" },
+              ].map(f => (
+                <button
+                  key={f.value}
+                  className={`segmented-btn${userTypeFilter === f.value ? " active" : ""}`}
+                  onClick={() => setUserTypeFilter(f.value)}
+                >{f.label}</button>
+              ))}
+            </div>
+            {/* Search */}
+            <div className="search-row">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Tìm theo tên, SĐT, ID..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && fetchFollowers()}
+                style={{ flex: 1 }}
+              />
+              <button className="btn btn-primary" onClick={fetchFollowers} style={{ whiteSpace: "nowrap" }}>
+                🔍 Tìm
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main List */}
-      <div className="card">
-        {loading ? (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px", color: "var(--text-muted)" }}>
-            <div className="spinner" style={{ borderColor: "var(--border)", borderTopColor: "var(--primary)", width: 28, height: 28, marginRight: "10px" }} />
-            Đang tải danh sách người quan tâm...
-          </div>
-        ) : followers.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>
-            📭 Không tìm thấy người dùng nào phù hợp.
-          </div>
-        ) : (
-          <>
-            <div className="table-responsive desktop-only">
-              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
-                    <th style={{ padding: "12px 8px", width: "50px" }}>Avatar</th>
-                    <th style={{ padding: "12px 8px", minWidth: "150px" }}>Tên Zalo</th>
-                    <th style={{ padding: "12px 8px", width: "170px" }}>Zalo User ID</th>
-                    <th style={{ padding: "12px 8px", width: "120px" }}>Số điện thoại</th>
-                    <th style={{ padding: "12px 8px", width: "110px" }}>Ngày QT</th>
-                    <th style={{ padding: "12px 8px", width: "160px" }}>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {followers.map((f) => (
-                    <tr key={f.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.2s" }}>
-                      <td style={{ padding: "12px 8px" }}>
-                        <div style={{ position: "relative", display: "inline-flex" }}>
-                          {f.avatarUrl ? (
-                            <img
-                              src={f.avatarUrl}
-                              alt={f.displayName}
-                              style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)" }}
-                            />
-                          ) : (
-                            <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.9rem" }}>
-                              {f.displayName ? f.displayName.substring(0, 1) : "U"}
-                            </div>
-                          )}
-                          {/* Dấu check xanh cho người đã đăng ký */}
-                          {((f.userType === "staff" && f.staffLink) || f.fullName) && (
-                            <div style={{
-                              position: "absolute", bottom: "-2px", right: "-2px",
-                              background: "white", borderRadius: "50%", padding: "2px",
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
-                            }}>
-                              <div style={{
-                                background: "var(--success)", color: "white",
-                                width: "12px", height: "12px", borderRadius: "50%",
-                                display: "flex", alignItems: "center", justifyContent: "center"
-                              }}>
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px 8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                          <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)" }}>
-                            {f.displayName || "Người dùng Zalo"}
-                          </span>
-                          {f.userType === "staff" ? (
-                            <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
-                              💼 Cơ quan
-                            </span>
-                          ) : (
-                            <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "#f0fdf4", color: "var(--success)", border: "1px solid #bbf7d0", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
-                              🟢 Khách hàng
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                          {f.appointments.length} hẹn | {f.testResults.length} KQ
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px 8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <code style={{ fontSize: "0.75rem", background: "var(--bg)", padding: "2px 6px", borderRadius: "4px" }}>
-                            {f.zaloUserId}
-                          </code>
-                          <button
-                            onClick={() => navigator.clipboard.writeText(f.zaloUserId)}
-                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", color: "var(--text-muted)" }}
-                            title="Copy ID"
-                          >
-                            📋
-                          </button>
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px 8px", fontSize: "0.9rem" }}>
-                        {f.phone ? (
-                          <span style={{ fontWeight: 500 }}>{f.phone}</span>
-                        ) : (
-                          <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>Chưa có SĐT</span>
-                        )}
-                      </td>
-                      <td style={{ padding: "12px 8px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                        {new Date(f.followedAt).toLocaleDateString("vi-VN")}
-                      </td>
-                      <td style={{ padding: "12px 8px" }}>
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                          <button className="btn btn-outline btn-sm" onClick={() => handleOpenDetail(f)}
-                            style={{ fontSize: "0.78rem", padding: "4px 8px", height: "28px", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                          >
-                            💬 Chi tiết
-                          </button>
-                          <button
-                            className="btn btn-sm"
-                            onClick={() => handleSendSingleRegistration(f.zaloUserId, f.displayName)}
-                            disabled={sendingSingle === f.zaloUserId}
-                            title={`Gửi link đăng ký cho ${f.displayName}`}
-                            style={{
-                              fontSize: "0.78rem", padding: "4px 8px", height: "28px",
-                              display: "inline-flex", alignItems: "center", gap: "4px",
-                              background: sendingSingle === f.zaloUserId ? "#f1f5f9" : "#eff6ff",
-                              color: "#1d4ed8", border: "1px solid #bfdbfe",
-                              cursor: sendingSingle === f.zaloUserId ? "not-allowed" : "pointer",
-                              borderRadius: "6px", whiteSpace: "nowrap",
-                            }}
-                          >
-                            {sendingSingle === f.zaloUserId ? (
-                              <><div style={{ width: 10, height: 10, border: "1.5px solid #93c5fd", borderTop: "1.5px solid #1d4ed8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />đang gửi</>
-                            ) : "📨 Gửi ĐK"}
-                          </button>
-                        </div>
-                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                      </td>
+        {/* Main List Card */}
+        <div className="card" style={{ padding: 0 }}>
+          {loading ? (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px", color: "var(--text-muted)" }}>
+              <div className="spinner" style={{ borderColor: "var(--border)", borderTopColor: "var(--primary)", width: 28, height: 28, marginRight: "10px" }} />
+              Đang tải...
+            </div>
+          ) : followers.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>
+              📭 Không tìm thấy người dùng nào phù hợp.
+            </div>
+          ) : (
+            <>
+              {/* ── DESKTOP TABLE ── */}
+              <div className="desktop-only" style={{ overflowX: "auto" }}>
+                <table className="followers-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "50px" }}></th>
+                      <th>Tên Zalo</th>
+                      <th style={{ width: "110px" }}>Loại</th>
+                      <th style={{ width: "130px" }}>SĐT</th>
+                      <th style={{ width: "110px" }}>Ngày QT</th>
+                      <th style={{ width: "140px" }}>Thao tác</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile view: list of cards */}
-            <div className="mobile-card-list mobile-only">
-              {followers.map((f) => {
-                const initials = f.displayName ? f.displayName.substring(0, 1) : "U";
-                const hasRegistered = (f.userType === "staff" && f.staffLink) || f.fullName;
-                return (
-                  <div key={f.id} className="mobile-card-item">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-avatar">
-                        {f.avatarUrl ? (
-                          <img
-                            src={f.avatarUrl}
-                            alt={f.displayName}
-                            style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }}
-                          />
-                        ) : (
-                          initials
-                        )}
-                        {hasRegistered && (
-                          <div className="mobile-card-avatar-badge">
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </thead>
+                  <tbody>
+                    {followers.map(f => (
+                      <tr key={f.id}>
+                        {/* Avatar */}
+                        <td style={{ padding: "10px 14px" }}>
+                          <div style={{ position: "relative", display: "inline-flex" }}>
+                            {f.avatarUrl ? (
+                              <img src={f.avatarUrl} alt={f.displayName}
+                                style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)" }} />
+                            ) : (
+                              <div style={{
+                                width: "36px", height: "36px", borderRadius: "50%",
+                                background: "linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%)",
+                                color: "white", display: "flex", alignItems: "center", justifyContent: "center",
+                                fontWeight: "bold", fontSize: "0.9rem"
+                              }}>
+                                {f.displayName ? f.displayName.substring(0, 1) : "U"}
+                              </div>
+                            )}
+                            {((f.userType === "staff" && f.staffLink) || f.fullName) && (
+                              <div style={{
+                                position: "absolute", bottom: "-1px", right: "-1px",
+                                background: "var(--success)", color: "white",
+                                border: "2px solid white", borderRadius: "50%",
+                                width: "14px", height: "14px",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                              }}>
+                                <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="mobile-card-info">
-                        <div className="mobile-card-title-row">
-                          <span className="mobile-card-name">
-                            {f.userType === "staff" && f.staffLink 
-                              ? f.staffLink.staffNameRaw 
-                              : f.fullName 
-                                ? f.fullName 
-                                : f.displayName || "Người dùng Zalo"}
-                          </span>
-                        </div>
-                        <div className="mobile-card-badge-row">
-                          {f.userType === "staff" ? (
-                            <span style={{ fontSize: "0.65rem", padding: "1px 5px", background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", borderRadius: "4px", fontWeight: 600 }}>
-                              💼 Cơ quan
+                        </td>
+                        {/* Tên + copy ID */}
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text)" }}>
+                              {f.userType === "staff" && f.staffLink
+                                ? f.staffLink.staffNameRaw
+                                : f.fullName || f.displayName || "Người dùng Zalo"}
                             </span>
-                          ) : (
-                            <span style={{ fontSize: "0.65rem", padding: "1px 5px", background: "#f0fdf4", color: "var(--success)", border: "1px solid #bbf7d0", borderRadius: "4px", fontWeight: 600 }}>
-                              🟢 Khách hàng
-                            </span>
+                            <button className="copy-id-btn" onClick={() => navigator.clipboard.writeText(f.zaloUserId)} title={`Copy ID: ${f.zaloUserId}`}>📋</button>
+                          </div>
+                          {((f.userType === "staff" && f.staffLink) || f.fullName) && (
+                            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>Zalo: {f.displayName}</div>
                           )}
-                          <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", background: "var(--bg)", padding: "1px 5px", borderRadius: "4px", border: "1px solid var(--border)" }}>
+                          <div style={{ fontSize: "0.7rem", color: "var(--text-light)", marginTop: "1px" }}>
                             {f.appointments.length} hẹn · {f.testResults.length} KQ
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.78rem", color: "var(--text-muted)", padding: "0 2px" }}>
-                      {((f.userType === "staff" && f.staffLink) || f.fullName) && (
-                        <div>
-                          <strong>Zalo:</strong> {f.displayName}
-                        </div>
-                      )}
-                      <div>
-                        <strong>SĐT:</strong> {f.phone ? <span style={{ color: "var(--text)", fontWeight: 600 }}>{f.phone}</span> : <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>Chưa đăng ký</span>}
-                      </div>
-                      {f.userType === "staff" && f.department && (
-                        <div>
-                          <strong>Khoa / Phòng:</strong> <span style={{ color: "var(--text)", fontWeight: 500 }}>{f.department}</span>
-                        </div>
-                      )}
-                      <div>
-                        <strong>ID Zalo:</strong> <code style={{ fontSize: "0.72rem", background: "var(--bg)", padding: "1px 4px", borderRadius: "3px" }}>{f.zaloUserId}</code>
-                      </div>
-                      <div>
-                        <strong>Ngày QT:</strong> {new Date(f.followedAt).toLocaleDateString("vi-VN")}
-                      </div>
-                    </div>
-                    
-                    <div className="mobile-card-actions">
-                      <button className="btn btn-outline btn-sm" onClick={() => handleOpenDetail(f)} style={{ fontSize: "0.75rem", padding: "4px 8px", height: "28px" }}>
-                        💬 Chi tiết
-                      </button>
-                      <button
-                        className="btn btn-sm"
-                        onClick={() => handleSendSingleRegistration(f.zaloUserId, f.displayName)}
-                        disabled={sendingSingle === f.zaloUserId}
-                        style={{
-                          fontSize: "0.75rem", padding: "4px 8px", height: "28px",
-                          background: sendingSingle === f.zaloUserId ? "#f1f5f9" : "#eff6ff",
-                          color: "#1d4ed8", border: "1px solid #bfdbfe",
-                          borderRadius: "6px",
-                        }}
-                      >
-                        {sendingSingle === f.zaloUserId ? "đang gửi" : "📨 Gửi ĐK"}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-
-
-        {/* Pagination Controls */}
-        {!loading && followers.length > 0 && (
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "16px 24px",
-            borderTop: "1px solid var(--border)",
-            background: "#fafafa",
-            borderBottomLeftRadius: "var(--radius)",
-            borderBottomRightRadius: "var(--radius)",
-            flexWrap: "wrap",
-            gap: "12px"
-          }}>
-            {/* Left Side: Summary info */}
-            <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-              Hiển thị <strong>{followers.length}</strong> trên <strong>{totalItems}</strong> người quan tâm
-            </div>
-
-            {/* Right Side: Page buttons */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {/* Page Size Select */}
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "12px" }}>
-                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Số dòng:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(parseInt(e.target.value, 10));
-                    setCurrentPage(1);
-                  }}
-                  style={{
-                    padding: "4px 8px",
-                    fontSize: "0.8rem",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border)",
-                    background: "white",
-                    cursor: "pointer"
-                  }}
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
+                          </div>
+                        </td>
+                        {/* Loại */}
+                        <td>
+                          {f.userType === "staff"
+                            ? <span className="user-badge user-badge-staff">💼 Cơ quan</span>
+                            : <span className="user-badge user-badge-citizen">🟢 Khách hàng</span>}
+                        </td>
+                        {/* SĐT */}
+                        <td style={{ fontSize: "0.875rem" }}>
+                          {f.phone
+                            ? <span style={{ fontWeight: 500 }}>{f.phone}</span>
+                            : <span style={{ color: "var(--text-light)", fontStyle: "italic", fontSize: "0.8rem" }}>Chưa có SĐT</span>}
+                        </td>
+                        {/* Ngày */}
+                        <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                          {new Date(f.followedAt).toLocaleDateString("vi-VN")}
+                        </td>
+                        {/* Thao tác */}
+                        <td>
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => handleOpenDetail(f)}
+                              style={{ padding: "4px 10px", height: "30px", fontSize: "0.78rem" }}>
+                              💬 Chi tiết
+                            </button>
+                            <button
+                              className="btn btn-sm"
+                              onClick={() => handleSendSingleRegistration(f.zaloUserId, f.displayName)}
+                              disabled={sendingSingle === f.zaloUserId}
+                              style={{
+                                padding: "4px 10px", height: "30px", fontSize: "0.78rem",
+                                background: sendingSingle === f.zaloUserId ? "#f1f5f9" : "#eff6ff",
+                                color: "#1d4ed8", border: "1px solid #bfdbfe", borderRadius: "6px",
+                                cursor: sendingSingle === f.zaloUserId ? "not-allowed" : "pointer",
+                              }}
+                            >
+                              {sendingSingle === f.zaloUserId ? (
+                                <div style={{ width: 10, height: 10, border: "1.5px solid #93c5fd", borderTop: "1.5px solid #1d4ed8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                              ) : "📨 Gửi ĐK"}
+                            </button>
+                          </div>
+                          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
-              {/* Navigation Buttons */}
-              <button
-                className="btn btn-outline btn-sm"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1 || loading}
-                style={{ padding: "4px 10px", fontSize: "0.8rem", height: "32px", border: "1px solid var(--border)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-              >
-                ⏮️ Đầu
-              </button>
-              <button
-                className="btn btn-outline btn-sm"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1 || loading}
-                style={{ padding: "4px 10px", fontSize: "0.8rem", height: "32px", border: "1px solid var(--border)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-              >
-                ◀️ Trước
-              </button>
+              {/* ── MOBILE CARDS ── */}
+              <div className="mobile-card-list mobile-only">
+                {followers.map(f => {
+                  const initials = f.displayName ? f.displayName.substring(0, 1) : "U";
+                  const hasRegistered = (f.userType === "staff" && f.staffLink) || f.fullName;
+                  const displayName = f.userType === "staff" && f.staffLink
+                    ? f.staffLink.staffNameRaw
+                    : f.fullName || f.displayName || "Người dùng Zalo";
+                  return (
+                    <div key={f.id} className="mobile-card-item">
+                      <div className="mobile-card-main">
+                        <div className="mobile-card-avatar">
+                          {f.avatarUrl
+                            ? <img src={f.avatarUrl} alt={f.displayName} style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                            : initials}
+                          {hasRegistered && (
+                            <div className="mobile-card-avatar-badge">
+                              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mobile-card-body">
+                          <div className="mobile-card-name">{displayName}</div>
+                          <div className="mobile-card-meta">
+                            {f.userType === "staff"
+                              ? <span className="user-badge user-badge-staff" style={{ fontSize: "0.62rem" }}>💼 Cơ quan</span>
+                              : <span className="user-badge user-badge-citizen" style={{ fontSize: "0.62rem" }}>🟢 KH</span>}
+                            <span className="mobile-card-phone">
+                              {f.phone || <em style={{ color: "var(--text-light)" }}>Chưa có SĐT</em>}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mobile-card-date">
+                          {new Date(f.followedAt).toLocaleDateString("vi-VN")}
+                        </div>
+                      </div>
+                      <div className="mobile-card-actions">
+                        <button className="mobile-card-action-btn" onClick={() => handleOpenDetail(f)}>💬 Chi tiết</button>
+                        <button className="mobile-card-action-btn primary"
+                          onClick={() => handleSendSingleRegistration(f.zaloUserId, f.displayName)}
+                          disabled={sendingSingle === f.zaloUserId}>
+                          {sendingSingle === f.zaloUserId
+                            ? <div style={{ width: 12, height: 12, border: "1.5px solid #93c5fd", borderTop: "1.5px solid #1d4ed8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                            : "📨 Gửi ĐK"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
-              <span style={{ fontSize: "0.85rem", color: "var(--text)", fontWeight: 600, padding: "0 8px" }}>
-                Trang {currentPage} / {totalPages}
-              </span>
-
-              <button
-                className="btn btn-outline btn-sm"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages || loading}
-                style={{ padding: "4px 10px", fontSize: "0.8rem", height: "32px", border: "1px solid var(--border)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-              >
-                Sau ▶️
-              </button>
-              <button
-                className="btn btn-outline btn-sm"
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages || loading}
-                style={{ padding: "4px 10px", fontSize: "0.8rem", height: "32px", border: "1px solid var(--border)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-              >
-                Cuối ⏭️
-              </button>
+          {/* ── PAGINATION ── */}
+          {!loading && followers.length > 0 && (
+            <div className="pagination-bar">
+              <div className="pagination-info">
+                Hiển thị <strong>{followers.length}</strong> / <strong>{totalItems}</strong> người
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                <div className="page-size-select">
+                  <span>Dòng:</span>
+                  <select value={pageSize} onChange={e => { setPageSize(parseInt(e.target.value, 10)); setCurrentPage(1); }}>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+                <div className="pagination-controls">
+                  <button className="pagination-btn first-last" onClick={() => setCurrentPage(1)} disabled={currentPage === 1 || loading}>⏮</button>
+                  <button className="pagination-btn" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1 || loading}>‹</button>
+                  <span className="pagination-current">{currentPage} / {totalPages}</span>
+                  <button className="pagination-btn" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages || loading}>›</button>
+                  <button className="pagination-btn first-last" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages || loading}>⏭</button>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       </>}
 
-      {/* Detail & Chat Modal — chỉ hiện ở tab followers */}
+      {/* ══════════════════════════════════════════════════════════
+          MODAL: Chi tiết (Bottom Sheet on Mobile)
+          ══════════════════════════════════════════════════════════ */}
       {activeTab === "followers" && isModalOpen && selectedFollower && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 1000, backdropFilter: "blur(4px)"
-        }}>
-          <div style={{
-            background: "white", borderRadius: "var(--radius-lg)",
-            width: "90%", maxWidth: "900px", height: "85vh",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-            display: "grid", gridTemplateColumns: "1.2fr 1.8fr",
-            overflow: "hidden"
-          }}>
-            
-            {/* Left Panel: Follower Details */}
-            <div style={{ borderRight: "1px solid var(--border)", background: "var(--bg)", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
-              {/* Profile Card */}
-              <div style={{ padding: "24px", background: "white", borderBottom: "1px solid var(--border)", textAlign: "center" }}>
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && handleCloseModal()}>
+          <div className="modal-box">
+
+            {/* LEFT PANEL */}
+            <div className="modal-panel-left">
+              <div style={{ padding: "20px 24px", background: "white", borderBottom: "1px solid var(--border)", textAlign: "center" }}>
                 {selectedFollower.avatarUrl ? (
-                  <img
-                    src={selectedFollower.avatarUrl}
-                    alt={selectedFollower.displayName}
-                    style={{ width: "80px", height: "80px", borderRadius: "50%", objectFit: "cover", marginBottom: "12px", border: "1px solid var(--primary-light)" }}
-                  />
+                  <img src={selectedFollower.avatarUrl} alt={selectedFollower.displayName}
+                    style={{ width: "72px", height: "72px", borderRadius: "50%", objectFit: "cover", marginBottom: "10px", border: "2px solid var(--primary-light)" }} />
                 ) : (
-                  <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "2rem", margin: "0 auto 12px" }}>
+                  <div style={{
+                    width: "72px", height: "72px", borderRadius: "50%",
+                    background: "linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%)",
+                    color: "white", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: "bold", fontSize: "1.8rem", margin: "0 auto 10px"
+                  }}>
                     {selectedFollower.displayName ? selectedFollower.displayName.substring(0, 1) : "U"}
                   </div>
                 )}
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
-                  {selectedFollower.userType === "staff" && selectedFollower.staffLink 
-                    ? selectedFollower.staffLink.staffNameRaw 
-                    : selectedFollower.fullName 
-                      ? selectedFollower.fullName 
-                      : selectedFollower.displayName}
+                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>
+                  {selectedFollower.userType === "staff" && selectedFollower.staffLink
+                    ? selectedFollower.staffLink.staffNameRaw
+                    : selectedFollower.fullName || selectedFollower.displayName}
                 </h3>
                 {((selectedFollower.userType === "staff" && selectedFollower.staffLink) || selectedFollower.fullName) && (
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                    Zalo: {selectedFollower.displayName}
-                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "3px" }}>Zalo: {selectedFollower.displayName}</div>
                 )}
-                
-                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px", marginBottom: "16px" }}>
-                  Zalo ID: <code>{selectedFollower.zaloUserId}</code>
-                </div>
-
-                {/* Form cấu hình phân loại & thông tin */}
-                <div style={{ textAlign: "left", background: "var(--bg)", padding: "16px", borderRadius: "var(--radius)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", borderBottom: "1px solid var(--border)", paddingBottom: "6px", marginBottom: "4px" }}>
-                    ⚙️ Phân loại & Thông tin
-                  </div>
-                  
-                  {/* Số điện thoại */}
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>📞 Số điện thoại</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Chưa cập nhật SĐT..."
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem" }}
-                    />
-                  </div>
-
-                  {/* Nhóm phân loại */}
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏷️ Phân loại đối tượng</label>
-                    <select
-                      className="form-input"
-                      value={newUserType}
-                      onChange={(e) => {
-                        setNewUserType(e.target.value);
-                        if (e.target.value !== "staff") {
-                          setNewDept("");
-                        }
-                      }}
-                      style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem", background: "white", cursor: "pointer" }}
-                    >
-                      <option value="citizen">🟢 Khách hàng / Người dân</option>
-                      <option value="staff">💼 Cán bộ cơ quan</option>
-                    </select>
-                  </div>
-
-                  {/* Phòng ban nếu thuộc cơ quan */}
-                  {newUserType === "staff" && (
-                    <div>
-                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏢 Khoa / Phòng ban</label>
-                      <select
-                        className="form-input"
-                        value={newDept}
-                        onChange={(e) => setNewDept(e.target.value)}
-                        style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem", cursor: "pointer" }}
-                      >
-                        <option value="">-- Chọn đơn vị công tác --</option>
-                        {DEPARTMENTS.map(d => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Thông tin Bệnh nhân (nếu là citizen) */}
-                  {newUserType === "citizen" && (
-                    <>
-                      <div>
-                        <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>👤 Họ và tên thật</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder="Tên khai báo..."
-                          value={newFullName}
-                          onChange={(e) => setNewFullName(e.target.value)}
-                          style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem" }}
-                        />
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                        <div>
-                          <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>💳 CCCD/Mã BN</label>
-                          <input
-                            type="text"
-                            className="form-input"
-                            placeholder="Số CCCD..."
-                            value={newCccd}
-                            onChange={(e) => setNewCccd(e.target.value)}
-                            style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🎂 Ngày sinh</label>
-                          <input
-                            type="date"
-                            className="form-input"
-                            value={newDob}
-                            onChange={(e) => setNewDob(e.target.value)}
-                            style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem" }}
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Ghi chú */}
-                  <div>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>📝 Ghi chú nhanh</label>
-                    <textarea
-                      className="form-input"
-                      placeholder="Nhập thông tin ghi chú..."
-                      value={newNotes}
-                      onChange={(e) => setNewNotes(e.target.value)}
-                      style={{ width: "100%", height: "60px", padding: "6px 10px", fontSize: "0.85rem", resize: "none" }}
-                    />
-                  </div>
-
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={handleUpdateFollowerMeta}
-                    disabled={updatingMeta}
-                    style={{ width: "100%", marginTop: "6px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
-                  >
-                    {updatingMeta ? (
-                      <>
-                        <div className="spinner" style={{ width: "12px", height: "12px", border: "1.5px solid var(--text-muted)", borderTopColor: "white" }} />
-                        Đang lưu...
-                      </>
-                    ) : "💾 Lưu thay đổi"}
-                  </button>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "6px" }}>
+                  <code style={{ background: "var(--bg)", padding: "1px 5px", borderRadius: 4 }}>{selectedFollower.zaloUserId}</code>
+                  <button className="copy-id-btn" onClick={() => navigator.clipboard.writeText(selectedFollower.zaloUserId)}>📋</button>
                 </div>
               </div>
 
-              {/* Follower History & Services */}
-              <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                {/* Appointments */}
+              <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.06em" }}>⚙️ Phân loại & Thông tin</div>
+
                 <div>
-                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "10px" }}>
-                    💉 Lịch hẹn tiêm chủng
-                  </h4>
-                  {(!selectedFollower.appointments || selectedFollower.appointments.length === 0) ? (
-                    <div style={{ fontSize: "0.8rem", color: "var(--text-light)", fontStyle: "italic" }}>Không có lịch hẹn nào.</div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {selectedFollower.appointments.map(apt => (
-                        <div key={apt.id} style={{ background: "white", padding: "10px", borderRadius: "var(--radius)", border: "1px solid var(--border)", fontSize: "0.8rem" }}>
-                          <div style={{ fontWeight: 600 }}>{apt.vaccineType}</div>
-                          <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "2px" }}>
-                            📅 {new Date(apt.appointedAt).toLocaleDateString("vi-VN")} | 
-                            <span style={{ marginLeft: "4px", color: apt.status === "approved" ? "var(--success)" : "var(--warning)" }}>
-                              {apt.status === "approved" ? " Đã duyệt" : " Chờ duyệt"}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>📞 Số điện thoại</label>
+                  <input type="text" className="form-input" placeholder="Chưa cập nhật SĐT..."
+                    value={newPhone} onChange={e => setNewPhone(e.target.value)} style={{ padding: "6px 10px", fontSize: "0.85rem" }} />
                 </div>
 
-                {/* Test Results */}
                 <div>
-                  <h4 style={{ fontSize: "0.85rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", marginBottom: "10px" }}>
-                    🔬 Kết quả xét nghiệm
-                  </h4>
-                  {(!selectedFollower.testResults || selectedFollower.testResults.length === 0) ? (
-                    <div style={{ fontSize: "0.8rem", color: "var(--text-light)", fontStyle: "italic" }}>Không có kết quả nào.</div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {selectedFollower.testResults.map(tr => (
-                        <div key={tr.id} style={{ background: "white", padding: "10px", borderRadius: "var(--radius)", border: "1px solid var(--border)", fontSize: "0.8rem" }}>
-                          <div style={{ fontWeight: 600 }}>Mã: {tr.resultCode}</div>
-                          <div style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            📝 {tr.content}
-                          </div>
-                        </div>
-                      ))}
+                  <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏷️ Phân loại</label>
+                  <select className="form-input" value={newUserType}
+                    onChange={e => { setNewUserType(e.target.value); if (e.target.value !== "staff") setNewDept(""); }}
+                    style={{ padding: "6px 10px", fontSize: "0.85rem", background: "white", cursor: "pointer" }}>
+                    <option value="citizen">🟢 Khách hàng / Người dân</option>
+                    <option value="staff">💼 Cán bộ cơ quan</option>
+                  </select>
+                </div>
+
+                {newUserType === "staff" && (
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏢 Khoa / Phòng ban</label>
+                    <select className="form-input" value={newDept} onChange={e => setNewDept(e.target.value)}
+                      style={{ padding: "6px 10px", fontSize: "0.85rem", cursor: "pointer" }}>
+                      <option value="">-- Chọn đơn vị --</option>
+                      {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {newUserType === "citizen" && (
+                  <>
+                    <div>
+                      <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>👤 Họ và tên thật</label>
+                      <input type="text" className="form-input" placeholder="Tên khai báo..."
+                        value={newFullName} onChange={e => setNewFullName(e.target.value)} style={{ padding: "6px 10px", fontSize: "0.85rem" }} />
                     </div>
-                  )}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                      <div>
+                        <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>💳 CCCD/Mã BN</label>
+                        <input type="text" className="form-input" placeholder="Số CCCD..."
+                          value={newCccd} onChange={e => setNewCccd(e.target.value)} style={{ padding: "6px 10px", fontSize: "0.85rem" }} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🎂 Ngày sinh</label>
+                        <input type="date" className="form-input" value={newDob} onChange={e => setNewDob(e.target.value)}
+                          style={{ padding: "6px 10px", fontSize: "0.85rem" }} />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>📝 Ghi chú</label>
+                  <textarea className="form-input" placeholder="Nhập ghi chú..."
+                    value={newNotes} onChange={e => setNewNotes(e.target.value)}
+                    style={{ height: "60px", padding: "6px 10px", fontSize: "0.85rem", resize: "none" }} />
+                </div>
+
+                <button className="btn btn-primary btn-sm" onClick={handleUpdateFollowerMeta} disabled={updatingMeta}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                  {updatingMeta
+                    ? <><div className="spinner" style={{ width: "12px", height: "12px", border: "1.5px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang lưu...</>
+                    : "💾 Lưu thay đổi"}
+                </button>
+
+                {/* Appointments summary */}
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: "12px" }}>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.06em", marginBottom: "8px" }}>
+                    💉 Lịch hẹn ({selectedFollower.appointments?.length || 0})
+                  </div>
+                  {!selectedFollower.appointments?.length ? (
+                    <div style={{ fontSize: "0.78rem", color: "var(--text-light)", fontStyle: "italic" }}>Không có lịch hẹn.</div>
+                  ) : selectedFollower.appointments.slice(0, 3).map(apt => (
+                    <div key={apt.id} style={{ background: "white", padding: "8px 10px", borderRadius: "var(--radius)", border: "1px solid var(--border)", fontSize: "0.78rem", marginBottom: "6px" }}>
+                      <div style={{ fontWeight: 600 }}>{apt.vaccineType}</div>
+                      <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                        📅 {new Date(apt.appointedAt).toLocaleDateString("vi-VN")} ·{" "}
+                        <span style={{ color: apt.status === "approved" ? "var(--success)" : "var(--warning)" }}>
+                          {apt.status === "approved" ? "Đã duyệt" : "Chờ duyệt"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Right Panel: Lưu ý OA Cơ quan Nhà nước */}
-            <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-              {/* Panel Header */}
-              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {/* RIGHT PANEL: Chat */}
+            <div className="modal-panel-right">
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>📋 Lịch sử tương tác</div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                    Các tin nhắn người dân gửi đến OA sẽ hiển thị ở đây
-                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Tin nhắn người dân gửi đến OA</div>
                 </div>
-                <button className="btn btn-outline btn-sm" onClick={handleCloseModal}>
-                  Đóng
-                </button>
+                <button className="btn btn-outline btn-sm" onClick={handleCloseModal}>✕ Đóng</button>
               </div>
 
-              {/* Notice Banner: OA type limitation */}
-              <div style={{
-                margin: "16px 20px 0",
-                padding: "14px 16px",
-                background: "#fff8e1",
-                border: "1px solid #ffe082",
-                borderRadius: "var(--radius)",
-                display: "flex",
-                gap: "12px",
-                alignItems: "flex-start"
-              }}>
-                <span style={{ fontSize: "1.2rem", flexShrink: 0 }}>⚠️</span>
+              <div style={{ margin: "12px 16px 0", padding: "12px 14px", background: "#fff8e1", border: "1px solid #ffe082", borderRadius: "var(--radius)", display: "flex", gap: "10px", alignItems: "flex-start", flexShrink: 0 }}>
+                <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>⚠️</span>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#795548", marginBottom: "4px" }}>
-                    OA Cơ quan Nhà nước không hỗ trợ gửi tin nhắn 1-1 qua API
+                  <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "#795548", marginBottom: "3px" }}>OA Cơ quan Nhà nước không hỗ trợ gửi tin 1-1 qua API</div>
+                  <div style={{ fontSize: "0.76rem", color: "#8d6e63", lineHeight: 1.5 }}>
+                    Vui lòng dùng <strong>Zalo OA Manager</strong> để trả lời.{" "}
+                    <a href="https://oa.zalo.me/home" target="_blank" rel="noopener noreferrer" style={{ color: "#0068ff", fontWeight: 600 }}>Mở OA Manager →</a>
                   </div>
-                  <div style={{ fontSize: "0.78rem", color: "#8d6e63", lineHeight: 1.5 }}>
-                    Theo chính sách của Zalo, tính năng gửi <strong>Tin tư vấn (CS)</strong> chỉ dành cho OA loại <strong>Doanh nghiệp</strong>.
-                    Để trả lời tin nhắn của người dân, vui lòng sử dụng <strong>Zalo OA Manager</strong>.
-                  </div>
-                  <a
-                    href="https://oa.zalo.me/home"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      marginTop: "10px",
-                      padding: "6px 14px",
-                      background: "#0068ff",
-                      color: "white",
-                      borderRadius: "6px",
-                      fontSize: "0.78rem",
-                      fontWeight: 600,
-                      textDecoration: "none"
-                    }}
-                  >
-                    <img src="https://stc-zalofamily.akamaized.net/pc-web/resources/images/logo_zalo.svg" alt="Zalo" style={{ width: "14px", height: "14px", filter: "brightness(0) invert(1)" }} />
-                    Mở Zalo OA Manager
-                  </a>
                 </div>
               </div>
 
-              {/* Chat History (inbound only) */}
-              <div style={{ flex: 1, padding: "16px 20px", overflowY: "auto", display: "flex", flexDirection: "column-reverse", gap: "12px", background: "#f8fafc" }}>
+              <div style={{ flex: 1, padding: "14px 16px", overflowY: "auto", display: "flex", flexDirection: "column-reverse", gap: "10px", background: "#f8fafc" }}>
                 {loadingChat ? (
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", color: "var(--text-muted)", fontSize: "0.85rem" }}>
-                    Đang tải lịch sử...
-                  </div>
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", color: "var(--text-muted)", fontSize: "0.85rem" }}>Đang tải lịch sử...</div>
                 ) : chatHistory.length === 0 ? (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-light)", textAlign: "center", padding: "20px" }}>
                     <span style={{ fontSize: "2rem", marginBottom: "8px" }}>💬</span>
                     <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>Chưa có tin nhắn nào</div>
-                    <div style={{ fontSize: "0.75rem", marginTop: "4px" }}>Tin nhắn từ người dân gửi đến OA sẽ hiển thị ở đây khi có Webhook.</div>
+                    <div style={{ fontSize: "0.75rem", marginTop: "4px" }}>Tin nhắn từ người dân sẽ hiển thị ở đây khi có Webhook.</div>
                   </div>
                 ) : (
-                  chatHistory.map((chat) => {
+                  chatHistory.map(chat => {
                     const isOutbound = chat.direction === "outbound";
                     return (
-                      <div
-                        key={chat.id}
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: isOutbound ? "flex-end" : "flex-start",
-                          maxWidth: "80%",
-                          alignSelf: isOutbound ? "flex-end" : "flex-start"
-                        }}
-                      >
-                        <div style={{
-                          padding: "10px 14px",
-                          borderRadius: "12px",
-                          borderTopRightRadius: isOutbound ? "2px" : "12px",
-                          borderTopLeftRadius: isOutbound ? "12px" : "2px",
-                          background: isOutbound ? "var(--primary)" : "white",
-                          color: isOutbound ? "white" : "var(--text)",
-                          fontSize: "0.875rem",
-                          boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                          border: isOutbound ? "none" : "1px solid var(--border)",
-                          wordBreak: "break-word"
-                        }}>
-                          {chat.content}
-                        </div>
-                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                          {new Date(chat.receivedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-                        </div>
+                      <div key={chat.id} style={{ display: "flex", flexDirection: "column", alignItems: isOutbound ? "flex-end" : "flex-start", maxWidth: "80%", alignSelf: isOutbound ? "flex-end" : "flex-start" }}>
+                        <div style={{ padding: "10px 14px", borderRadius: "12px", borderTopRightRadius: isOutbound ? "2px" : "12px", borderTopLeftRadius: isOutbound ? "12px" : "2px", background: isOutbound ? "var(--primary)" : "white", color: isOutbound ? "white" : "var(--text)", fontSize: "0.875rem", boxShadow: "0 1px 2px rgba(0,0,0,0.05)", border: isOutbound ? "none" : "1px solid var(--border)", wordBreak: "break-word" }}>{chat.content}</div>
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>{new Date(chat.receivedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</div>
                       </div>
                     );
                   })
                 )}
               </div>
 
-              {/* Footer note */}
-              <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)", background: "var(--bg)", fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
-                <span>💡</span>
-                Để gửi thông báo hàng loạt, hãy sử dụng tính năng <strong>ZNS</strong> hoặc <strong>Tin truyền thông</strong> trong Zalo OA Manager.
+              <div style={{ padding: "10px 16px", borderTop: "1px solid var(--border)", background: "var(--bg)", fontSize: "0.75rem", color: "var(--text-muted)", flexShrink: 0 }}>
+                💡 Dùng <strong>ZNS</strong> hoặc <strong>Tin truyền thông</strong> trong OA Manager để gửi hàng loạt.
               </div>
             </div>
 
@@ -1338,102 +1038,74 @@ export default function FollowersPage() {
         </div>
       )}
 
-      {/* ── TAB: ĐĂNG KÝ NHÂN VIÊN ──────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════
+          TAB: ĐĂNG KÝ NHÂN VIÊN
+          ══════════════════════════════════════════════════════════ */}
       {activeTab === "registration" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-          {/* Thống kê */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+          {/* Stats */}
+          <div className="reg-stats-grid">
             {[
-              { label: "Tổng Followers", value: regStats?.totalFollowers ?? "…", icon: "👥", color: "#1d4ed8" },
-              { label: "Đã Đăng Ký", value: regStats?.totalRegistered ?? "…", icon: "✅", color: "#10b981" },
-              { label: "Chưa Đăng Ký", value: regStats?.unregistered ?? "…", icon: "⏳", color: "#f59e0b" },
+              { label: "Tổng Followers", value: regStats?.totalFollowers ?? "…", icon: "👥", bg: "#eff6ff", color: "#1d4ed8" },
+              { label: "Đã Đăng Ký", value: regStats?.totalRegistered ?? "…", icon: "✅", bg: "#f0fdf4", color: "#16a34a" },
+              { label: "Chưa Đăng Ký", value: regStats?.unregistered ?? "…", icon: "⏳", bg: "#fffbeb", color: "#d97706" },
             ].map(s => (
-              <div key={s.label} className="card" style={{ padding: "16px 20px" }}>
-                <div style={{ fontSize: "1.6rem", marginBottom: "4px" }}>{s.icon}</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: s.color }}>{regLoading ? "…" : s.value}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 500 }}>{s.label}</div>
+              <div key={s.label} className="reg-stat-card">
+                <div className="reg-stat-icon" style={{ background: s.bg }}>{s.icon}</div>
+                <div className="reg-stat-body">
+                  <div className="reg-stat-value" style={{ color: s.color }}>{regLoading ? "…" : s.value}</div>
+                  <div className="reg-stat-label">{s.label}</div>
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Công cụ gửi link */}
-          <div className="card" style={{ padding: "24px" }}>
-            <div className="card-title" style={{ marginBottom: "16px" }}>📤 Gửi Link Đăng Ký Qua Zalo</div>
+          {/* Gửi link */}
+          <div className="card" style={{ padding: "20px 24px" }}>
+            <div className="card-title" style={{ marginBottom: "12px" }}>📤 Gửi Link Đăng Ký</div>
             <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", marginBottom: "16px", lineHeight: 1.6 }}>
-              Hệ thống sẽ gửi tin nhắn Zalo kèm link đăng ký cá nhân đến từng nhân viên.
-              Họ chỉ cần bấm link và điền tên thật — hệ thống sẽ tự động liên kết.
+              Hệ thống gửi tin Zalo kèm link đăng ký cá nhân. Nhân viên chỉ cần bấm link và điền tên thật.
             </p>
-            <div className="registration-send-wrapper" style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div className="registration-send-wrapper">
               <div style={{ flex: "1 1 200px" }}>
                 <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "6px" }}>Phạm vi gửi</label>
-                <select
-                  value={sendScope}
-                  onChange={e => setSendScope(e.target.value)}
-                  className="form-input"
-                  style={{ height: "38px", fontSize: "0.875rem", minWidth: "200px", width: "100%" }}
-                >
-                  <option value="unregistered">📋 Chỉ người chưa đăng ký ({regStats?.unregistered ?? "…"} người)</option>
-                  <option value="all">👥 Tất cả followers ({regStats?.totalFollowers ?? "…"} người)</option>
+                <select value={sendScope} onChange={e => setSendScope(e.target.value)} className="form-input"
+                  style={{ height: "38px", fontSize: "0.875rem", width: "100%" }}>
+                  <option value="unregistered">📋 Chỉ người chưa đăng ký ({regStats?.unregistered ?? "…"})</option>
+                  <option value="all">👥 Tất cả followers ({regStats?.totalFollowers ?? "…"})</option>
                 </select>
               </div>
-              <div className="registration-send-actions" style={{ display: "flex", gap: "10px", flexWrap: "wrap", flex: "1 1 auto" }}>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleSendRegistration}
-                  disabled={sending || regLoading}
-                  style={{ height: "38px", display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap", flex: "1" }}
-                >
-                  {sending ? (
-                    <><div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang gửi...</>
-                  ) : "📨 Gửi Link Đăng Ký"}
+              <div className="registration-send-actions">
+                <button className="btn btn-primary" onClick={handleSendRegistration} disabled={sending || regLoading}
+                  style={{ height: "38px", display: "flex", alignItems: "center", gap: "8px", flex: 1 }}>
+                  {sending
+                    ? <><div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang gửi...</>
+                    : "📨 Gửi Link"}
                 </button>
-                <button
-                  className="btn btn-outline"
-                  onClick={fetchRegStats}
-                  disabled={regLoading}
-                  style={{ height: "38px", flex: "1" }}
-                >
-                  🔄 Làm mới
-                </button>
+                <button className="btn btn-outline" onClick={fetchRegStats} disabled={regLoading} style={{ height: "38px", flex: 1 }}>🔄 Làm mới</button>
               </div>
             </div>
-
-            {/* Kết quả gửi */}
             {sendResult && (
-              <div style={{
-                marginTop: "16px", padding: "12px 16px", borderRadius: "var(--radius)",
-                background: sendResult.error ? "#fef2f2" : "#f0fdf4",
-                border: `1px solid ${sendResult.error ? "#fecaca" : "#bbf7d0"}`,
-                color: sendResult.error ? "#dc2626" : "#15803d",
-                fontSize: "0.875rem",
-              }}>
+              <div style={{ marginTop: "14px", padding: "10px 14px", borderRadius: "var(--radius)", background: sendResult.error ? "#fef2f2" : "#f0fdf4", border: `1px solid ${sendResult.error ? "#fecaca" : "#bbf7d0"}`, color: sendResult.error ? "#dc2626" : "#15803d", fontSize: "0.875rem" }}>
                 {sendResult.error ? `❌ Lỗi: ${sendResult.error}` : `✅ ${sendResult.message}`}
-                {sendResult.errors?.length > 0 && (
-                  <ul style={{ marginTop: "6px", paddingLeft: "16px", fontSize: "0.8rem" }}>
-                    {sendResult.errors.map((e, i) => <li key={i}>{e}</li>)}
-                  </ul>
-                )}
               </div>
             )}
           </div>
 
-          {/* Gửi thử 1 người cụ thể */}
+          {/* Gửi thử 1 người */}
           <SingleTestSend onSend={handleSendSingleRegistration} sendingSingle={sendingSingle} showToast={showToast} />
 
           {/* Bảng đã đăng ký */}
-          <div className="card">
-            <div className="registration-header-row" style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <div className="card" style={{ padding: 0 }}>
+            <div className="registration-header-row" style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)" }}>
               <div>
                 <div className="card-title">✅ Danh Sách Đã Đăng Ký ({regStats?.totalRegistered ?? 0})</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã tự xác nhận tên thật qua link đăng ký</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã xác nhận tên thật qua link đăng ký</div>
               </div>
               {regStats?.links?.length > 0 && (
-                <button
-                  className="btn btn-success btn-sm"
-                  onClick={handleExportExcel}
-                  style={{ display: "flex", alignItems: "center", gap: "6px", background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", borderRadius: "8px", padding: "8px 16px", fontWeight: "bold", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(16,185,129,0.2)" }}
-                >
+                <button className="btn btn-sm" onClick={handleExportExcel}
+                  style={{ background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", display: "flex", alignItems: "center", gap: "6px" }}>
                   📥 Xuất Excel
                 </button>
               )}
@@ -1452,60 +1124,39 @@ export default function FollowersPage() {
               </div>
             ) : (
               <>
-                <div className="table-responsive desktop-only">
-                  <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                <div className="desktop-only" style={{ overflowX: "auto" }}>
+                  <table className="followers-table">
                     <thead>
-                      <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
-                        <th style={{ padding: "12px 16px" }}>Ảnh</th>
-                        <th style={{ padding: "12px 16px" }}>Tên Thật (Đã Đăng Ký)</th>
-                        <th style={{ padding: "12px 16px" }}>Tên Zalo</th>
-                        <th style={{ padding: "12px 16px" }}>Phòng / Khoa</th>
-                        <th style={{ padding: "12px 16px" }}>Ngày ĐK</th>
-                        <th style={{ padding: "12px 16px" }}>Thao tác</th>
+                      <tr>
+                        <th style={{ width: "50px" }}></th>
+                        <th>Tên thật (Đã đăng ký)</th>
+                        <th>Tên Zalo</th>
+                        <th>Phòng / Khoa</th>
+                        <th style={{ width: "110px" }}>Ngày ĐK</th>
+                        <th style={{ width: "110px" }}>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
                       {regStats.links.map(link => (
-                        <tr key={link.id} style={{ borderBottom: "1px solid var(--border)" }}>
-                          <td style={{ padding: "10px 16px" }}>
-                            {link.avatarUrl ? (
-                              <img src={link.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid var(--border)" }} />
-                            ) : (
-                              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
-                                {link.staffNameRaw?.charAt(0) || "?"}
-                              </div>
-                            )}
+                        <tr key={link.id}>
+                          <td style={{ padding: "10px 14px" }}>
+                            {link.avatarUrl
+                              ? <img src={link.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid var(--border)" }} />
+                              : <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{link.staffNameRaw?.charAt(0) || "?"}</div>}
                           </td>
-                          <td style={{ padding: "10px 16px" }}>
+                          <td>
                             <div style={{ fontWeight: 700, color: "var(--text)" }}>{link.staffNameRaw}</div>
                             {link.phone && <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>📞 {link.phone}</div>}
                           </td>
-                          <td style={{ padding: "10px 16px" }}>
-                            <div style={{ fontSize: "0.875rem", color: "var(--text)" }}>{link.displayName || "—"}</div>
-                            <code style={{ fontSize: "0.7rem", color: "var(--text-muted)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>{link.zaloUserId}</code>
-                          </td>
-                          <td style={{ padding: "10px 16px", fontSize: "0.875rem", color: "var(--text-muted)" }}>
-                            {link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn</em>}
-                          </td>
-                          <td style={{ padding: "10px 16px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                            {new Date(link.registeredAt).toLocaleDateString("vi-VN")}
-                          </td>
-                          <td style={{ padding: "10px 16px" }}>
+                          <td style={{ fontSize: "0.875rem", color: "var(--text)" }}>{link.displayName || "—"}</td>
+                          <td style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>{link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn</em>}</td>
+                          <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{new Date(link.registeredAt).toLocaleDateString("vi-VN")}</td>
+                          <td>
                             <div style={{ display: "flex", gap: "6px" }}>
-                              <button
-                                className="btn btn-sm btn-outline"
-                                onClick={() => handleOpenEditLink(link)}
-                                style={{ fontSize: "0.78rem", padding: "4px 8px", height: "28px" }}
-                              >
-                                ✏️ Sửa
-                              </button>
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handleDeleteLink(link.id)}
-                                disabled={deletingId === link.id}
-                                style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.78rem", padding: "4px 8px", height: "28px" }}
-                              >
-                                {deletingId === link.id ? "…" : "🗑️ Xóa"}
+                              <button className="btn btn-sm btn-outline" onClick={() => handleOpenEditLink(link)} style={{ height: "28px", padding: "3px 8px", fontSize: "0.78rem" }}>✏️ Sửa</button>
+                              <button className="btn btn-sm" onClick={() => handleDeleteLink(link.id)} disabled={deletingId === link.id}
+                                style={{ height: "28px", padding: "3px 8px", fontSize: "0.78rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>
+                                {deletingId === link.id ? "…" : "🗑️"}
                               </button>
                             </div>
                           </td>
@@ -1515,184 +1166,82 @@ export default function FollowersPage() {
                   </table>
                 </div>
 
-                {/* Mobile view for staff links: list of cards */}
                 <div className="mobile-card-list mobile-only">
-                  {regStats.links.map(link => {
-                    const initials = link.staffNameRaw?.charAt(0) || "?";
-                    return (
-                      <div key={link.id} className="mobile-card-item">
-                        <div className="mobile-card-header">
-                          <div className="mobile-card-avatar">
-                            {link.avatarUrl ? (
-                              <img src={link.avatarUrl} alt="" style={{ width: "42px", height: "42px", borderRadius: "50%" }} />
-                            ) : (
-                              initials
-                            )}
-                          </div>
-                          <div className="mobile-card-info">
-                            <div className="mobile-card-title-row">
-                              <span className="mobile-card-name">{link.staffNameRaw}</span>
-                            </div>
-                            <div className="mobile-card-subtext" style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                              {link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn khoa/phòng</em>}
-                            </div>
+                  {regStats.links.map(link => (
+                    <div key={link.id} className="mobile-card-item">
+                      <div className="mobile-card-main">
+                        <div className="mobile-card-avatar">
+                          {link.avatarUrl
+                            ? <img src={link.avatarUrl} alt="" style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                            : (link.staffNameRaw?.charAt(0) || "?")}
+                        </div>
+                        <div className="mobile-card-body">
+                          <div className="mobile-card-name">{link.staffNameRaw}</div>
+                          <div className="mobile-card-meta">
+                            <span className="mobile-card-phone">{link.department || <em style={{ color: "var(--text-light)", fontSize: "0.75rem" }}>Chưa chọn khoa/phòng</em>}</span>
                           </div>
                         </div>
-                        
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.78rem", color: "var(--text-muted)", padding: "0 2px" }}>
-                          <div>
-                            <strong>Tên Zalo:</strong> {link.displayName || "—"}
-                          </div>
-                          <div>
-                            <strong>Số điện thoại:</strong> {link.phone ? <span style={{ color: "var(--text)", fontWeight: 500 }}>{link.phone}</span> : <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>Chưa có SĐT</span>}
-                          </div>
-                          <div>
-                            <strong>ID Zalo:</strong> <code style={{ fontSize: "0.72rem", background: "var(--bg)", padding: "1px 4px", borderRadius: "3px" }}>{link.zaloUserId}</code>
-                          </div>
-                          <div>
-                            <strong>Ngày ĐK:</strong> {new Date(link.registeredAt).toLocaleDateString("vi-VN")}
-                          </div>
-                        </div>
-                        
-                        <div className="mobile-card-actions">
-                          <button
-                            className="btn btn-sm btn-outline"
-                            onClick={() => handleOpenEditLink(link)}
-                            style={{ fontSize: "0.75rem", padding: "4px 8px", height: "28px" }}
-                          >
-                            ✏️ Sửa
-                          </button>
-                          <button
-                            className="btn btn-sm"
-                            onClick={() => handleDeleteLink(link.id)}
-                            disabled={deletingId === link.id}
-                            style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: "0.75rem", padding: "4px 8px", height: "28px" }}
-                          >
-                            {deletingId === link.id ? "…" : "🗑️ Xóa"}
-                          </button>
-                        </div>
+                        <div className="mobile-card-date">{new Date(link.registeredAt).toLocaleDateString("vi-VN")}</div>
                       </div>
-                    );
-                  })}
+                      <div className="mobile-card-actions">
+                        <button className="mobile-card-action-btn" onClick={() => handleOpenEditLink(link)}>✏️ Sửa</button>
+                        <button className="mobile-card-action-btn primary" onClick={() => handleDeleteLink(link.id)} disabled={deletingId === link.id} style={{ color: "#dc2626" }}>
+                          {deletingId === link.id ? "…" : "🗑️ Xóa"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </>
             )}
           </div>
-
         </div>
       )}
-      {/* Modal Sửa liên kết nhân viên */}
-      {isEditLinkModalOpen && editingLink && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 1001, backdropFilter: "blur(4px)"
-        }}>
-          <div style={{
-            background: "white", borderRadius: "var(--radius-lg)",
-            width: "90%", maxWidth: "450px", padding: "28px",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-            animation: "fadeUp 0.3s ease"
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)" }}>
-                ✏️ Sửa Thông Tin Cán Bộ
-              </h3>
-              <button
-                type="button"
-                onClick={() => { setIsEditLinkModalOpen(false); setEditingLink(null); }}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.2rem" }}
-              >✕</button>
-            </div>
 
-            {/* Profile Zalo Mini Panel */}
-            <div style={{
-              background: "var(--primary-light)", border: "1px solid var(--border-focus)",
-              borderRadius: "12px", padding: "12px 14px", marginBottom: "18px",
-              display: "flex", alignItems: "center", gap: "10px"
-            }}>
-              {editingLink.avatarUrl ? (
-                <img src={editingLink.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%" }} />
-              ) : (
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.9rem" }}>
-                  {editingLink.staffNameRaw?.charAt(0) || "?"}
-                </div>
-              )}
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, color: "var(--primary)", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  Zalo: {editingLink.displayName || "Người dùng Zalo"}
-                </div>
-                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                  ID: <code>{editingLink.zaloUserId}</code>
-                </div>
+      {/* ── MODAL: Sửa liên kết nhân viên ── */}
+      {isEditLinkModalOpen && editingLink && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, backdropFilter: "blur(4px)" }}>
+          <div style={{ background: "white", borderRadius: "var(--radius-lg)", width: "90%", maxWidth: "450px", padding: "28px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", animation: "slideInUp 0.3s ease" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>✏️ Sửa Thông Tin Cán Bộ</h3>
+              <button type="button" onClick={() => { setIsEditLinkModalOpen(false); setEditingLink(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.2rem" }}>✕</button>
+            </div>
+            <div style={{ background: "var(--primary-light)", border: "1px solid var(--border-focus)", borderRadius: "10px", padding: "12px 14px", marginBottom: "18px", display: "flex", alignItems: "center", gap: "10px" }}>
+              {editingLink.avatarUrl
+                ? <img src={editingLink.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%" }} />
+                : <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "0.9rem" }}>{editingLink.staffNameRaw?.charAt(0) || "?"}</div>}
+              <div>
+                <div style={{ fontWeight: 600, color: "var(--primary)", fontSize: "0.85rem" }}>Zalo: {editingLink.displayName || "Người dùng Zalo"}</div>
+                <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>ID: <code>{editingLink.zaloUserId}</code></div>
               </div>
             </div>
-
             <form onSubmit={handleUpdateLink} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              {/* Họ tên */}
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>👤 Họ và Tên <span style={{ color: "red" }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Họ và tên..."
-                  value={editStaffNameRaw}
-                  onChange={(e) => setEditStaffNameRaw(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", fontSize: "0.9rem" }}
-                  required
-                />
+                <input type="text" className="form-input" placeholder="Họ và tên..." value={editStaffNameRaw}
+                  onChange={e => setEditStaffNameRaw(e.target.value)} style={{ padding: "8px 12px" }} required />
               </div>
-
-              {/* Số điện thoại */}
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>📞 Số điện thoại</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="SĐT..."
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", fontSize: "0.9rem" }}
-                />
+                <input type="text" className="form-input" placeholder="SĐT..." value={editPhone}
+                  onChange={e => setEditPhone(e.target.value)} style={{ padding: "8px 12px" }} />
               </div>
-
-              {/* Phòng ban */}
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏢 Khoa / Phòng ban</label>
-                <select
-                  className="form-input"
-                  value={editDept}
-                  onChange={(e) => setEditDept(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", fontSize: "0.9rem", cursor: "pointer" }}
-                >
+                <select className="form-input" value={editDept} onChange={e => setEditDept(e.target.value)}
+                  style={{ padding: "8px 12px", cursor: "pointer" }}>
                   <option value="">-- Chọn đơn vị công tác --</option>
-                  {DEPARTMENTS.map(d => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
+                  {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
-
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => { setIsEditLinkModalOpen(false); setEditingLink(null); }}
-                  style={{ flex: 1, height: "38px" }}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={updatingLink}
-                  style={{ flex: 1, height: "38px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
-                >
-                  {updatingLink ? (
-                    <>
-                      <div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />
-                      Đang lưu...
-                    </>
-                  ) : "Lưu"}
+              <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
+                <button type="button" className="btn btn-outline" style={{ flex: 1, height: "40px" }}
+                  onClick={() => { setIsEditLinkModalOpen(false); setEditingLink(null); }}>Hủy</button>
+                <button type="submit" className="btn btn-primary" disabled={updatingLink}
+                  style={{ flex: 1, height: "40px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                  {updatingLink
+                    ? <><div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang lưu...</>
+                    : "Lưu"}
                 </button>
               </div>
             </form>
