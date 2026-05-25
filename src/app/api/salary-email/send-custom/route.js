@@ -267,8 +267,22 @@ export async function PUT(req) {
       });
 
       const name = String(rowObj[columnMapping.nameCol] || "").trim();
-      const email = String(rowObj[columnMapping.emailCol] || "").trim();
-      if (!name || !email || !email.includes("@")) continue;
+      let email = "";
+      if (columnMapping.emailCol) {
+        email = String(rowObj[columnMapping.emailCol] || "").trim();
+      }
+      const phone = columnMapping.phoneCol ? String(rowObj[columnMapping.phoneCol] || "").trim() : "";
+      const zaloId = columnMapping.zaloIdCol ? String(rowObj[columnMapping.zaloIdCol] || "").trim() : "";
+
+      if (!name) continue;
+      
+      let validEmail = email;
+      if (email && !email.includes("@")) {
+        validEmail = ""; // Invalid email
+      }
+
+      // Require at least one valid contact method (Email, Phone, or Zalo ID)
+      if (!validEmail && !phone && !zaloId) continue;
 
       const deptKeywords = ["phòng", "ban ", "khoa", "tổ ", "đội ", "tổng cộng", "cộng"];
       if (deptKeywords.some((k) => name.toLowerCase().startsWith(k))) continue;

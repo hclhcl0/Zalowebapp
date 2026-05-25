@@ -1251,8 +1251,8 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
   );
 
   const loadData = async () => {
-    if (!columnMapping.nameCol || !columnMapping.emailCol) {
-      setParseError("Vui lòng chọn cột Họ tên và cột Email.");
+    if (!columnMapping.nameCol || (!columnMapping.emailCol && !columnMapping.phoneCol && !columnMapping.zaloIdCol)) {
+      setParseError("Vui lòng chọn cột Họ tên và ít nhất một cột liên hệ (Email, SĐT, hoặc Zalo ID).");
       return;
     }
     setParsing(true);
@@ -1549,7 +1549,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Cột Email nhân viên <span style={{ color: "var(--danger)" }}>*</span></label>
+                      <label className="form-label">Cột Email nhân viên (Bắt buộc nếu gửi Email)</label>
                       <select
                         value={columnMapping.emailCol}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, emailCol: e.target.value }))}
@@ -1675,7 +1675,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
 
                 <button
                   onClick={loadData}
-                  disabled={parsing || !columnMapping.nameCol || !columnMapping.emailCol}
+                  disabled={parsing || !columnMapping.nameCol || (!columnMapping.emailCol && !columnMapping.phoneCol && !columnMapping.zaloIdCol)}
                   className="btn btn-primary"
                   style={{ width: "100%", justifyContent: "center", height: "40px" }}
                 >
