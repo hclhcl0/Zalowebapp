@@ -46,7 +46,9 @@ export default function LoginPage() {
       <div className="login-banner">
         <div className="login-banner-content">
           <div className="login-logo">
-            <div className="login-logo-icon">🏥</div>
+            <div className="login-logo-icon" style={{ background: "#ffffff", padding: "6px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.8)" }}>
+              <img src="/cdc-logo.png" alt="CDC Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            </div>
           </div>
           <h1 className="login-banner-title">CDC Đà Nẵng</h1>
           <p className="login-banner-subtitle">

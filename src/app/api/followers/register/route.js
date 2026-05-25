@@ -79,7 +79,7 @@ export async function POST(request) {
     const nameConflict = await prisma.staffZaloLink.findUnique({ where: { staffName } });
     if (nameConflict && nameConflict.zaloUserId !== uid) {
       return NextResponse.json({
-        error: `Tên "${staffNameRaw}" đã được đăng ký bởi một tài khoản Zalo khác. Nếu đây là lỗi, hãy liên hệ Phòng TCHC.`
+        error: `Tên "${staffNameRaw}" đã được đăng ký bởi một tài khoản Zalo khác. Nếu đây là lỗi, hãy liên hệ Phòng Kế Hoạch - Nghiệp vụ.`
       }, { status: 409 });
     }
 

@@ -9,13 +9,15 @@ function CDCLogo() {
   return (
     <div style={{
       width: 72, height: 72, borderRadius: "50%",
-      background: "linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)",
+      background: "#ffffff",
       display: "flex", alignItems: "center", justifyContent: "center",
-      boxShadow: "0 8px 32px rgba(20,184,166,0.35)",
+      boxShadow: "0 8px 32px rgba(15,118,110,0.15)",
+      border: "2px solid #0f766e",
       margin: "0 auto 20px",
+      padding: "6px",
       flexShrink: 0,
     }}>
-      <span style={{ fontSize: 32, lineHeight: 1 }}>🏥</span>
+      <img src="/cdc-logo.png" alt="CDC Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
     </div>
   );
 }

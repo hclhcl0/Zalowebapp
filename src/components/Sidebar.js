@@ -27,8 +27,6 @@ const menuGroups = [
     title: "Hệ thống",
     items: [
       { icon: "⚙️", label: "Cài đặt & Zalo API", href: "/settings" },
-      { icon: "📞", label: "Cấu hình Hotline", href: "/settings?tab=contact" },
-      { icon: "🤖", label: "Kịch bản Chatbot", href: "/settings?tab=oa_info" },
       { icon: "👥", label: "Quản lý tài khoản", href: "/settings/users" },
     ],
   },
@@ -127,7 +125,7 @@ export default function Sidebar() {
     <aside className="sidebar">
       {/* Logo */}
       <div className="sidebar-header">
-        <div className="sidebar-logo-icon">🏥</div>
+        <img src="/cdc-logo.png" alt="CDC Logo" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
         <div className="sidebar-logo-text">
           <span className="sidebar-logo-main">CDC Đà Nẵng</span>
           <span className="sidebar-logo-sub">Quản trị Zalo OA</span>

@@ -31,13 +31,15 @@ function CDCLogo() {
   return (
     <div style={{
       width: 72, height: 72, borderRadius: "50%",
-      background: "linear-gradient(135deg, #1d4ed8 0%, #0ea5e9 100%)",
+      background: "#ffffff",
       display: "flex", alignItems: "center", justifyContent: "center",
-      boxShadow: "0 8px 32px rgba(29,78,216,0.35)",
+      boxShadow: "0 8px 32px rgba(29,78,216,0.15)",
+      border: "2px solid #1d4ed8",
       margin: "0 auto 20px",
+      padding: "6px",
       flexShrink: 0,
     }}>
-      <span style={{ fontSize: 32, lineHeight: 1 }}>🏥</span>
+      <img src="/cdc-logo.png" alt="CDC Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
     </div>
   );
 }
@@ -70,7 +72,7 @@ function InvalidLinkState() {
       </h2>
       <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: 1.6 }}>
         Vui lòng sử dụng đường dẫn được gửi từ Zalo OA của CDC Đà Nẵng.
-        <br />Liên hệ Phòng TCHC nếu bạn cần hỗ trợ.
+        <br />Liên hệ Phòng Kế Hoạch - Nghiệp vụ nếu bạn cần hỗ trợ.
       </p>
     </div>
   );

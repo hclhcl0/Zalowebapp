@@ -220,8 +220,29 @@ async function handleFollow(userId, data, request) {
 // Xử lý: Người dùng bỏ theo dõi OA
 // ============================================================
 async function handleUnfollow(userId) {
-  // Có thể đánh dấu trong database nhưng không xoá để giữ lịch sử
-  console.log(`[WEBHOOK] User unfollowed: ${userId}`);
+  try {
+    // Tìm liên kết nhân viên xem có tồn tại không
+    const link = await prisma.staffZaloLink.findUnique({
+      where: { zaloUserId: userId },
+    });
+
+    if (link) {
+      console.log(`[WEBHOOK] Unfollow: Tự động xóa liên kết của nhân viên ${link.staffNameRaw} (${userId})`);
+      await prisma.staffZaloLink.delete({
+        where: { zaloUserId: userId },
+      });
+    }
+
+    // Reset loại người dùng về citizen trong bảng Follower
+    await prisma.follower.update({
+      where: { zaloUserId: userId },
+      data: { userType: "citizen", department: null, phone: null },
+    }).catch(() => {});
+
+    console.log(`[WEBHOOK] User unfollowed and cleaned up successfully: ${userId}`);
+  } catch (e) {
+    console.error(`[WEBHOOK] Error handling unfollow for ${userId}:`, e);
+  }
 }
 
 // ============================================================
