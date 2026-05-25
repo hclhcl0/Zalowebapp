@@ -26,7 +26,6 @@ export default withAuth(
 );
 
 export const config = {
-  // Bảo vệ toàn bộ các trang ngoại trừ đăng nhập, api auth, cron jobs, static files, và file xác thực zalo
-  matcher: ["/((?!login|api/auth|api/cron|api/zalo/webhook|news/view|zalo_verifier|_next/static|_next/image|favicon.ico).*)"],
-
+  // Bảo vệ toàn bộ các trang ngoại trừ đăng nhập, api auth, cron jobs, static files (có phần mở rộng), và các trang công khai khác
+  matcher: ["/((?!login|api/auth|api/cron|api/zalo/webhook|news/view|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };
