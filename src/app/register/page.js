@@ -6,18 +6,22 @@ import { useSearchParams } from "next/navigation";
 // DANH SÁCH PHÒNG BAN CDC ĐÀ NẴNG
 // ============================================================
 const DEPARTMENTS = [
-  "Ban Giám đốc",
-  "Phòng Tổ chức – Hành chính",
-  "Phòng Kế hoạch – Tài chính",
-  "Khoa Kiểm soát bệnh truyền nhiễm",
-  "Khoa Phòng chống HIV/AIDS",
-  "Khoa Phòng chống bệnh không lây nhiễm",
-  "Khoa Sức khỏe môi trường – Y tế trường học",
-  "Khoa An toàn thực phẩm",
-  "Khoa Kiểm dịch y tế quốc tế",
-  "Khoa Xét nghiệm",
-  "Khoa Dược – Vật tư y tế",
-  "Trạm Y tế dự phòng quận/huyện",
+  "Phòng chống bệnh truyền nhiễm",
+  "Kiểm dịch Y tế quốc tế",
+  "Ký sinh trùng - Côn trùng",
+  "Phòng chống bệnh không lây nhiễm",
+  "Sức khoẻ môi trường - YTTH",
+  "Sức khoẻ sinh sản",
+  "Dinh dưỡng",
+  "Phòng chống HIV/AIDS - ĐTNC",
+  "Truyền thông giáo dục sức khoẻ",
+  "Phòng khám đa khoa",
+  "Bệnh nghề nghiệp",
+  "Xét nghiệm – CĐHA - TDCN",
+  "Dược – VTYT",
+  "Tổ chức - Hành chính",
+  "Tài chính - Kế toán",
+  "Kế hoạch - Nghiệp vụ"
 ];
 
 // ============================================================

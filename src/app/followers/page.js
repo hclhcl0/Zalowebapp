@@ -3,6 +3,25 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 
+const DEPARTMENTS = [
+  "Phòng chống bệnh truyền nhiễm",
+  "Kiểm dịch Y tế quốc tế",
+  "Ký sinh trùng - Côn trùng",
+  "Phòng chống bệnh không lây nhiễm",
+  "Sức khoẻ môi trường - YTTH",
+  "Sức khoẻ sinh sản",
+  "Dinh dưỡng",
+  "Phòng chống HIV/AIDS - ĐTNC",
+  "Truyền thông giáo dục sức khoẻ",
+  "Phòng khám đa khoa",
+  "Bệnh nghề nghiệp",
+  "Xét nghiệm – CĐHA - TDCN",
+  "Dược – VTYT",
+  "Tổ chức - Hành chính",
+  "Tài chính - Kế toán",
+  "Kế hoạch - Nghiệp vụ"
+];
+
 // ============================================================
 // COMPONENT: Gửi thử link đăng ký cho 1 người cụ thể
 // ============================================================
@@ -852,14 +871,17 @@ export default function FollowersPage() {
                   {newUserType === "staff" && (
                     <div>
                       <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏢 Khoa / Phòng ban</label>
-                      <input
-                        type="text"
+                      <select
                         className="form-input"
-                        placeholder="Ví dụ: Khoa xét nghiệm, Kế hoạch..."
                         value={newDept}
                         onChange={(e) => setNewDept(e.target.value)}
-                        style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem" }}
-                      />
+                        style={{ width: "100%", padding: "6px 10px", fontSize: "0.85rem", cursor: "pointer" }}
+                      >
+                        <option value="">-- Chọn đơn vị công tác --</option>
+                        {DEPARTMENTS.map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
 
