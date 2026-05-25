@@ -407,7 +407,7 @@ function RegisterForm() {
         <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f1f5f9", textAlign: "center" }}>
           <p style={{ fontSize: "0.75rem", color: "#94a3b8", lineHeight: 1.6 }}>
             🔒 Thông tin của bạn được bảo mật và chỉ dùng để gửi thông báo nội bộ.<br />
-            Mọi thắc mắc liên hệ Phòng TCHC – CDC Đà Nẵng.
+            Mọi thắc mắc liên hệ Phòng Kế Hoạch - Nghiệp vụ – CDC Đà Nẵng.
           </p>
         </div>
       </div>
