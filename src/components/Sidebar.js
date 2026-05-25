@@ -14,14 +14,7 @@ const menuGroups = [
       { icon: "📧", label: "Gửi Email Báo Lương", href: "/salary-email" },
     ],
   },
-  {
-    title: "Dịch vụ Y tế",
-    items: [
-      { icon: "💉", label: "Đặt lịch tiêm chủng", href: "/services/vaccination" },
-      { icon: "🔬", label: "Kết quả xét nghiệm", href: "/services/test-results" },
-      { icon: "💰", label: "Bảng giá dịch vụ", href: "/services/pricing" },
-    ],
-  },
+
   {
     title: "Tin tức & Cảnh báo",
     items: [

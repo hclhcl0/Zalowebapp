@@ -24,27 +24,11 @@ export default function Dashboard() {
         </div>
         <div className="stat-card">
           <div className="stat-info">
-            <div className="stat-label">Lịch hẹn tiêm (tháng)</div>
-            <div className="stat-value">342</div>
-            <div className="stat-change">↑ +18 so với tháng trước</div>
-          </div>
-          <div className="stat-icon green">💉</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
             <div className="stat-label">Tin nhắn ZNS đã gửi</div>
             <div className="stat-value">8,912</div>
             <div className="stat-change">↑ +1.2K tuần này</div>
           </div>
           <div className="stat-icon yellow">📨</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-info">
-            <div className="stat-label">Lượt tra cứu kết quả</div>
-            <div className="stat-value">1,120</div>
-            <div className="stat-change down">↓ -40 so với tuần trước</div>
-          </div>
-          <div className="stat-icon purple">🔬</div>
         </div>
       </div>
 
@@ -64,7 +48,7 @@ export default function Dashboard() {
               <div className="activity-dot green" />
               <div>
                 <div className="activity-text">
-                  <strong>Nguyễn Văn A</strong> đăng ký lịch tiêm vắc xin <strong>Cúm mùa</strong> ngày 22/05
+                  <strong>Nguyễn Văn A</strong> đã nhấn quan tâm trang Zalo Official Account
                 </div>
                 <div className="activity-time">10 phút trước</div>
               </div>
@@ -82,7 +66,7 @@ export default function Dashboard() {
               <div className="activity-dot yellow" />
               <div>
                 <div className="activity-text">
-                  <strong>Trần Thị B</strong> tra cứu kết quả xét nghiệm mã <strong>XN00231</strong>
+                  <strong>Trần Thị B</strong> đã gửi tin nhắn phản hồi qua Zalo OA Chat
                 </div>
                 <div className="activity-time">3 giờ trước</div>
               </div>
@@ -91,7 +75,7 @@ export default function Dashboard() {
               <div className="activity-dot green" />
               <div>
                 <div className="activity-text">
-                  Lịch hẹn #342 của <strong>Lê Hoàng C</strong> đã được <strong>duyệt</strong> — ZNS đã gửi
+                  Hệ thống tự động đồng bộ thành công 18 bài viết từ Zalo OA về database
                 </div>
                 <div className="activity-time">5 giờ trước</div>
               </div>
@@ -100,7 +84,7 @@ export default function Dashboard() {
               <div className="activity-dot red" />
               <div>
                 <div className="activity-text">
-                  <strong>Phạm Thị D</strong> hủy đăng ký lịch tiêm ngày 20/05
+                  <strong>Nhân viên Admin</strong> cập nhật cấu hình tốc độ gửi email báo lương trong Cài đặt
                 </div>
                 <div className="activity-time">Hôm qua</div>
               </div>
@@ -122,15 +106,7 @@ export default function Dashboard() {
               <span className="quick-action-icon">📝</span>
               Đăng tin tức
             </Link>
-            <Link href="/services/vaccination" className="quick-action-btn">
-              <span className="quick-action-icon">💉</span>
-              Duyệt lịch hẹn
-            </Link>
-            <Link href="/services/test-results" className="quick-action-btn">
-              <span className="quick-action-icon">🔬</span>
-              Nhập KQ xét nghiệm
-            </Link>
-            <Link href="/support/hotline" className="quick-action-btn">
+            <Link href="/settings?tab=contact" className="quick-action-btn">
               <span className="quick-action-icon">📞</span>
               Cập nhật hotline
             </Link>
@@ -138,41 +114,6 @@ export default function Dashboard() {
               <span className="quick-action-icon">📧</span>
               Gửi email báo lương
             </Link>
-          </div>
-
-          {/* Lịch hẹn chờ duyệt */}
-          <div style={{ marginTop: "24px" }}>
-            <div className="card-title" style={{ marginBottom: "12px" }}>
-              ⏳ Lịch hẹn chờ duyệt
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {[
-                { name: "Nguyễn V. A", type: "Cúm mùa", date: "22/05" },
-                { name: "Trần T. B",   type: "Viêm gan B", date: "23/05" },
-                { name: "Lê H. C",     type: "Sởi - Quai bị", date: "24/05" },
-              ].map((item) => (
-                <div
-                  key={item.name}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 12px",
-                    background: "var(--bg)",
-                    borderRadius: "var(--radius)",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{item.name}</div>
-                    <div style={{ color: "var(--text-muted)" }}>
-                      {item.type} · {item.date}
-                    </div>
-                  </div>
-                  <span className="badge badge-pending">Chờ duyệt</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>
