@@ -143,7 +143,7 @@ export default async function Dashboard() {
       </div>
 
       {/* Bottom grid: 60/40 Split */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "24px" }}>
+      <div className="dashboard-grid">
         
         {/* Left Column: Recent activity (Live from Prisma) */}
         <div className="card">

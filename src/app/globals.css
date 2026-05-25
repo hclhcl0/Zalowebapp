@@ -316,6 +316,13 @@ a { text-decoration: none; color: inherit; }
   margin-bottom: 24px;
 }
 
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 24px;
+}
+
+
 .stat-card {
   background: var(--card-bg);
   border-radius: var(--radius-lg);
@@ -1434,6 +1441,11 @@ tbody tr:hover { background: #f8fafc; }
   .stat-grid {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
   }
 
   .card {
