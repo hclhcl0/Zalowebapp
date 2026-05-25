@@ -86,10 +86,10 @@ async function callZaloAPI(url, options = {}) {
 }
 
 // ============================================================
-// GỬI TIN NHẮN VĂN BẢN
+// GỬI TIN NHẮN VĂN BẢN (Nâng cấp API v3.0 /message/cs)
 // ============================================================
 export async function sendTextMessage(toUserId, text) {
-  return callZaloAPI("https://openapi.zalo.me/v2.0/oa/message", {
+  return callZaloAPI("https://openapi.zalo.me/v3.0/oa/message/cs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -116,15 +116,15 @@ export async function sendZNS({ phone, templateId, templateData }) {
 }
 
 // ============================================================
-// GỬI TIN TRUYỀN THÔNG (Chuyển sang gửi dạng CS để tránh lỗi -233)
+// GỬI TIN TRUYỀN THÔNG (Chuyển sang gửi dạng CS API v3.0 để tương thích)
 // ============================================================
 export async function sendPromotionMessage(userId, title, content, url = "") {
   const token = await getAccessToken();
 
-  // Dùng API v2.0 thay vì v3.0 /message/promotion để tránh lỗi -233 đối với tài khoản cơ quan nhà nước
+  // Dùng API v3.0 /message/cs thay vì v3.0 /message/promotion để tránh lỗi -233 đối với tài khoản cơ quan nhà nước
   const textContent = `${title.toUpperCase()}\n\n${content}${url ? `\n\nXem chi tiết: ${url}` : ""}`;
 
-  const res = await fetch("https://openapi.zalo.me/v2.0/oa/message", {
+  const res = await fetch("https://openapi.zalo.me/v3.0/oa/message/cs", {
     method: "POST",
     headers: { "Content-Type": "application/json", access_token: token },
     body: JSON.stringify({
@@ -136,7 +136,7 @@ export async function sendPromotionMessage(userId, title, content, url = "") {
 }
 
 // ============================================================
-// GỬI TIN DANH SÁCH (List/Carousel Message) - Gửi qua /message/cs
+// GỬI TIN DANH SÁCH (List/Carousel Message) - Gửi qua API v3.0 /message/cs
 // ============================================================
 export async function sendListMessage(userId, elementsData) {
   const token = await getAccessToken();
@@ -174,7 +174,7 @@ export async function sendListMessage(userId, elementsData) {
     };
   });
 
-  const res = await fetch("https://openapi.zalo.me/v2.0/oa/message", {
+  const res = await fetch("https://openapi.zalo.me/v3.0/oa/message/cs", {
     method: "POST",
     headers: { "Content-Type": "application/json", access_token: token },
     body: JSON.stringify({
@@ -345,13 +345,13 @@ export async function uploadVideoToZalo(videoUrlOrPath) {
 }
 
 // ============================================================
-// GỬI TIN NHẮN VIDEO (Chuyển đổi thành tin nhắn chứa link video để tương thích và bypass lỗi -201)
+// GỬI TIN NHẮN VIDEO (Gửi text chứa link qua v3.0 /message/cs)
 // ============================================================
 export async function sendVideoMessage(userId, videoUrl) {
   const token = await getAccessToken();
   const textContent = `🎥 CDC ĐÀ NẴNG - TIN NHẮN VIDEO\n\nMời bạn xem video tại đây:\n${videoUrl}`;
 
-  const res = await fetch("https://openapi.zalo.me/v2.0/oa/message", {
+  const res = await fetch("https://openapi.zalo.me/v3.0/oa/message/cs", {
     method: "POST",
     headers: { "Content-Type": "application/json", access_token: token },
     body: JSON.stringify({
