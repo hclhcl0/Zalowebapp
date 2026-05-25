@@ -688,66 +688,66 @@ export default function FollowersPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
-                  <th style={{ padding: "12px 8px", width: "60px" }}>Avatar</th>
-                  <th style={{ padding: "12px 8px" }}>Tên Zalo</th>
-                  <th style={{ padding: "12px 8px", minWidth: "160px" }}>Tên đã đăng ký</th>
-                  <th style={{ padding: "12px 8px", width: "200px" }}>Zalo User ID</th>
-                  <th style={{ padding: "12px 8px", width: "130px" }}>Số điện thoại</th>
-                  <th style={{ padding: "12px 8px", width: "120px" }}>Ngày quan tâm</th>
-                  <th style={{ padding: "12px 8px", width: "180px" }}>Thao tác</th>
+                  <th style={{ padding: "12px 8px", width: "50px" }}>Avatar</th>
+                  <th style={{ padding: "12px 8px", minWidth: "150px" }}>Tên Zalo</th>
+                  <th style={{ padding: "12px 8px", width: "170px" }}>Zalo User ID</th>
+                  <th style={{ padding: "12px 8px", width: "120px" }}>Số điện thoại</th>
+                  <th style={{ padding: "12px 8px", width: "110px" }}>Ngày QT</th>
+                  <th style={{ padding: "12px 8px", width: "160px" }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {followers.map((f) => (
                   <tr key={f.id} style={{ borderBottom: "1px solid var(--border)", transition: "background 0.2s" }}>
                     <td style={{ padding: "12px 8px" }}>
-                      {f.avatarUrl ? (
-                        <img
-                          src={f.avatarUrl}
-                          alt={f.displayName}
-                          style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)" }}
-                        />
-                      ) : (
-                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.9rem" }}>
-                          {f.displayName ? f.displayName.substring(0, 1) : "U"}
-                        </div>
-                      )}
+                      <div style={{ position: "relative", display: "inline-flex" }}>
+                        {f.avatarUrl ? (
+                          <img
+                            src={f.avatarUrl}
+                            alt={f.displayName}
+                            style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)" }}
+                          />
+                        ) : (
+                          <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.9rem" }}>
+                            {f.displayName ? f.displayName.substring(0, 1) : "U"}
+                          </div>
+                        )}
+                        {/* Dấu check xanh cho người đã đăng ký */}
+                        {((f.userType === "staff" && f.staffLink) || f.fullName) && (
+                          <div style={{
+                            position: "absolute", bottom: "-2px", right: "-2px",
+                            background: "white", borderRadius: "50%", padding: "2px",
+                            boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
+                          }}>
+                            <div style={{
+                              background: "var(--success)", color: "white",
+                              width: "12px", height: "12px", borderRadius: "50%",
+                              display: "flex", alignItems: "center", justifyContent: "center"
+                            }}>
+                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: "12px 8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                        <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>
+                        <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)" }}>
                           {f.displayName || "Người dùng Zalo"}
                         </span>
                         {f.userType === "staff" ? (
-                          <span style={{ fontSize: "0.7rem", padding: "2px 6px", background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
-                            💼 Cơ quan {f.department ? `· ${f.department}` : ""}
+                          <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "var(--primary-light)", color: "var(--primary)", border: "1px solid var(--border-focus)", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
+                            💼 Cơ quan
                           </span>
                         ) : (
-                          <span style={{ fontSize: "0.7rem", padding: "2px 6px", background: "#f0fdf4", color: "var(--success)", border: "1px solid #bbf7d0", borderRadius: "4px", fontWeight: 500 }}>
+                          <span style={{ fontSize: "0.65rem", padding: "2px 6px", background: "#f0fdf4", color: "var(--success)", border: "1px solid #bbf7d0", borderRadius: "4px", fontWeight: 500, whiteSpace: "nowrap" }}>
                             🟢 Khách hàng
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                        {f.appointments.length} lịch hẹn | {f.testResults.length} kết quả
+                      <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                        {f.appointments.length} hẹn | {f.testResults.length} KQ
                       </div>
-                    </td>
-
-                    {/* Cột Tên đã đăng ký */}
-                    <td style={{ padding: "12px 8px" }}>
-                      {f.userType === "staff" && f.staffLink ? (
-                        <span className="badge badge-approved" style={{ fontSize: "0.75rem", padding: "4px 10px", border: "1px solid #bbf7d0" }}>
-                          ✅ {f.staffLink.staffNameRaw}
-                        </span>
-                      ) : f.fullName ? (
-                        <span className="badge badge-info" style={{ fontSize: "0.75rem", padding: "4px 10px", border: "1px solid var(--border-focus)" }}>
-                          ✅ {f.fullName}
-                        </span>
-                      ) : (
-                        <span className="badge" style={{ background: "var(--bg)", color: "var(--text-muted)", fontSize: "0.75rem", padding: "4px 10px", border: "1px solid var(--border)" }}>
-                          ⏳ Chưa đăng ký
-                        </span>
-                      )}
                     </td>
                     <td style={{ padding: "12px 8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
