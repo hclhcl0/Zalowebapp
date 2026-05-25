@@ -38,49 +38,67 @@ export async function GET(request) {
 // ============================================================
 export async function POST(request) {
   try {
-    const body = await request.json();
+    let body = {};
+    try {
+      body = await request.json();
+    } catch (e) {
+      console.warn("[ZALO WEBHOOK] Non-JSON or empty body received:", e.message);
+    }
+
     const { event_name, user_id_by_app, message, timestamp } = body;
 
     console.log("[ZALO WEBHOOK]", JSON.stringify(body, null, 2));
 
-    // Lưu log toàn bộ sự kiện vào database
-    await prisma.messageLog.create({
-      data: {
-        zaloUserId: user_id_by_app || "unknown",
-        direction: "inbound",
-        type: event_name || "unknown",
-        content: message?.text || null,
-        rawPayload: JSON.stringify(body),
-        receivedAt: timestamp ? new Date(timestamp * 1000) : new Date(),
-      },
-    });
+    // Luôn bắt lỗi DB riêng để không làm sập webhook
+    try {
+      // Lưu log toàn bộ sự kiện vào database
+      await prisma.messageLog.create({
+        data: {
+          zaloUserId: user_id_by_app || "unknown",
+          direction: "inbound",
+          type: event_name || "unknown",
+          content: message?.text || null,
+          rawPayload: JSON.stringify(body),
+          receivedAt: timestamp ? new Date(timestamp * 1000) : new Date(),
+        },
+      });
+    } catch (dbErr) {
+      console.error("[ZALO WEBHOOK DB ERROR]", dbErr);
+    }
 
-    // Xử lý các loại sự kiện
-    switch (event_name) {
-      // Người dùng nhắn tin
-      case "user_send_text":
-        await handleTextMessage(user_id_by_app, message?.text);
-        break;
+    // Xử lý các loại sự kiện (chỉ khi có event_name)
+    if (event_name) {
+      try {
+        switch (event_name) {
+          // Người dùng nhắn tin
+          case "user_send_text":
+            await handleTextMessage(user_id_by_app, message?.text);
+            break;
 
-      // Người dùng mới theo dõi OA
-      case "follow":
-        await handleFollow(user_id_by_app, body);
-        break;
+          // Người dùng mới theo dõi OA
+          case "follow":
+            await handleFollow(user_id_by_app, body);
+            break;
 
-      // Người dùng bỏ theo dõi OA
-      case "unfollow":
-        await handleUnfollow(user_id_by_app);
-        break;
+          // Người dùng bỏ theo dõi OA
+          case "unfollow":
+            await handleUnfollow(user_id_by_app);
+            break;
 
-      default:
-        console.log(`[ZALO WEBHOOK] Unhandled event: ${event_name}`);
+          default:
+            console.log(`[ZALO WEBHOOK] Unhandled event: ${event_name}`);
+        }
+      } catch (procErr) {
+        console.error("[ZALO WEBHOOK PROCESS ERROR]", procErr);
+      }
     }
 
     // Trả về 200 OK để Zalo biết đã nhận thành công
-    return NextResponse.json({ error: 0 });
+    return NextResponse.json({ error: 0, status: "success" });
   } catch (err) {
-    console.error("[ZALO WEBHOOK ERROR]", err);
-    return NextResponse.json({ error: 1, message: err.message }, { status: 500 });
+    console.error("[ZALO WEBHOOK CRITICAL ERROR]", err);
+    // Luôn trả về 200 OK để xác minh webhook thành công ngay cả khi có lỗi cực kỳ nghiêm trọng
+    return NextResponse.json({ error: 0, warning: err.message });
   }
 }
 
