@@ -225,7 +225,7 @@ function normalizeVi(s) {
 export async function PUT(req) {
   try {
     const body = await req.json();
-    const { fileBase64, headerRowIndex, isSubHeader, columnMapping } = body;
+    const { fileBase64, headerRowIndex, isSubHeader, columnMapping, sheetName } = body;
 
     const binaryStr = atob(fileBase64);
     const bytes = new Uint8Array(binaryStr.length);
@@ -234,8 +234,9 @@ export async function PUT(req) {
     }
 
     const workbook = XLSX.read(bytes, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
+    const sheets = workbook.SheetNames;
+    const selectedSheetName = sheetName && sheets.includes(sheetName) ? sheetName : sheets[0];
+    const sheet = workbook.Sheets[selectedSheetName];
     const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
     const topRow = (allRows[headerRowIndex] || []).map((h) => String(h || "").trim());

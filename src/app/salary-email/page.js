@@ -410,6 +410,9 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [fileName, setFileName] = useState("");
+  const [excelFile, setExcelFile] = useState(null);
+  const [sheets, setSheets] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState("");
   const [parsing, setParsing] = useState(false);
   const [parseError, setParseError] = useState("");
   const [isDrag, setIsDrag] = useState(false);
@@ -446,18 +449,22 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
     }
   };
 
-  const processFile = useCallback(async (file) => {
+  const processFile = useCallback(async (file, sheetName = "") => {
     setParseError("");
     setParsing(true);
     setRecords([]);
     setFileName(file.name);
+    setExcelFile(file);
     setPage(0);
     try {
       const fd = new FormData();
       fd.append("file", file);
+      if (sheetName) fd.append("sheetName", sheetName);
       const res = await fetch("/api/salary-email/parse-excel", { method: "POST", body: fd });
       const json = await res.json();
       if (json.records) {
+        setSheets(json.sheets || []);
+        setSelectedSheet(json.selectedSheet || "");
         setRecords(
           json.records.map((r) => {
             // Tự động đối chiếu Zalo Follower
@@ -697,11 +704,40 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
           {records.length > 0 && (
             <div style={{ marginTop: "20px" }}>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
                   <span className="badge badge-info" style={{ gap: "4px" }}>
                     <Users className="w-3.5 h-3.5" /> {records.length} Nhân viên
                   </span>
-                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", maxWidth: "240px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
+                  {sheets.length > 1 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "10px" }}>
+                      <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)" }}>Sheet:</span>
+                      <select
+                        value={selectedSheet}
+                        onChange={(e) => {
+                          const nextSheet = e.target.value;
+                          if (excelFile) processFile(excelFile, nextSheet);
+                        }}
+                        className="form-select"
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "0.72rem",
+                          height: "26px",
+                          width: "auto",
+                          minWidth: "110px",
+                          borderRadius: "6px",
+                          border: "1px solid var(--primary)",
+                          color: "var(--primary)",
+                          fontWeight: 600,
+                          background: "var(--primary-light)"
+                        }}
+                      >
+                        {sheets.map((sh) => (
+                          <option key={sh} value={sh}>{sh}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: "flex", gap: "4px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)" }}>
                   {[
@@ -1181,6 +1217,9 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
 
   const [fileBase64, setFileBase64] = useState("");
   const [fileName, setFileName] = useState("");
+  const [excelFile, setExcelFile] = useState(null);
+  const [sheets, setSheets] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState("");
   const [headerRowIndex, setHeaderRowIndex] = useState(0);
   const [isSubHeader, setIsSubHeader] = useState(false);
   const [headers, setHeaders] = useState([]);
@@ -1241,9 +1280,10 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
     }
   };
 
-  const processFile = useCallback(async (file) => {
+  const processFile = useCallback(async (file, sheetName = "") => {
     setParseError("");
     setParsing(true);
+    setExcelFile(file);
     setStep(1);
     setRecords([]);
     setFileName(file.name);
@@ -1255,11 +1295,14 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
 
         const fd = new FormData();
         fd.append("file", file);
+        if (sheetName) fd.append("sheetName", sheetName);
         const res = await fetch("/api/salary-email/preview-excel", { method: "POST", body: fd });
         const json = await res.json();
         if (json.error) {
           setParseError(json.error);
         } else {
+          setSheets(json.sheets || []);
+          setSelectedSheet(json.selectedSheet || "");
           setHeaders(json.headers);
           setHeaderRowIndex(json.headerRowIndex);
           setIsSubHeader(json.isSubHeader || false);
@@ -1313,7 +1356,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
       const res = await fetch("/api/salary-email/send-custom", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileBase64, headerRowIndex, isSubHeader, columnMapping }),
+        body: JSON.stringify({ fileBase64, headerRowIndex, isSubHeader, columnMapping, sheetName: selectedSheet }),
       });
       const json = await res.json();
       if (json.records) {
@@ -1545,10 +1588,39 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
               </div>
             ) : (
               <div className="space-y-6" style={{ animation: "fadeIn 0.3s ease" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Đang xử lý:</span>
                     <span className="badge badge-info">{fileName}</span>
+                    {sheets.length > 1 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "10px" }}>
+                        <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)" }}>Sheet:</span>
+                        <select
+                          value={selectedSheet}
+                          onChange={(e) => {
+                            const nextSheet = e.target.value;
+                            if (excelFile) processFile(excelFile, nextSheet);
+                          }}
+                          className="form-select"
+                          style={{
+                            padding: "2px 8px",
+                            fontSize: "0.72rem",
+                            height: "26px",
+                            width: "auto",
+                            minWidth: "110px",
+                            borderRadius: "6px",
+                            border: "1px solid var(--primary)",
+                            color: "var(--primary)",
+                            fontWeight: 600,
+                            background: "var(--primary-light)"
+                          }}
+                        >
+                          {sheets.map((sh) => (
+                            <option key={sh} value={sh}>{sh}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                   <button onClick={() => setStep(1)} className="btn btn-ghost btn-sm" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <RefreshCw className="w-3.5 h-3.5" /> Đổi file khác
@@ -2225,6 +2297,9 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
   const [records, setRecords] = useState([]);
   const [thang, setThang] = useState("");
   const [fileName, setFileName] = useState("");
+  const [excelFile, setExcelFile] = useState(null);
+  const [sheets, setSheets] = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState("");
   const [parsing, setParsing] = useState(false);
   const [parseError, setParseError] = useState("");
   const [isDrag, setIsDrag] = useState(false);
@@ -2265,16 +2340,18 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
     }
   };
 
-  const processFile = useCallback(async (file) => {
+  const processFile = useCallback(async (file, sheetName = "") => {
     setParseError("");
     setParsing(true);
     setRecords([]);
     setFileName(file.name);
+    setExcelFile(file);
     setPage(0);
     setThang("");
     try {
       const fd = new FormData();
       fd.append("file", file);
+      if (sheetName) fd.append("sheetName", sheetName);
       const res = await fetch("/api/salary-email/parse-tax-excel", { method: "POST", body: fd });
       const json = await res.json();
       if (json.error) {
@@ -2282,6 +2359,8 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
         return;
       }
       if (json.records) {
+        setSheets(json.sheets || []);
+        setSelectedSheet(json.selectedSheet || "");
         const withTax = json.records.filter((r) => r.thueTNCN > 0);
         setRecords(
           withTax.map((r) => {
@@ -2520,12 +2599,41 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
           {records.length > 0 && (
             <div style={{ marginTop: "20px" }}>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
                   <span className="badge badge-info" style={{ gap: "4px" }}>
                     <Users className="w-3.5 h-3.5" /> {records.length} Nhân viên phát sinh thuế
                   </span>
-                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", maxWidth: "240px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
                   {thang && <span className="badge badge-approved">Tháng {thang}</span>}
+                  {sheets.length > 1 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "10px" }}>
+                      <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)" }}>Sheet:</span>
+                      <select
+                        value={selectedSheet}
+                        onChange={(e) => {
+                          const nextSheet = e.target.value;
+                          if (excelFile) processFile(excelFile, nextSheet);
+                        }}
+                        className="form-select"
+                        style={{
+                          padding: "2px 8px",
+                          fontSize: "0.72rem",
+                          height: "26px",
+                          width: "auto",
+                          minWidth: "110px",
+                          borderRadius: "6px",
+                          border: "1px solid var(--primary)",
+                          color: "var(--primary)",
+                          fontWeight: 600,
+                          background: "var(--primary-light)"
+                        }}
+                      >
+                        {sheets.map((sh) => (
+                          <option key={sh} value={sh}>{sh}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: "flex", gap: "4px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)" }}>
                   {[

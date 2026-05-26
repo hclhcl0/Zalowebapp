@@ -11,6 +11,7 @@ export async function POST(req) {
   try {
     const formData = await req.formData();
     const file = formData.get("file");
+    const sheetNameParam = formData.get("sheetName");
 
     if (!file) return NextResponse.json({ error: "Không tìm thấy file." }, { status: 400 });
 
@@ -20,7 +21,9 @@ export async function POST(req) {
 
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const sheets = workbook.SheetNames;
+    const sheetName = sheetNameParam && sheets.includes(sheetNameParam) ? sheetNameParam : sheets[0];
+    const sheet = workbook.Sheets[sheetName];
     const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
     // Tìm hàng header đầu tiên có ít nhất 2 ô không trống
@@ -71,6 +74,7 @@ export async function POST(req) {
       success: true, headers, rows: previewRows,
       totalRows: Math.max(0, allRows.length - dataStartIdx),
       headerRowIndex, isSubHeader,
+      sheets, selectedSheet: sheetName
     });
   } catch (err) {
     console.error("[salary-email/preview-excel]", err);
