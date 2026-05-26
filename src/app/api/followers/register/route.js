@@ -100,11 +100,25 @@ export async function POST(request) {
     const staffName = normalizeName(staffNameRaw);
     if (!staffName) return NextResponse.json({ error: "Tên không hợp lệ" }, { status: 400 });
 
+    // Chuẩn hóa SĐT của người đang đăng ký
+    const cleanPhone = (p) => p ? String(p).replace(/\D/g, "").replace(/^84/, "0") : null;
+    const registrantPhone = cleanPhone(phone) || cleanPhone(follower.phone);
+
     // Kiểm tra tên đã được dùng bởi người khác chưa
-    const nameConflict = await prisma.staffZaloLink.findUnique({ where: { staffName } });
-    if (nameConflict && nameConflict.zaloUserId !== uid) {
+    const nameConflicts = await prisma.staffZaloLink.findMany({ where: { staffName } });
+    const trueConflict = nameConflicts.find(c => {
+      if (c.zaloUserId === uid) return false; // chính mình đang cập nhật lại → không phải conflict
+      // Nếu có SĐT của cả 2 → so sánh SĐT để phân biệt
+      const existingPhone = cleanPhone(c.phone);
+      if (registrantPhone && existingPhone) {
+        return registrantPhone === existingPhone; // chỉ block nếu cả tên + SĐT trùng
+      }
+      // Không có SĐT để phân biệt → coi là trùng, cảnh báo nhưng vẫn cho đăng ký
+      return false;
+    });
+    if (trueConflict) {
       return NextResponse.json({
-        error: `Tên "${staffNameRaw}" đã được đăng ký bởi một tài khoản Zalo khác. Nếu đây là lỗi, hãy liên hệ Phòng Kế Hoạch - Nghiệp vụ.`
+        error: `Tên "${staffNameRaw}" và số điện thoại này đã được đăng ký bởi một tài khoản Zalo khác. Nếu đây là lỗi, hãy liên hệ Phòng Kế Hoạch - Nghiệp vụ.`
       }, { status: 409 });
     }
 
@@ -143,12 +157,6 @@ export async function POST(request) {
     });
   } catch (err) {
     console.error("[Register POST]", err);
-    // Lỗi unique constraint (tên trùng)
-    if (err.code === "P2002") {
-      return NextResponse.json({
-        error: "Tên này đã được đăng ký. Mỗi tên chỉ được liên kết với 1 tài khoản Zalo."
-      }, { status: 409 });
-    }
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -66,12 +66,16 @@ export async function PUT(request, { params }) {
 
     const staffName = normalizeName(staffNameRaw);
 
-    // Kiểm tra trùng tên với liên kết của người khác
+    // Kiểm tra trùng tên với liên kết của người khác (không cần block vì staffName không còn unique)
+    // Chỉ cảnh báo nếu cả tên + SĐT đều trùng
     if (staffName !== currentLink.staffName) {
-      const conflict = await prisma.staffZaloLink.findUnique({ where: { staffName } });
-      if (conflict && conflict.id !== id) {
+      const cleanPhone = (p) => p ? String(p).replace(/\D/g, "").replace(/^84/, "0") : null;
+      const newPhone = cleanPhone(phone);
+      const existing = await prisma.staffZaloLink.findMany({ where: { staffName } });
+      const samePhoneConflict = existing.find(c => c.id !== id && newPhone && cleanPhone(c.phone) === newPhone);
+      if (samePhoneConflict) {
         return NextResponse.json({
-          error: `Tên "${staffNameRaw.trim()}" đã được sử dụng bởi tài khoản Zalo khác.`
+          error: `Tên "${staffNameRaw.trim()}" và số điện thoại này đã được sử dụng bởi tài khoản Zalo khác.`
         }, { status: 409 });
       }
     }

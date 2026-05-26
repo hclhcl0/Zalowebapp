@@ -147,7 +147,7 @@ model MessageLog {
 model StaffZaloLink {
   id           Int      @id @default(autoincrement())
   staffNameRaw String            // Tên gốc nhân viên nhập vào form
-  staffName    String   @unique  // Tên chuẩn hóa (lowercase, bỏ dấu) — để khớp với Excel
+  staffName    String            // Tên chuẩn hóa (lowercase) — để khớp với Excel
   zaloUserId   String   @unique  // Zalo User ID đã liên kết
   department   String?           // Phòng ban (tùy chọn)
   phone        String?           // SĐT bổ sung (tùy chọn)
