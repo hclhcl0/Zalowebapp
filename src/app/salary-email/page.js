@@ -1343,8 +1343,20 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
   );
 
   const loadData = async () => {
-    if (!columnMapping.nameCol || (!columnMapping.emailCol && !columnMapping.phoneCol && !columnMapping.zaloIdCol)) {
-      setParseError("Vui lòng chọn cột Họ tên và ít nhất một cột liên hệ (Email, SĐT, hoặc Zalo ID).");
+    if (!columnMapping.nameCol) {
+      setParseError("Vui lòng chọn cột Họ tên nhân viên.");
+      return;
+    }
+    if (channel !== "zalo" && !columnMapping.emailCol) {
+      setParseError("Vui lòng chọn cột Email nhân viên (bắt buộc khi gửi qua kênh Email).");
+      return;
+    }
+    if (channel === "zalo" && !columnMapping.phoneCol && !columnMapping.zaloIdCol) {
+      setParseError("Vui lòng chọn ít nhất cột Số điện thoại hoặc Zalo ID để làm tiêu chí đối chiếu Zalo.");
+      return;
+    }
+    if (channel === "both" && !columnMapping.emailCol && !columnMapping.phoneCol && !columnMapping.zaloIdCol) {
+      setParseError("Vui lòng chọn cột Email và ít nhất một cột liên hệ Zalo (SĐT hoặc Zalo ID) khi gửi cả hai kênh.");
       return;
     }
     setParsing(true);
@@ -1665,6 +1677,47 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                   {/* Left: compulsory columns */}
                   <div className="space-y-4">
                     <h3 style={{ margin: "0 0 10px 0", fontWeight: 700, color: "var(--text)", borderBottom: "1px solid var(--border)", paddingBottom: "6px" }}>1. Thiết lập cột cơ bản</h3>
+                    
+                    {/* Chọn kênh gửi ngay tại Bước 2 */}
+                    <div className="form-group" style={{ marginBottom: "16px", padding: "10px", background: "var(--primary-light)", borderRadius: "6px", border: "1px solid var(--border-focus)" }}>
+                      <label className="form-label" style={{ fontWeight: 700, color: "var(--primary)", fontSize: "0.78rem" }}>🎯 LỰA CHỌN KÊNH GỬI TRƯỚC:</label>
+                      <div style={{ display: "flex", gap: "14px", marginTop: "6px", flexWrap: "wrap" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
+                          <input 
+                            type="radio" 
+                            name="channel-custom-step2" 
+                            value="email" 
+                            checked={channel === "email"} 
+                            onChange={() => setChannel("email")} 
+                            style={{ cursor: "pointer" }}
+                          />
+                          📧 Chỉ gửi Gmail
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
+                          <input 
+                            type="radio" 
+                            name="channel-custom-step2" 
+                            value="zalo" 
+                            checked={channel === "zalo"} 
+                            onChange={() => setChannel("zalo")} 
+                            style={{ cursor: "pointer" }}
+                          />
+                          💬 Chỉ gửi Zalo OA
+                        </label>
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
+                          <input 
+                            type="radio" 
+                            name="channel-custom-step2" 
+                            value="both" 
+                            checked={channel === "both"} 
+                            onChange={() => setChannel("both")} 
+                            style={{ cursor: "pointer" }}
+                          />
+                          🔄 Gửi cả hai kênh
+                        </label>
+                      </div>
+                    </div>
+
                     <div className="form-group">
                       <label className="form-label">Cột Tên nhân viên <span style={{ color: "var(--danger)" }}>*</span></label>
                       <select
@@ -1680,8 +1733,16 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                         ))}
                       </select>
                     </div>
+
                     <div className="form-group">
-                      <label className="form-label">Cột Email nhân viên (Bắt buộc nếu gửi Email)</label>
+                      <label className="form-label">
+                        Cột Email nhân viên 
+                        {channel === "zalo" ? (
+                          <span style={{ color: "var(--text-light)", fontWeight: 400, marginLeft: "4px" }}>(Không bắt buộc vì chỉ gửi Zalo)</span>
+                        ) : (
+                          <span style={{ color: "var(--danger)", marginLeft: "4px" }}>* (Bắt buộc gửi Email)</span>
+                        )}
+                      </label>
                       <select
                         value={columnMapping.emailCol}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, emailCol: e.target.value }))}
@@ -1695,8 +1756,16 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                         ))}
                       </select>
                     </div>
+
                     <div className="form-group">
-                      <label className="form-label">Cột Số điện thoại (Tùy chọn, đối chiếu Zalo)</label>
+                      <label className="form-label">
+                        Cột Số điện thoại 
+                        {channel === "zalo" ? (
+                          <span style={{ color: "var(--danger)", marginLeft: "4px" }}>* (Nên chọn để đối chiếu Zalo)</span>
+                        ) : (
+                          <span style={{ color: "var(--text-light)", fontWeight: 400, marginLeft: "4px" }}>(Tùy chọn)</span>
+                        )}
+                      </label>
                       <select
                         value={columnMapping.phoneCol || ""}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, phoneCol: e.target.value }))}
@@ -1710,8 +1779,9 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                         ))}
                       </select>
                     </div>
+
                     <div className="form-group">
-                      <label className="form-label">Cột Zalo ID (Tùy chọn, đối chiếu Zalo trực tiếp)</label>
+                      <label className="form-label">Cột Zalo ID <span style={{ color: "var(--text-light)", fontWeight: 400 }}>(Tùy chọn, đối chiếu Zalo trực tiếp)</span></label>
                       <select
                         value={columnMapping.zaloIdCol || ""}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, zaloIdCol: e.target.value }))}
@@ -1725,8 +1795,9 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                         ))}
                       </select>
                     </div>
+
                     <div className="form-group">
-                      <label className="form-label">Cột Tổng thu nhập (Tùy chọn, sẽ tô đậm vàng ở chân bảng)</label>
+                      <label className="form-label">Cột Tổng thu nhập <span style={{ color: "var(--text-light)", fontWeight: 400 }}>(Tùy chọn, sẽ tô đậm vàng ở chân bảng)</span></label>
                       <select
                         value={columnMapping.totalCol}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, totalCol: e.target.value }))}
