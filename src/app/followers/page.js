@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -262,6 +262,8 @@ export default function FollowersPage() {
   const [sendScope, setSendScope] = useState("unregistered");
   const [sendResult, setSendResult] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [importingExcel, setImportingExcel] = useState(false);
+  const fileInputRef = useRef(null);
   
   // ── Sửa liên kết nhân viên state ──
   const [editingLink, setEditingLink] = useState(null);
@@ -419,6 +421,37 @@ export default function FollowersPage() {
     } catch (err) {
       console.error("Lỗi xuất file Excel:", err);
       alert("Đã xảy ra lỗi khi xuất file Excel: " + err.message);
+    }
+  };
+
+  const handleImportExcelFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportingExcel(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/followers/import-excel", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Nhập Excel thất bại");
+
+      let msg = `🎉 Liên kết thành công: ${json.successCount} nhân viên.\n❌ Không tìm thấy: ${json.notFoundCount} nhân viên.`;
+      if (json.errors && json.errors.length > 0) {
+        msg += "\n\nChi tiết lỗi (tối đa 10 dòng):\n" + json.errors.join("\n");
+      }
+      alert(msg);
+      fetchRegStats();
+      fetchFollowers();
+    } catch (err) {
+      alert("Lỗi: " + err.message);
+    } finally {
+      setImportingExcel(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -1103,12 +1136,31 @@ export default function FollowersPage() {
                 <div className="card-title">✅ Danh Sách Đã Đăng Ký ({regStats?.totalRegistered ?? 0})</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã xác nhận tên thật qua link đăng ký</div>
               </div>
-              {regStats?.links?.length > 0 && (
-                <button className="btn btn-sm" onClick={handleExportExcel}
-                  style={{ background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", display: "flex", alignItems: "center", gap: "6px" }}>
-                  📥 Xuất Excel
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleImportExcelFile}
+                />
+                <button
+                  className="btn btn-sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importingExcel}
+                  style={{ background: "white", color: "#2563eb", border: "1px solid #bfdbfe", display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  {importingExcel ? (
+                    <div style={{ width: 14, height: 14, border: "2px solid #bfdbfe", borderTopColor: "#2563eb", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                  ) : "📤 Nhập Excel"}
                 </button>
-              )}
+                {regStats?.links?.length > 0 && (
+                  <button className="btn btn-sm" onClick={handleExportExcel}
+                    style={{ background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", display: "flex", alignItems: "center", gap: "6px" }}>
+                    📥 Xuất Excel
+                  </button>
+                )}
+              </div>
             </div>
 
             {regLoading ? (
