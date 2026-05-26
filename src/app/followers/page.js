@@ -548,6 +548,36 @@ export default function FollowersPage() {
     setChatHistory([]);
   };
 
+  // Gửi tin nhắn 1-1 cho follower
+  const handleSendMessage = async () => {
+    if (!selectedFollower || !chatMessage.trim()) return;
+    setSendingMessage(true);
+    try {
+      const res = await fetch(`/api/followers/${selectedFollower.id}/message`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: chatMessage }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Gửi tin thất bại");
+      
+      // Cập nhật giao diện chat
+      setChatHistory([{
+        id: Date.now(),
+        direction: "outbound",
+        content: chatMessage,
+        receivedAt: new Date().toISOString()
+      }, ...chatHistory]);
+      
+      setChatMessage("");
+      showToast("Đã gửi tin nhắn!", "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
   // Update follower metadata (Phone, userType, department, notes)
   const handleUpdateFollowerMeta = async () => {
     if (!selectedFollower) return;
@@ -997,6 +1027,7 @@ export default function FollowersPage() {
                     : "💾 Lưu thay đổi"}
                 </button>
 
+
                 {/* Appointments summary */}
                 <div style={{ borderTop: "1px solid var(--border)", paddingTop: "12px" }}>
                   <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.06em", marginBottom: "8px" }}>
@@ -1029,13 +1060,12 @@ export default function FollowersPage() {
                 <button className="btn btn-outline btn-sm" onClick={handleCloseModal}>✕ Đóng</button>
               </div>
 
-              <div style={{ margin: "12px 16px 0", padding: "12px 14px", background: "#fff8e1", border: "1px solid #ffe082", borderRadius: "var(--radius)", display: "flex", gap: "10px", alignItems: "flex-start", flexShrink: 0 }}>
-                <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>⚠️</span>
+              <div style={{ margin: "12px 16px 0", padding: "12px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "var(--radius)", display: "flex", gap: "10px", alignItems: "flex-start", flexShrink: 0 }}>
+                <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>💡</span>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "#795548", marginBottom: "3px" }}>OA Cơ quan Nhà nước không hỗ trợ gửi tin 1-1 qua API</div>
-                  <div style={{ fontSize: "0.76rem", color: "#8d6e63", lineHeight: 1.5 }}>
-                    Vui lòng dùng <strong>Zalo OA Manager</strong> để trả lời.{" "}
-                    <a href="https://oa.zalo.me/home" target="_blank" rel="noopener noreferrer" style={{ color: "#0068ff", fontWeight: 600 }}>Mở OA Manager →</a>
+                  <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "#166534", marginBottom: "3px" }}>Nhắn tin trực tiếp</div>
+                  <div style={{ fontSize: "0.76rem", color: "#15803d", lineHeight: 1.5 }}>
+                    Theo chính sách Zalo, OA Cơ quan Nhà nước chỉ gửi được tin nhắn phản hồi trong vòng <strong>48 giờ</strong> kể từ lúc người dân nhắn tin đến.
                   </div>
                 </div>
               </div>
@@ -1062,8 +1092,24 @@ export default function FollowersPage() {
                 )}
               </div>
 
-              <div style={{ padding: "10px 16px", borderTop: "1px solid var(--border)", background: "var(--bg)", fontSize: "0.75rem", color: "var(--text-muted)", flexShrink: 0 }}>
-                💡 Dùng <strong>ZNS</strong> hoặc <strong>Tin truyền thông</strong> trong OA Manager để gửi hàng loạt.
+              <div style={{ padding: "10px 16px", borderTop: "1px solid var(--border)", background: "white", display: "flex", gap: "10px", alignItems: "center", flexShrink: 0 }}>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Nhập nội dung tin nhắn..." 
+                  value={chatMessage} 
+                  onChange={e => setChatMessage(e.target.value)} 
+                  onKeyDown={e => e.key === "Enter" && handleSendMessage()}
+                  style={{ flex: 1, height: "36px", fontSize: "0.85rem", padding: "0 12px", borderRadius: "20px" }}
+                />
+                <button 
+                  className="btn btn-primary" 
+                  onClick={handleSendMessage} 
+                  disabled={sendingMessage || !chatMessage.trim()}
+                  style={{ height: "36px", borderRadius: "20px", padding: "0 16px", display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  {sendingMessage ? <div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} /> : "Gửi"}
+                </button>
               </div>
             </div>
 
