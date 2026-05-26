@@ -71,6 +71,22 @@ export async function POST(req) {
     return new Response("Cần ít nhất 1 tài khoản Gmail để gửi email.", { status: 400 });
   }
 
+  // Lấy clientId và clientSecret từ DB để dùng cho OAuth2
+  if (accounts && accounts.length > 0) {
+    const settings = await prisma.systemConfig.findMany({
+      where: { key: { in: ["gmail_oauth_client_id", "gmail_oauth_client_secret"] } },
+    });
+    const clientId = settings.find((s) => s.key === "gmail_oauth_client_id")?.value?.trim() || "";
+    const clientSecret = settings.find((s) => s.key === "gmail_oauth_client_secret")?.value?.trim() || "";
+    
+    accounts.forEach(acc => {
+      if (acc.refreshToken) {
+        acc.clientId = clientId;
+        acc.clientSecret = clientSecret;
+      }
+    });
+  }
+
   // Dùng EmailPool mới — có SMTP pooling và retry tự động
   const pool = (channel === "email" || channel === "both") && accounts?.length
     ? new EmailPool(accounts)
