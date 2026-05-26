@@ -43,7 +43,6 @@ export function generateSalaryZaloMessage(data, opts = {}) {
 
   msg += `💰 *TỔNG THU NHẬP:* *${data.tongThuNhap ? data.tongThuNhap.toLocaleString("vi-VN") : 0}* VNĐ\n\n`;
   msg += `---------------------------------\n`;
-  msg += `*Lưu ý:* Vui lòng kiểm tra lại thông tin. Nếu có sai sót, vui lòng phản hồi lại. Thông tin lương là thông tin bảo mật cá nhân, đề nghị không chia sẻ.`;
   
   return msg;
 }
@@ -118,7 +117,6 @@ export function generateTaxZaloMessage(data, opts = {}) {
   }
   
   msg += `\n---------------------------------\n`;
-  msg += `*Lưu ý:* Vui lòng kiểm tra lại thông tin. Nếu có sai sót, vui lòng phản hồi lại.`;
   
   return msg;
 }
