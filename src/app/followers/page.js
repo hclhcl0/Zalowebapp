@@ -222,10 +222,11 @@ function SingleTestSend({ onSend, sendingSingle }) {
 
 export default function FollowersPage() {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState("followers"); // "followers" | "registration"
+  const [activeTab, setActiveTab] = useState("registration"); // "followers" | "registration"
   const [followers, setFollowers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [regSearchQuery, setRegSearchQuery] = useState(""); // State cho ô tìm kiếm danh sách đã đăng ký
   const [userTypeFilter, setUserTypeFilter] = useState("all");
 
   // Phân trang
@@ -618,6 +619,17 @@ export default function FollowersPage() {
 
   // (Chức năng gửi tin nhắn 1-1 không khả dụng với OA Cơ quan Nhà nước)
 
+  const filteredRegLinks = regStats?.links 
+    ? regStats.links.filter(l => {
+        if (!regSearchQuery.trim()) return true;
+        const lowerQ = regSearchQuery.toLowerCase();
+        return (l.staffNameRaw && l.staffNameRaw.toLowerCase().includes(lowerQ)) ||
+               (l.displayName && l.displayName.toLowerCase().includes(lowerQ)) ||
+               (l.phone && l.phone.includes(lowerQ)) ||
+               (l.department && l.department.toLowerCase().includes(lowerQ));
+      })
+    : [];
+
   return (
     <div>
       {/* Toast Notification */}
@@ -668,8 +680,8 @@ export default function FollowersPage() {
       {/* ── TAB NAVIGATION (PILL STYLE) ─────────────────────── */}
       <div className="followers-tabs">
         {[
-          { id: "followers", label: "👥 Danh sách" },
           { id: "registration", label: "🔗 Đăng ký NV" },
+          { id: "followers", label: "👥 Danh sách" },
         ].map(tab => (
           <button
             key={tab.id}
@@ -1123,6 +1135,139 @@ export default function FollowersPage() {
       {activeTab === "registration" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
+          {/* Bảng đã đăng ký */}
+          <div className="card" style={{ padding: 0 }}>
+            <div className="registration-header-row" style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)" }}>
+              <div>
+                <div className="card-title">✅ Danh Sách Đã Đăng Ký ({regStats?.totalRegistered ?? 0})</div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã xác nhận tên thật qua link đăng ký</div>
+              </div>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="🔍 Tìm cán bộ..."
+                  value={regSearchQuery}
+                  onChange={e => setRegSearchQuery(e.target.value)}
+                  style={{ width: "200px", height: "32px", fontSize: "0.8rem", padding: "0 10px" }}
+                />
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleImportExcelFile}
+                />
+                <button
+                  className="btn btn-sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importingExcel}
+                  style={{ background: "white", color: "#2563eb", border: "1px solid #bfdbfe", display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  {importingExcel ? (
+                    <div style={{ width: 14, height: 14, border: "2px solid #bfdbfe", borderTopColor: "#2563eb", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                  ) : "📤 Nhập Excel"}
+                </button>
+                {regStats?.links?.length > 0 && (
+                  <button className="btn btn-sm" onClick={handleExportExcel}
+                    style={{ background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", display: "flex", alignItems: "center", gap: "6px" }}>
+                    📥 Xuất Excel
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {regLoading ? (
+              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                <div className="spinner" style={{ width: 28, height: 28, border: "3px solid var(--border)", borderTopColor: "var(--primary)", margin: "0 auto 12px" }} />
+                Đang tải...
+              </div>
+            ) : !regStats?.links?.length ? (
+              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📭</div>
+                <div style={{ fontWeight: 600 }}>Chưa có nhân viên nào đăng ký</div>
+                <div style={{ fontSize: "0.85rem", marginTop: "4px" }}>Hãy gửi link đăng ký ở trên để bắt đầu.</div>
+              </div>
+            ) : filteredRegLinks.length === 0 ? (
+              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔍</div>
+                <div style={{ fontWeight: 600 }}>Không tìm thấy cán bộ phù hợp</div>
+                <div style={{ fontSize: "0.85rem", marginTop: "4px" }}>Thử tìm với từ khóa khác.</div>
+              </div>
+            ) : (
+              <>
+                <div className="desktop-only" style={{ overflowX: "auto" }}>
+                  <table className="followers-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "50px" }}></th>
+                        <th>Tên thật (Đã đăng ký)</th>
+                        <th>Tên Zalo</th>
+                        <th>Phòng / Khoa</th>
+                        <th style={{ width: "110px" }}>Ngày ĐK</th>
+                        <th style={{ width: "110px" }}>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredRegLinks.map(link => (
+                        <tr key={link.id}>
+                          <td style={{ padding: "10px 14px" }}>
+                            {link.avatarUrl
+                              ? <img src={link.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid var(--border)" }} />
+                              : <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{link.staffNameRaw?.charAt(0) || "?"}</div>}
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 700, color: "var(--text)" }}>{link.staffNameRaw}</div>
+                            {link.phone && <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>📞 {link.phone}</div>}
+                          </td>
+                          <td style={{ fontSize: "0.875rem", color: "var(--text)" }}>{link.displayName || "—"}</td>
+                          <td style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>{link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn</em>}</td>
+                          <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{new Date(link.registeredAt).toLocaleDateString("vi-VN")}</td>
+                          <td>
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              <button className="btn btn-sm btn-outline" onClick={() => handleOpenEditLink(link)} style={{ height: "28px", padding: "3px 8px", fontSize: "0.78rem" }}>✏️ Sửa</button>
+                              <button className="btn btn-sm" onClick={() => handleDeleteLink(link.id)} disabled={deletingId === link.id}
+                                style={{ height: "28px", padding: "3px 8px", fontSize: "0.78rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>
+                                {deletingId === link.id ? "…" : "🗑️"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mobile-card-list mobile-only">
+                  {filteredRegLinks.map(link => (
+                    <div key={link.id} className="mobile-card-item">
+                      <div className="mobile-card-main">
+                        <div className="mobile-card-avatar">
+                          {link.avatarUrl
+                            ? <img src={link.avatarUrl} alt="" style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                            : (link.staffNameRaw?.charAt(0) || "?")}
+                        </div>
+                        <div className="mobile-card-body">
+                          <div className="mobile-card-name">{link.staffNameRaw}</div>
+                          <div className="mobile-card-meta">
+                            <span className="mobile-card-phone">{link.department || <em style={{ color: "var(--text-light)", fontSize: "0.75rem" }}>Chưa chọn khoa/phòng</em>}</span>
+                          </div>
+                        </div>
+                        <div className="mobile-card-date">{new Date(link.registeredAt).toLocaleDateString("vi-VN")}</div>
+                      </div>
+                      <div className="mobile-card-actions">
+                        <button className="mobile-card-action-btn" onClick={() => handleOpenEditLink(link)}>✏️ Sửa</button>
+                        <button className="mobile-card-action-btn primary" onClick={() => handleDeleteLink(link.id)} disabled={deletingId === link.id} style={{ color: "#dc2626" }}>
+                          {deletingId === link.id ? "…" : "🗑️ Xóa"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Stats */}
           <div className="reg-stats-grid">
             {[
@@ -1175,124 +1320,6 @@ export default function FollowersPage() {
           {/* Gửi thử 1 người */}
           <SingleTestSend onSend={handleSendSingleRegistration} sendingSingle={sendingSingle} showToast={showToast} />
 
-          {/* Bảng đã đăng ký */}
-          <div className="card" style={{ padding: 0 }}>
-            <div className="registration-header-row" style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)" }}>
-              <div>
-                <div className="card-title">✅ Danh Sách Đã Đăng Ký ({regStats?.totalRegistered ?? 0})</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã xác nhận tên thật qua link đăng ký</div>
-              </div>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  onChange={handleImportExcelFile}
-                />
-                <button
-                  className="btn btn-sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={importingExcel}
-                  style={{ background: "white", color: "#2563eb", border: "1px solid #bfdbfe", display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  {importingExcel ? (
-                    <div style={{ width: 14, height: 14, border: "2px solid #bfdbfe", borderTopColor: "#2563eb", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                  ) : "📤 Nhập Excel"}
-                </button>
-                {regStats?.links?.length > 0 && (
-                  <button className="btn btn-sm" onClick={handleExportExcel}
-                    style={{ background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", display: "flex", alignItems: "center", gap: "6px" }}>
-                    📥 Xuất Excel
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {regLoading ? (
-              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-                <div className="spinner" style={{ width: 28, height: 28, border: "3px solid var(--border)", borderTopColor: "var(--primary)", margin: "0 auto 12px" }} />
-                Đang tải...
-              </div>
-            ) : !regStats?.links?.length ? (
-              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-                <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📭</div>
-                <div style={{ fontWeight: 600 }}>Chưa có nhân viên nào đăng ký</div>
-                <div style={{ fontSize: "0.85rem", marginTop: "4px" }}>Hãy gửi link đăng ký ở trên để bắt đầu.</div>
-              </div>
-            ) : (
-              <>
-                <div className="desktop-only" style={{ overflowX: "auto" }}>
-                  <table className="followers-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: "50px" }}></th>
-                        <th>Tên thật (Đã đăng ký)</th>
-                        <th>Tên Zalo</th>
-                        <th>Phòng / Khoa</th>
-                        <th style={{ width: "110px" }}>Ngày ĐK</th>
-                        <th style={{ width: "110px" }}>Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {regStats.links.map(link => (
-                        <tr key={link.id}>
-                          <td style={{ padding: "10px 14px" }}>
-                            {link.avatarUrl
-                              ? <img src={link.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid var(--border)" }} />
-                              : <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary-light)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{link.staffNameRaw?.charAt(0) || "?"}</div>}
-                          </td>
-                          <td>
-                            <div style={{ fontWeight: 700, color: "var(--text)" }}>{link.staffNameRaw}</div>
-                            {link.phone && <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>📞 {link.phone}</div>}
-                          </td>
-                          <td style={{ fontSize: "0.875rem", color: "var(--text)" }}>{link.displayName || "—"}</td>
-                          <td style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>{link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn</em>}</td>
-                          <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{new Date(link.registeredAt).toLocaleDateString("vi-VN")}</td>
-                          <td>
-                            <div style={{ display: "flex", gap: "6px" }}>
-                              <button className="btn btn-sm btn-outline" onClick={() => handleOpenEditLink(link)} style={{ height: "28px", padding: "3px 8px", fontSize: "0.78rem" }}>✏️ Sửa</button>
-                              <button className="btn btn-sm" onClick={() => handleDeleteLink(link.id)} disabled={deletingId === link.id}
-                                style={{ height: "28px", padding: "3px 8px", fontSize: "0.78rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>
-                                {deletingId === link.id ? "…" : "🗑️"}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="mobile-card-list mobile-only">
-                  {regStats.links.map(link => (
-                    <div key={link.id} className="mobile-card-item">
-                      <div className="mobile-card-main">
-                        <div className="mobile-card-avatar">
-                          {link.avatarUrl
-                            ? <img src={link.avatarUrl} alt="" style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
-                            : (link.staffNameRaw?.charAt(0) || "?")}
-                        </div>
-                        <div className="mobile-card-body">
-                          <div className="mobile-card-name">{link.staffNameRaw}</div>
-                          <div className="mobile-card-meta">
-                            <span className="mobile-card-phone">{link.department || <em style={{ color: "var(--text-light)", fontSize: "0.75rem" }}>Chưa chọn khoa/phòng</em>}</span>
-                          </div>
-                        </div>
-                        <div className="mobile-card-date">{new Date(link.registeredAt).toLocaleDateString("vi-VN")}</div>
-                      </div>
-                      <div className="mobile-card-actions">
-                        <button className="mobile-card-action-btn" onClick={() => handleOpenEditLink(link)}>✏️ Sửa</button>
-                        <button className="mobile-card-action-btn primary" onClick={() => handleDeleteLink(link.id)} disabled={deletingId === link.id} style={{ color: "#dc2626" }}>
-                          {deletingId === link.id ? "…" : "🗑️ Xóa"}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
         </div>
       )}
 
