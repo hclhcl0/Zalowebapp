@@ -498,9 +498,6 @@ function TestEmailPanel({ accounts }) {
       </div>
     </div>
   );
-      </div>
-    </div>
-  );
 }
 
 // ==========================================
