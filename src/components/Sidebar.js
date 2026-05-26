@@ -36,7 +36,7 @@ const menuGroups = [
       { icon: "LayoutDashboard", label: "Dashboard", href: "/" },
       { icon: "Users", label: "Người quan tâm Zalo", href: "/followers" },
       { icon: "Megaphone", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
-      { icon: "Mail", label: "Gửi Cập Nhật Thông Tin Nội Bộ", href: "/salary-email" },
+      { icon: "Mail", label: "Gửi tin nội bộ", href: "/salary-email" },
     ],
   },
   {
