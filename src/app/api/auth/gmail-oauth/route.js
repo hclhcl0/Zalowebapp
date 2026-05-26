@@ -19,8 +19,8 @@ export async function GET(req) {
       where: { key: { in: ["gmail_oauth_client_id", "gmail_oauth_client_secret"] } },
     });
     const getVal = (key) => settings.find((s) => s.key === key)?.value || "";
-    const clientId = getVal("gmail_oauth_client_id");
-    const clientSecret = getVal("gmail_oauth_client_secret");
+    const clientId = getVal("gmail_oauth_client_id").trim();
+    const clientSecret = getVal("gmail_oauth_client_secret").trim();
 
     if (!clientId || !clientSecret) {
       return Response.json(
