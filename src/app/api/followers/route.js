@@ -35,7 +35,7 @@ export async function GET(request) {
 
     // Lấy tất cả zaloUserId của nhân viên đã liên kết để đối chiếu chéo (chánh lỗi lệch data)
     const allStaffLinks = await prisma.staffZaloLink.findMany({
-      select: { zaloUserId: true, department: true, phone: true }
+      select: { zaloUserId: true, department: true, phone: true, staffNameRaw: true, staffName: true }
     });
     const staffZaloUserIds = allStaffLinks.map((link) => link.zaloUserId);
 
