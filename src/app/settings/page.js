@@ -802,10 +802,21 @@ function SettingsPageContent() {
                         </div>
                       </div>
 
-                      {/* Tốc độ gửi */}
+                      {/* Tuỳ chọn Gửi Email */}
                       <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px" }}>
-                        <h4 style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "12px" }}>⚙️ Tốc độ & Giãn cách</h4>
+                        <h4 style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "12px" }}>⚙️ Tùy chọn Gửi Email</h4>
                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label" style={{ fontSize: "0.78rem" }}>Tên người gửi (Sender Name)</label>
+                            <input 
+                              type="text" 
+                              value={values.email_sender_name ?? "CDC Đà Nẵng"} 
+                              onChange={(e) => handleChange("email_sender_name", e.target.value)} 
+                              className="form-input" 
+                              placeholder="VD: CDC Đà Nẵng"
+                            />
+                            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>Tên hiển thị khi người dân/nhân viên nhận được email.</span>
+                          </div>
                           <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label" style={{ fontSize: "0.78rem" }}>Số email mỗi đợt</label>
                             <input type="number" value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} className="form-input" />

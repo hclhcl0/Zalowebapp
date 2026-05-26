@@ -106,12 +106,14 @@ export async function POST(req) {
     }
 
     // Lấy clientId và clientSecret từ DB để dùng cho OAuth2
+    let senderName = "CDC Đà Nẵng";
     if (accounts && accounts.length > 0) {
       const settings = await prisma.systemConfig.findMany({
-        where: { key: { in: ["gmail_oauth_client_id", "gmail_oauth_client_secret"] } },
+        where: { key: { in: ["gmail_oauth_client_id", "gmail_oauth_client_secret", "email_sender_name"] } },
       });
       const clientId = settings.find((s) => s.key === "gmail_oauth_client_id")?.value?.trim() || "";
       const clientSecret = settings.find((s) => s.key === "gmail_oauth_client_secret")?.value?.trim() || "";
+      senderName = settings.find((s) => s.key === "email_sender_name")?.value?.trim() || senderName;
       
       accounts.forEach(acc => {
         if (acc.refreshToken) {
@@ -174,7 +176,7 @@ export async function POST(req) {
                 footerNote,
               });
               await pool.sendMail(account.id, {
-                from: `"CDC Đà Nẵng - Phòng TCHC" <${account.user}>`,
+                from: `"${senderName}" <${account.user}>`,
                 to: record.email,
                 subject: finalSubject,
                 html,
