@@ -392,7 +392,112 @@ export default function SalaryEmailPage() {
               </a>
             </div>
           </div>
+
+          {/* Test Email Panel */}
+          <TestEmailPanel accounts={accounts} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TestEmailPanel({ accounts }) {
+  const [testTo, setTestTo] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+
+  const runTest = async () => {
+    if (!testTo.trim() || !accounts.length) return;
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const acc = accounts[0]; // dùng tài khoản đầu tiên để test
+      const res = await fetch("/api/salary-email/test-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toEmail: testTo.trim(), account: acc }),
+      });
+      const data = await res.json();
+      setTestResult(data);
+    } catch (e) {
+      setTestResult({ ok: false, error: e.message });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  if (!accounts.length) return null;
+
+  return (
+    <div className="card" style={{ padding: "20px" }}>
+      <div className="card-header" style={{ marginBottom: "14px" }}>
+        <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span>🧪 Kiểm tra gửi email</span>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.5 }}>
+          Gửi 1 email test để xác nhận hệ thống hoạt động đúng.
+        </p>
+        <input
+          type="email"
+          className="form-input"
+          placeholder="Email nhận test (vd: your@gmail.com)"
+          value={testTo}
+          onChange={(e) => setTestTo(e.target.value)}
+          style={{ fontSize: "0.82rem" }}
+        />
+        <button
+          onClick={runTest}
+          disabled={testing || !testTo.trim()}
+          className="btn btn-outline"
+          style={{ display: "flex", alignItems: "center", gap: "6px", justifyContent: "center" }}
+        >
+          {testing
+            ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang gửi...</>
+            : <><Send className="w-3.5 h-3.5" /> Gửi email test</>}
+        </button>
+
+        {testResult && (
+          <div style={{
+            padding: "12px",
+            borderRadius: "var(--radius)",
+            background: testResult.ok ? "#f0fdf4" : "#fef2f2",
+            border: `1px solid ${testResult.ok ? "#bbf7d0" : "#fecaca"}`,
+            fontSize: "0.78rem",
+            lineHeight: 1.6,
+          }}>
+            {testResult.ok ? (
+              <>
+                <p style={{ color: "#15803d", fontWeight: 700, margin: "0 0 6px" }}>✅ Gửi thành công!</p>
+                <p style={{ margin: "2px 0", color: "var(--text-muted)" }}>
+                  <strong>Message ID:</strong> {testResult.sendResult?.messageId}
+                </p>
+                <p style={{ margin: "2px 0", color: "var(--text-muted)" }}>
+                  <strong>Accepted:</strong> {testResult.sendResult?.accepted?.join(", ")}
+                </p>
+                <p style={{ margin: "6px 0 0", color: "#15803d" }}>
+                  📬 Kiểm tra hộp thư {testTo} (kể cả thư mục <strong>Spam/Junk</strong>).
+                </p>
+              </>
+            ) : (
+              <>
+                <p style={{ color: "#dc2626", fontWeight: 700, margin: "0 0 6px" }}>
+                  ❌ Lỗi bước: {testResult.step || "unknown"}
+                </p>
+                <p style={{ margin: "2px 0", color: "#dc2626" }}>{testResult.error}</p>
+                {testResult.diagnosis && (
+                  <p style={{ margin: "8px 0 0", color: "#78350f", background: "#fffbeb", padding: "8px", borderRadius: "4px", border: "1px solid #fde68a" }}>
+                    💡 {testResult.diagnosis}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
       </div>
     </div>
   );
