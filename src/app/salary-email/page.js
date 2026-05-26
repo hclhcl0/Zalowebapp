@@ -3487,7 +3487,16 @@ function ZaloStaffTab({ followers }) {
                         )}
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 600, fontSize: "0.85rem" }}>
-                            {f.staffLink?.staffNameRaw || f.displayName}
+                            {f.staffLink?.staffNameRaw ? (
+                              <>
+                                <span>{f.staffLink.staffNameRaw}</span>
+                                <span style={{ fontWeight: 400, color: "var(--text-muted)", marginLeft: "8px", fontSize: "0.78rem" }}>
+                                  (Zalo: {f.displayName})
+                                </span>
+                              </>
+                            ) : (
+                              f.displayName
+                            )}
                           </div>
                           <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", gap: "10px" }}>
                             <span>📞 {f.phone || "--"}</span>
