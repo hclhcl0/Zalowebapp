@@ -3,7 +3,6 @@ import { generateSalaryEmail } from "@/lib/salaryEmailTemplate";
 import { sendTextMessage } from "@/lib/zalo";
 import { generateSalaryZaloMessage } from "@/lib/zaloMessageTemplates";
 import { prisma } from "@/lib/prisma";
-import nodemailer from "nodemailer";
 
 export const dynamic = "force-dynamic";
 
@@ -25,19 +24,16 @@ function normalizeName(n) {
 }
 
 async function findZaloUserId(record) {
-  // Nếu frontend truyền zaloUserId (kể cả chuỗi rỗng khi unlinked), sử dụng nó trực tiếp và không tự động khớp lại
   if (record.zaloUserId !== undefined) {
     return record.zaloUserId || null;
   }
 
-  // 1. [ƯU TIÊN CAO] Tra StaffZaloLink theo tên chuẩn hóa (nhân viên đã tự đăng ký)
   const normName = normalizeName(record.tenNhanVien);
   if (normName) {
     const staffLink = await prisma.staffZaloLink.findUnique({ where: { staffName: normName } });
     if (staffLink) return staffLink.zaloUserId;
   }
 
-  // 2. Tìm theo số điện thoại
   const phone = cleanPhone(record.phone || record.sdt);
   if (phone) {
     const possibleFormats = [phone];
@@ -55,7 +51,6 @@ async function findZaloUserId(record) {
     }
   }
 
-  // 3. Tìm theo displayName (fallback)
   if (normName) {
     const followers = await prisma.follower.findMany();
     const match = followers.find(f => normalizeName(f.displayName) === normName);
@@ -76,75 +71,72 @@ export async function POST(req) {
     return new Response("Cần ít nhất 1 tài khoản Gmail để gửi email.", { status: 400 });
   }
 
-  const transporters = new Map();
-  if (channel === "email" || channel === "both") {
-    for (const acc of accounts) {
-      transporters.set(acc.id, nodemailer.createTransport({
-        service: "gmail",
-        auth: { user: acc.user, pass: acc.appPassword },
-      }));
-    }
-  }
+  // Dùng EmailPool mới — có SMTP pooling và retry tự động
+  const pool = (channel === "email" || channel === "both") && accounts?.length
+    ? new EmailPool(accounts)
+    : null;
 
-  const pool = accounts?.length ? new EmailPool(accounts) : null;
   const emailSubject = subject || "Thông báo lương quý - CDC Đà Nẵng";
 
   const stream = new ReadableStream({
     async start(controller) {
       enc(controller, { type: "start", total: records.length });
-      for (let i = 0; i < records.length; i++) {
-        if (req.signal.aborted) break;
-        const record = records[i];
-        
-        let result = { 
-          tenNhanVien: record.tenNhanVien, 
-          email: record.email || "", 
-          status: "success", 
-          sentVia: "" 
-        };
-        let sentViaList = [];
+      try {
+        for (let i = 0; i < records.length; i++) {
+          if (req.signal.aborted) break;
+          const record = records[i];
+          
+          let result = { 
+            tenNhanVien: record.tenNhanVien, 
+            email: record.email || "", 
+            status: "success", 
+            sentVia: "" 
+          };
+          let sentViaList = [];
 
-        try {
-          // 1. GỬI QUA ZALO
-          if (channel === "zalo" || channel === "both") {
-            const zaloUserId = await findZaloUserId(record);
-            if (!zaloUserId) {
-              throw new Error("Không tìm thấy Zalo User ID (cán bộ chưa quan tâm OA hoặc thông tin chưa đồng bộ).");
+          try {
+            // 1. GỬI QUA ZALO
+            if (channel === "zalo" || channel === "both") {
+              const zaloUserId = await findZaloUserId(record);
+              if (!zaloUserId) {
+                throw new Error("Không tìm thấy Zalo User ID (cán bộ chưa quan tâm OA hoặc thông tin chưa đồng bộ).");
+              }
+              const zaloMsg = generateSalaryZaloMessage(record, { quarterTitle: emailSubject, customMessage });
+              const zaloRes = await sendTextMessage(zaloUserId, zaloMsg);
+              if (zaloRes.error !== 0) {
+                throw new Error(`Zalo API error: ${zaloRes.message} (Mã: ${zaloRes.error})`);
+              }
+              sentViaList.push("Zalo");
             }
-            const zaloMsg = generateSalaryZaloMessage(record, { quarterTitle: emailSubject, customMessage });
-            const zaloRes = await sendTextMessage(zaloUserId, zaloMsg);
-            if (zaloRes.error !== 0) {
-              throw new Error(`Zalo API error: ${zaloRes.message} (Mã: ${zaloRes.error})`);
+
+            // 2. GỬI QUA GMAIL (dùng pool.sendMail có retry)
+            if (pool && (channel === "email" || channel === "both")) {
+              const account = pool.next();
+              const html = generateSalaryEmail(record, { quarterTitle: emailSubject, customMessage });
+              await pool.sendMail(account.id, {
+                from: `"CDC Đà Nẵng - Phòng TCHC" <${account.user}>`,
+                to: record.email,
+                subject: emailSubject,
+                html,
+              });
+              sentViaList.push(`Gmail (${account.user})`);
             }
-            sentViaList.push("Zalo");
+
+            result.status = "success";
+            result.sentVia = sentViaList.join(" & ");
+          } catch (err) {
+            result.status = "error";
+            result.sentVia = sentViaList.length ? sentViaList.join(" & ") : (channel === "zalo" ? "Zalo" : "Gmail");
+            result.error = err.message;
           }
 
-          // 2. GỬI QUA GMAIL
-          if (channel === "email" || channel === "both") {
-            const account = pool.next();
-            const transporter = transporters.get(account.id);
-            const html = generateSalaryEmail(record, { quarterTitle: emailSubject, customMessage });
-            await transporter.sendMail({
-              from: `"CDC Đà Nẵng - Phòng TCHC" <${account.user}>`,
-              to: record.email,
-              subject: emailSubject,
-              html,
-            });
-            sentViaList.push(`Gmail (${account.user})`);
+          enc(controller, { type: "progress", index: i + 1, total: records.length, result });
+          if (batchSize > 0 && (i + 1) % batchSize === 0 && i < records.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
           }
-
-          result.status = "success";
-          result.sentVia = sentViaList.join(" & ");
-        } catch (err) {
-          result.status = "error";
-          result.sentVia = sentViaList.length ? sentViaList.join(" & ") : (channel === "zalo" ? "Zalo" : "Gmail");
-          result.error = err.message;
         }
-
-        enc(controller, { type: "progress", index: i + 1, total: records.length, result });
-        if (batchSize > 0 && (i + 1) % batchSize === 0 && i < records.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
-        }
+      } finally {
+        pool?.closeAll();
       }
       enc(controller, { type: "done", stats: pool ? pool.getStats() : { sentCount: 0 } });
       controller.close();
@@ -160,4 +152,3 @@ export async function POST(req) {
     },
   });
 }
-

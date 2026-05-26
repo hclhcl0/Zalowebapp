@@ -7,7 +7,6 @@ import { generateTaxEmail } from "@/lib/taxEmailTemplate";
 import { sendTextMessage } from "@/lib/zalo";
 import { generateTaxZaloMessage } from "@/lib/zaloMessageTemplates";
 import { prisma } from "@/lib/prisma";
-import nodemailer from "nodemailer";
 
 export const dynamic = "force-dynamic";
 
@@ -92,20 +91,10 @@ export async function POST(req) {
       return new Response("Cần ít nhất 1 tài khoản Gmail để gửi email.", { status: 400 });
     }
 
-    const transporters = new Map();
-    if (channel === "email" || channel === "both") {
-      for (const acc of accounts) {
-        transporters.set(
-          acc.id,
-          nodemailer.createTransport({
-            service: "gmail",
-            auth: { user: acc.user, pass: acc.appPassword },
-          })
-        );
-      }
-    }
-
-    const pool = accounts?.length ? new EmailPool(accounts) : null;
+    // Dùng EmailPool mới — có SMTP pooling và retry tự động
+    const pool = (channel === "email" || channel === "both") && accounts?.length
+      ? new EmailPool(accounts)
+      : null;
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -140,16 +129,15 @@ export async function POST(req) {
               sentViaList.push("Zalo");
             }
 
-            // 2. GỬI QUA GMAIL
-            if (channel === "email" || channel === "both") {
+            // 2. GỬI QUA GMAIL (dùng pool.sendMail có retry)
+            if (pool && (channel === "email" || channel === "both")) {
               const account = pool.next();
-              const transporter = transporters.get(account.id);
               const html = generateTaxEmail(record, {
                 emailTitle,
                 customMessage,
                 showKhoanDetail,
               });
-              await transporter.sendMail({
+              await pool.sendMail(account.id, {
                 from: `"CDC Đà Nẵng - Phòng Kế toán" <${account.user}>`,
                 to: record.email,
                 subject: emailTitle,

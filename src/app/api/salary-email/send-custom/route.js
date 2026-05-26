@@ -7,7 +7,6 @@ import { generateCustomEmail } from "@/lib/customEmailTemplate";
 import { sendTextMessage } from "@/lib/zalo";
 import { generateCustomZaloMessage } from "@/lib/zaloMessageTemplates";
 import { prisma } from "@/lib/prisma";
-import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -106,20 +105,10 @@ export async function POST(req) {
       return new Response("Thiếu cột họ tên hoặc email trong mapping.", { status: 400 });
     }
 
-    const transporters = new Map();
-    if (channel === "email" || channel === "both") {
-      for (const acc of accounts) {
-        transporters.set(
-          acc.id,
-          nodemailer.createTransport({
-            service: "gmail",
-            auth: { user: acc.user, pass: acc.appPassword },
-          })
-        );
-      }
-    }
-
-    const pool = accounts?.length ? new EmailPool(accounts) : null;
+    // Dùng EmailPool mới — có SMTP pooling và retry tự động
+    const pool = (channel === "email" || channel === "both") && accounts?.length
+      ? new EmailPool(accounts)
+      : null;
     const finalSubject = subject || emailTitle || "Thông báo lương - CDC Đà Nẵng";
     const finalTitle = emailTitle || subject || "Thông báo lương - CDC Đà Nẵng";
 
@@ -159,17 +148,16 @@ export async function POST(req) {
               sentViaList.push("Zalo");
             }
 
-            // 2. GỬI QUA GMAIL
-            if (channel === "email" || channel === "both") {
+            // 2. GỬI QUA GMAIL (dùng pool.sendMail có retry)
+            if (pool && (channel === "email" || channel === "both")) {
               const account = pool.next();
-              const transporter = transporters.get(account.id);
               const html = generateCustomEmail(record, {
                 emailTitle: finalTitle,
                 columnMapping,
                 customMessage,
                 footerNote,
               });
-              await transporter.sendMail({
+              await pool.sendMail(account.id, {
                 from: `"CDC Đà Nẵng - Phòng TCHC" <${account.user}>`,
                 to: record.email,
                 subject: finalSubject,
