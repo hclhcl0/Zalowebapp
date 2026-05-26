@@ -1,6 +1,6 @@
 /**
  * POST /api/salary-email/send-tax
- * Gửi email báo thuế TNCN hàng loạt với SSE progress streaming
+ * Gửi email cập nhật thông tin khác TNCN hàng loạt với SSE progress streaming
  */
 import { EmailPool } from "@/lib/emailPool";
 import { generateTaxEmail } from "@/lib/taxEmailTemplate";
@@ -130,7 +130,7 @@ export async function POST(req) {
           };
           let sentViaList = [];
 
-          const emailTitle = subject || `Thông báo Thuế Thu Nhập Cá Nhân tháng ${record.thang}`;
+          const emailTitle = subject || `Cập nhật thông tin nội bộ khác tháng ${record.thang}`;
 
           try {
             // 1. GỬI QUA ZALO

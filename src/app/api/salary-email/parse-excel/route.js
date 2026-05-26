@@ -1,6 +1,6 @@
 /**
  * POST /api/salary-email/parse-excel
- * Nhận file Excel bảng lương quý → parse danh sách nhân viên + lương
+ * Nhận file Excel thông tin nội bộ quý → parse danh sách nhân viên + thông tin nội bộ
  */
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";

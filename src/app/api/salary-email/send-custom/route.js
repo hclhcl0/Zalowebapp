@@ -127,8 +127,8 @@ export async function POST(req) {
     const pool = (channel === "email" || channel === "both") && accounts?.length
       ? new EmailPool(accounts)
       : null;
-    const finalSubject = subject || emailTitle || "Thông báo lương - CDC Đà Nẵng";
-    const finalTitle = emailTitle || subject || "Thông báo lương - CDC Đà Nẵng";
+    const finalSubject = subject || emailTitle || "Thông thông báo nội bộ - CDC Đà Nẵng";
+    const finalTitle = emailTitle || subject || "Thông thông báo nội bộ - CDC Đà Nẵng";
 
     const stream = new ReadableStream({
       async start(controller) {

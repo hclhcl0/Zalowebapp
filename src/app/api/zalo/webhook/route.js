@@ -210,7 +210,7 @@ async function handleFollow(userId, data, request) {
   const welcomeMessage = `Xin chào! Cảm ơn bạn đã quan tâm đến Zalo OA của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng) 🏥\n\n` + 
     `Để chúng tôi phục vụ tốt nhất, vui lòng xác nhận bạn là Khách hàng hay Nhân viên CDC bằng cách bấm vào 1 trong 2 link dưới đây:\n\n` +
     `▶️ DÀNH CHO KHÁCH HÀNG (Nhận kết quả xét nghiệm, tiêm chủng):\n${patientLink}\n\n` +
-    `▶️ DÀNH CHO NHÂN VIÊN CDC (Nhận bảng lương, thuế):\n${staffLink}\n\n` +
+    `▶️ DÀNH CHO NHÂN VIÊN CDC (Nhận thông tin nội bộ, cập nhật khác):\n${staffLink}\n\n` +
     `Lưu ý: Chỉ cần đăng ký 1 lần duy nhất để hệ thống tự động nhận diện.`;
 
   await sendTextMessage(userId, welcomeMessage);

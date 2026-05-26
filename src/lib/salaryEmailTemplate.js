@@ -1,5 +1,5 @@
 // ============================================================
-// lib/salaryEmailTemplate.js — Mẫu email báo lương quý
+// lib/salaryEmailTemplate.js — Mẫu email thông báo nội bộ quý
 // Chuyển đổi từ emailTemplate.ts của dự án email
 // ============================================================
 
@@ -27,7 +27,7 @@ function fmtMoney(v) {
 export function generateSalaryEmail(data, opts = {}) {
   const {
     orgName = "TRUNG TÂM KIỂM SOÁT BỆNH TẬT ĐÀ NẴNG",
-    quarterTitle = "Thông báo tiền lương tăng thêm Quý I/2026",
+    quarterTitle = "Thông báo thông báo nội bộ Quý I/2026",
     logoUrl = "https://ksbtdanang.vn/assets/images/logo.png",
     footerText = "© CDC Đà Nẵng",
     customMessage,
@@ -83,7 +83,7 @@ export function generateSalaryEmail(data, opts = {}) {
               </tr>
             </thead>
             <tbody>
-              <tr><td style="${tdLabel}">Hệ số lương</td><td style="${tdVal}">${fmtCoef(data.heSoLieuT1)}</td><td style="${tdVal}">${fmtCoef(data.heSoLieuT2)}</td><td style="${tdVal}">${fmtCoef(data.heSoLieuT3)}</td></tr>
+              <tr><td style="${tdLabel}">Hệ số thông tin nội bộ</td><td style="${tdVal}">${fmtCoef(data.heSoLieuT1)}</td><td style="${tdVal}">${fmtCoef(data.heSoLieuT2)}</td><td style="${tdVal}">${fmtCoef(data.heSoLieuT3)}</td></tr>
               <tr><td style="${tdLabel}">Phụ cấp vượt khung</td><td style="${tdVal}">${fmtCoef(data.pcvkT1)}</td><td style="${tdVal}">${fmtCoef(data.pcvkT2)}</td><td style="${tdVal}">${fmtCoef(data.pcvkT3)}</td></tr>
               <tr><td style="${tdLabel}">Phụ cấp chức vụ</td><td style="${tdVal}">${fmtCoef(data.pccvT1)}</td><td style="${tdVal}">${fmtCoef(data.pccvT2)}</td><td style="${tdVal}">${fmtCoef(data.pccvT3)}</td></tr>
               <tr><td style="${tdTotal}">Tổng hệ số</td><td style="${tdTotalV}">${fmtCoef(data.tongHeSoT1)}</td><td style="${tdTotalV}">${fmtCoef(data.tongHeSoT2)}</td><td style="${tdTotalV}">${fmtCoef(data.tongHeSoT3)}</td></tr>

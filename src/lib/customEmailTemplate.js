@@ -13,7 +13,7 @@ function fmtVal(v) {
 export function generateCustomEmail(record, opts) {
   const {
     orgName = "TRUNG TÂM KIỂM SOÁT BỆNH TẬT ĐÀ NẴNG",
-    emailTitle = "Thông báo lương — CDC Đà Nẵng",
+    emailTitle = "Thông thông báo nội bộ — CDC Đà Nẵng",
     logoUrl = "https://ksbtdanang.vn/assets/images/logo.png",
     footerText = "© CDC Đà Nẵng",
     customMessage,

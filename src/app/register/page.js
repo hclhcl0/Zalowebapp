@@ -118,7 +118,7 @@ function SuccessState({ staffNameRaw, displayName }) {
         borderRadius: 12, padding: "16px 20px", textAlign: "left",
       }}>
         <p style={{ color: "#166534", fontSize: "0.85rem", lineHeight: 1.7, margin: 0 }}>
-          📩 Từ nay bạn sẽ nhận được thông báo lương, thuế TNCN và các thông tin quan trọng
+          📩 Từ nay bạn sẽ nhận được cập nhật thông tin nội bộ cơ quan và các thông tin quan trọng
           trực tiếp qua Zalo. Không cần thực hiện thêm bước nào.
         </p>
       </div>

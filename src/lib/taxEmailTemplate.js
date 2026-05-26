@@ -1,5 +1,5 @@
 // ============================================================
-// lib/taxEmailTemplate.js — Email thông báo Thuế TNCN
+// lib/taxEmailTemplate.js — Email thông báo Thông tin nội bộ khác
 // ============================================================
 
 function fmtMoney(v) {
@@ -10,7 +10,7 @@ function fmtMoney(v) {
 export function generateTaxEmail(data, opts = {}) {
   const {
     orgName = "TRUNG TÂM KIỂM SOÁT BỆNH TẬT ĐÀ NẴNG",
-    emailTitle = `Thông báo Thuế Thu Nhập Cá Nhân tháng ${data.thang}`,
+    emailTitle = `Thông báo Cập nhật khác Thu Nhập Cá Nhân tháng ${data.thang}`,
     logoUrl = "https://ksbtdanang.vn/assets/images/logo.png",
     footerText = "© CDC Đà Nẵng — Phòng Tài chính - Kế toán",
     customMessage,
@@ -55,7 +55,7 @@ export function generateTaxEmail(data, opts = {}) {
       <tr><td style="padding:20px 24px 8px 24px;">
         <p style="margin:0 0 16px 0;font-size:14px;color:#333333;line-height:1.7;">
           Phòng Tài chính kế toán kính gửi <strong>Anh/Chị ${data.tenNhanVien}</strong>
-          thông tin thuế thu nhập cá nhân tháng <strong>${data.thang}</strong> như sau:
+          thông tin cập nhật khác thu nhập cá nhân tháng <strong>${data.thang}</strong> như sau:
         </p>
         ${customMessage ? `<div style="margin:0 0 16px 0;font-size:13px;color:#1e293b;line-height:1.6;background-color:#f1f5f9;padding:14px;border-left:4px solid ${blueHdr};border-radius:4px;">${customMessage.replace(/\n/g, "<br/>")}</div>` : ""}
       </td></tr>
@@ -84,7 +84,7 @@ export function generateTaxEmail(data, opts = {}) {
             <td style="padding-right:16px;vertical-align:top;"><div style="width:3px;height:80px;background-color:${blueHdr};border-radius:2px;"></div></td>
             <td style="vertical-align:top;">
               <p style="margin:0 0 3px 0;font-size:14px;font-weight:700;color:#1565c0;">Phan Thị Yến Ly</p>
-              <p style="margin:0 0 3px 0;font-size:12px;color:#555555;">Kế toán thuế - Phòng Tài chính kế toán</p>
+              <p style="margin:0 0 3px 0;font-size:12px;color:#555555;">Kế toán cập nhật khác - Phòng Tài chính kế toán</p>
               <p style="margin:0 0 2px 0;font-size:12px;color:#555555;">📞 0948.997.315</p>
               <p style="margin:0;font-size:12px;color:#555555;">🏥 Trung tâm Kiểm soát bệnh tật Thành phố Đà Nẵng</p>
             </td>
@@ -92,7 +92,7 @@ export function generateTaxEmail(data, opts = {}) {
         </table>
       </td></tr>
       <tr><td style="background-color:${blueHdr};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
-      <tr><td style="padding:10px 24px;text-align:center;background-color:#f8f8f8;"><p style="margin:0;font-size:11px;color:#aaaaaa;">© Trung tâm Kiểm soát bệnh tật Thành phố Đà Nẵng — Thông tin thuế TNCN là thông tin cá nhân, đề nghị không chia sẻ.</p></td></tr>
+      <tr><td style="padding:10px 24px;text-align:center;background-color:#f8f8f8;"><p style="margin:0;font-size:11px;color:#aaaaaa;">© Trung tâm Kiểm soát bệnh tật Thành phố Đà Nẵng — Thông tin thông tin nội bộ khác là thông tin cá nhân, đề nghị không chia sẻ.</p></td></tr>
     </table>
   </td></tr>
 </table>

@@ -94,7 +94,7 @@ export async function POST(req) {
     ? new EmailPool(accounts)
     : null;
 
-  const emailSubject = subject || "Thông báo lương quý - CDC Đà Nẵng";
+  const emailSubject = subject || "Thông thông báo nội bộ quý - CDC Đà Nẵng";
 
   const stream = new ReadableStream({
     async start(controller) {

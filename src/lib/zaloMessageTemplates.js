@@ -1,9 +1,9 @@
 // ============================================================
-// lib/zaloMessageTemplates.js — Mẫu tin nhắn Zalo báo lương & thuế
+// lib/zaloMessageTemplates.js — Mẫu tin nhắn Zalo thông báo nội bộ & cập nhật khác
 // ============================================================
 
 export function generateSalaryZaloMessage(data, opts = {}) {
-  const { quarterTitle = "Thông báo tiền lương tăng thêm Quý", customMessage } = opts;
+  const { quarterTitle = "Thông báo thông báo nội bộ Quý", customMessage } = opts;
   
   let msg = `🔔 *${quarterTitle.toUpperCase()}*\n`;
   msg += `Kính gửi: *${data.tenNhanVien}*\n\n`;
@@ -12,11 +12,11 @@ export function generateSalaryZaloMessage(data, opts = {}) {
     msg += `${customMessage}\n\n`;
   }
   
-  msg += `*Chi tiết tiền lương tăng thêm:*\n`;
+  msg += `*Chi tiết thông báo nội bộ:*\n`;
   
   // Month 1
   msg += `🔹 *Tháng 1:*\n`;
-  msg += ` - Hệ số lương: ${data.heSoLieuT1 || 0}\n`;
+  msg += ` - Hệ số thông tin nội bộ: ${data.heSoLieuT1 || 0}\n`;
   msg += ` - PC vượt khung: ${data.pcvkT1 || 0}\n`;
   msg += ` - PC chức vụ: ${data.pccvT1 || 0}\n`;
   msg += ` - Tổng hệ số: ${data.tongHeSoT1 || 0}\n`;
@@ -25,7 +25,7 @@ export function generateSalaryZaloMessage(data, opts = {}) {
 
   // Month 2
   msg += `🔹 *Tháng 2:*\n`;
-  msg += ` - Hệ số lương: ${data.heSoLieuT2 || 0}\n`;
+  msg += ` - Hệ số thông tin nội bộ: ${data.heSoLieuT2 || 0}\n`;
   msg += ` - PC vượt khung: ${data.pcvkT2 || 0}\n`;
   msg += ` - PC chức vụ: ${data.pccvT2 || 0}\n`;
   msg += ` - Tổng hệ số: ${data.tongHeSoT2 || 0}\n`;
@@ -34,7 +34,7 @@ export function generateSalaryZaloMessage(data, opts = {}) {
 
   // Month 3
   msg += `🔹 *Tháng 3:*\n`;
-  msg += ` - Hệ số lương: ${data.heSoLieuT3 || 0}\n`;
+  msg += ` - Hệ số thông tin nội bộ: ${data.heSoLieuT3 || 0}\n`;
   msg += ` - PC vượt khung: ${data.pcvkT3 || 0}\n`;
   msg += ` - PC chức vụ: ${data.pccvT3 || 0}\n`;
   msg += ` - Tổng hệ số: ${data.tongHeSoT3 || 0}\n`;
@@ -48,7 +48,7 @@ export function generateSalaryZaloMessage(data, opts = {}) {
 }
 
 export function generateCustomZaloMessage(data, opts = {}) {
-  const { emailTitle = "Thông báo lương", columnMapping, customMessage, footerNote } = opts;
+  const { emailTitle = "Thông thông báo nội bộ", columnMapping, customMessage, footerNote } = opts;
   
   let msg = `🔔 *${emailTitle.toUpperCase()}*\n`;
   msg += `Kính gửi: *${data.tenNhanVien}*\n\n`;
@@ -79,20 +79,20 @@ export function generateCustomZaloMessage(data, opts = {}) {
 }
 
 export function generateTaxZaloMessage(data, opts = {}) {
-  const { quarterTitle = "Thông báo thuế TNCN", customMessage } = opts;
+  const { quarterTitle = "Thông cập nhật thông tin khác TNCN", customMessage } = opts;
   
   let msg = `🔔 *${quarterTitle.toUpperCase()}*\n`;
   msg += `Kính gửi: *${data.tenNhanVien}*\n`;
   if (data.phong) msg += `Bộ phận: ${data.phong}\n`;
   if (data.soTK) msg += `Số tài khoản: ${data.soTK}\n`;
-  if (data.thang) msg += `Kỳ thuế/Tháng: ${data.thang}\n`;
+  if (data.thang) msg += `Kỳ cập nhật khác/Tháng: ${data.thang}\n`;
   msg += `\n`;
   
   if (customMessage) {
     msg += `${customMessage}\n\n`;
   }
   
-  msg += `*Chi tiết thuế TNCN:*\n`;
+  msg += `*Chi tiết thông tin nội bộ khác:*\n`;
   
   if (data.khoans && data.khoans.length > 0) {
     data.khoans.forEach((kh) => {
@@ -110,10 +110,10 @@ export function generateTaxZaloMessage(data, opts = {}) {
     msg += ` - Giảm trừ gia cảnh: ${data.giamTruGiaCanh.toLocaleString("vi-VN")} VNĐ\n`;
   }
   if (data.thuNhapTinhThue !== undefined) {
-    msg += ` - Thu nhập tính thuế: ${data.thuNhapTinhThue.toLocaleString("vi-VN")} VNĐ\n`;
+    msg += ` - Thu nhập tính cập nhật khác: ${data.thuNhapTinhThue.toLocaleString("vi-VN")} VNĐ\n`;
   }
   if (data.thueTNCN !== undefined) {
-    msg += `💰 *Thuế TNCN tạm khấu trừ:* *${data.thueTNCN.toLocaleString("vi-VN")}* VNĐ\n`;
+    msg += `💰 *Thông tin nội bộ khác tạm khấu trừ:* *${data.thueTNCN.toLocaleString("vi-VN")}* VNĐ\n`;
   }
   
   msg += `\n---------------------------------\n`;

@@ -261,8 +261,8 @@ export default function SalaryEmailPage() {
       {/* ── HEADER ── */}
       <div className="page-header" style={{ marginBottom: "20px" }}>
         <div>
-          <h1 className="page-title">📧 Gửi Email Báo Lương &amp; Thuế</h1>
-          <p className="page-desc">Gửi báo lương quý, thuế TNCN và email đính kèm Excel tùy biến cho nhân viên CDC Đà Nẵng</p>
+          <h1 className="page-title">📧 Gửi Email Thông Tin Nội Bộ Cơ Quan</h1>
+          <p className="page-desc">Gửi cập nhật thông tin nội bộ cơ quan và email đính kèm Excel tùy biến cho nhân viên CDC Đà Nẵng</p>
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <button
@@ -290,9 +290,9 @@ export default function SalaryEmailPage() {
       {/* Navigation Tabs */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
         {[
-          { id: "salary", label: "📊 Báo Lương Quý", desc: "Theo mẫu lương tăng thêm" },
+          { id: "salary", label: "📊 Thông Báo Nội Bộ", desc: "Theo mẫu thông báo nội bộ" },
           { id: "custom", label: "⚙️ Email Tùy Chọn", desc: "Excel cấu trúc bất kỳ" },
-          { id: "tax", label: "🧾 Báo Thuế TNCN", desc: "Chỉ gửi người nộp thuế" }
+          { id: "tax", label: "🧾 Cập Nhật Thông Tin Khác", desc: "Chỉ gửi người nộp cập nhật khác" }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -362,7 +362,7 @@ export default function SalaryEmailPage() {
                   <strong>{accounts.length > 0 ? `Đang hoạt động (${accounts.length} Gmail)` : "Chưa cấu hình"}</strong>
                   <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.75rem" }}>
                     {accounts.length > 0 
-                      ? "Tài khoản Gmail được luân phiên tự động để gửi báo lương & báo thuế."
+                      ? "Tài khoản Gmail được luân phiên tự động để gửi thông tin nội bộ cơ quan."
                       : "Vui lòng thêm tài khoản Gmail để bắt đầu thực hiện chiến dịch."}
                   </p>
                 </div>
@@ -420,7 +420,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
   const [page, setPage] = useState(0);
 
   const [channel, setChannel] = useState("email");
-  const [subject, setSubject] = useState("Thông báo tiền lương tăng thêm Quý I/2026 - CDC Đà Nẵng");
+  const [subject, setSubject] = useState("Thông báo thông báo nội bộ Quý I/2026 - CDC Đà Nẵng");
   const [customMessage, setCustomMessage] = useState("");
 
   const [isSending, setIsSending] = useState(false);
@@ -645,7 +645,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
         <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
           <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold" }}>1</span>
-            <span>Tải file Excel danh sách Báo lương</span>
+            <span>Tải file Excel danh sách Thông báo nội bộ</span>
           </div>
         </div>
         <div>
@@ -900,7 +900,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
         <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
           <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold" }}>2</span>
-            <span>Cấu hình gửi báo lương (Email & Zalo OA)</span>
+            <span>Cấu hình gửi thông báo nội bộ (Email & Zalo OA)</span>
           </div>
         </div>
         <div className="space-y-4">
@@ -976,7 +976,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               {channel === "email" && (
                 <>
                   <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                    Sẽ gửi {selectedCount} email báo lương thông qua {accounts.length} tài khoản Gmail.
+                    Sẽ gửi {selectedCount} email thông báo nội bộ thông qua {accounts.length} tài khoản Gmail.
                   </p>
                   {accounts.length > 0 && (
                     <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
@@ -987,7 +987,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               )}
               {channel === "zalo" && (
                 <p style={{ margin: 0, fontWeight: 700 }}>
-                  Sẽ gửi {selectedCount} tin nhắn báo lương qua Zalo OA cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
+                  Sẽ gửi {selectedCount} tin nhắn thông báo nội bộ qua Zalo OA cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
                 </p>
               )}
               {channel === "both" && (
@@ -1017,7 +1017,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" /> Bắt đầu gửi báo lương ({channel === "email" ? "Gmail" : channel === "zalo" ? "Zalo" : "Gmail & Zalo"})
+                <Send className="w-4 h-4" /> Bắt đầu gửi thông báo nội bộ ({channel === "email" ? "Gmail" : channel === "zalo" ? "Zalo" : "Gmail & Zalo"})
               </>
             )}
           </button>
@@ -1116,7 +1116,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
-                    <span>Hoàn tất! Tất cả {prog.success} email báo lương đã gửi thành công! 🎉</span>
+                    <span>Hoàn tất! Tất cả {prog.success} email thông báo nội bộ đã gửi thành công! 🎉</span>
                   </>
                 )}
               </div>
@@ -1158,7 +1158,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               background: "var(--bg)"
             }}>
               <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
-                <Mail className="w-4 h-4 text-primary" /> Xem trước báo lương: {previewRecord.tenNhanVien}
+                <Mail className="w-4 h-4 text-primary" /> Xem trước thông báo nội bộ: {previewRecord.tenNhanVien}
               </h3>
               <button
                 onClick={() => setPreviewRecord(null)}
@@ -1432,7 +1432,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
     abortControllerRef.current = ac;
 
     try {
-      const emailTitle = subject || "Thông báo lương - CDC Đà Nẵng";
+      const emailTitle = subject || "Thông thông báo nội bộ - CDC Đà Nẵng";
       const res = await fetch("/api/salary-email/send-custom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2258,7 +2258,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                 }}
                 dangerouslySetInnerHTML={{
                   __html: generateCustomEmail(previewRecord, {
-                    emailTitle: subject || "Thông báo lương - CDC Đà Nẵng",
+                    emailTitle: subject || "Thông thông báo nội bộ - CDC Đà Nẵng",
                     customMessage,
                     footerNote,
                     columnMapping,
@@ -2395,11 +2395,11 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
         setThang(json.thang || "");
         if (json.records.length !== withTax.length) {
           const skipped = json.records.length - withTax.length;
-          setParseError(`ℹ️ Đã tự động bỏ qua ${skipped} nhân viên không có thuế TNCN.`);
+          setParseError(`ℹ️ Đã tự động bỏ qua ${skipped} nhân viên không có thông tin nội bộ khác.`);
         }
       }
     } catch (e) {
-      setParseError("Không thể kết nối hoặc phân tích file thuế: " + e.message);
+      setParseError("Không thể kết nối hoặc phân tích file cập nhật khác: " + e.message);
     } finally {
       setParsing(false);
     }
@@ -2431,7 +2431,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
     abortControllerRef.current = ac;
 
     try {
-      const emailTitle = subject || `Thông báo Thuế TNCN tháng ${thang} - CDC Đà Nẵng`;
+      const emailTitle = subject || `Thông báo Thông tin nội bộ khác tháng ${thang} - CDC Đà Nẵng`;
       const res = await fetch("/api/salary-email/send-tax", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2531,7 +2531,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
         <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
           <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>1</span>
-            <span>Tải file Excel Thuế TNCN</span>
+            <span>Tải file Excel Thông tin nội bộ khác</span>
           </div>
         </div>
         <div>
@@ -2573,7 +2573,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
                 <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "4px" }}>
                   <Upload className="w-5 h-5 text-primary" />
                 </div>
-                <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>Kéo thả hoặc nhấn để chọn file Thuế TNCN</p>
+                <p style={{ margin: 0, fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>Kéo thả hoặc nhấn để chọn file Thông tin nội bộ khác</p>
                 <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>Hỗ trợ: .xlsx, .xls, .csv</p>
               </div>
             )}
@@ -2602,7 +2602,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
                   <span className="badge badge-info" style={{ gap: "4px" }}>
-                    <Users className="w-3.5 h-3.5" /> {records.length} Nhân viên phát sinh thuế
+                    <Users className="w-3.5 h-3.5" /> {records.length} Nhân viên phát sinh cập nhật khác
                   </span>
                   <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fileName}</span>
                   {thang && <span className="badge badge-approved">Tháng {thang}</span>}
@@ -2708,7 +2708,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
                       <th>Liên kết Zalo</th>
                       <th style={{ textAlign: "right" }}>Tổng thu nhập</th>
                       <th style={{ textAlign: "right" }}>TNTT</th>
-                      <th style={{ textAlign: "right", color: "var(--danger)" }}>Thuế phải nộp</th>
+                      <th style={{ textAlign: "right", color: "var(--danger)" }}>Cập nhật khác phải nộp</th>
                       <th style={{ textAlign: "center" }}>TT</th>
                       <th style={{ textAlign: "center" }}>Xem</th>
                     </tr>
@@ -2799,7 +2799,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
         <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
           <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>2</span>
-            <span>Cấu hình &amp; Tiến hành gửi thuế (Email & Zalo OA)</span>
+            <span>Cấu hình &amp; Tiến hành gửi cập nhật khác (Email & Zalo OA)</span>
           </div>
         </div>
         <div className="space-y-4">
@@ -2848,7 +2848,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder={`Thông báo Thuế Thu Nhập Cá Nhân tháng ${thang || "__"} - CDC Đà Nẵng`}
+              placeholder={`Thông báo Cập nhật khác Thu Nhập Cá Nhân tháng ${thang || "__"} - CDC Đà Nẵng`}
               className="form-input"
             />
           </div>
@@ -2888,7 +2888,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               {channel === "email" && (
                 <>
                   <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                    Sẽ gửi {selectedCount} email thuế TNCN thông qua {accounts.length} tài khoản Gmail.
+                    Sẽ gửi {selectedCount} email thông tin nội bộ khác thông qua {accounts.length} tài khoản Gmail.
                   </p>
                   {accounts.length > 0 && (
                     <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
@@ -2899,13 +2899,13 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               )}
               {channel === "zalo" && (
                 <p style={{ margin: 0, fontWeight: 700 }}>
-                  Sẽ gửi {selectedCount} tin nhắn Zalo OA thuế TNCN cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
+                  Sẽ gửi {selectedCount} tin nhắn Zalo OA thông tin nội bộ khác cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
                 </p>
               )}
               {channel === "both" && (
                 <>
                   <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                    Sẽ gửi đồng thời {selectedCount} email thuế TNCN (qua Gmail Pool) & tin nhắn Zalo OA cho cán bộ.
+                    Sẽ gửi đồng thời {selectedCount} email thông tin nội bộ khác (qua Gmail Pool) & tin nhắn Zalo OA cho cán bộ.
                   </p>
                   {accounts.length > 0 && (
                     <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
@@ -2942,7 +2942,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
           <div className="card-header" style={{ marginBottom: "16px" }}>
             <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               {isDone ? <CheckCircle className="w-5 h-5 text-success" /> : <Loader2 className="w-5 h-5 text-primary animate-spin" />}
-              <span>{isDone ? "Hoàn tất gửi thuế!" : `Đang tiến hành... ${pct}%`}</span>
+              <span>{isDone ? "Hoàn tất gửi cập nhật khác!" : `Đang tiến hành... ${pct}%`}</span>
             </div>
             {!isDone && isSending && (
               <button
@@ -3044,7 +3044,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               background: "var(--bg)"
             }}>
               <h3 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
-                <Mail className="w-4 h-4 text-emerald-600" /> Xem trước email thuế: {previewRecord.tenNhanVien}
+                <Mail className="w-4 h-4 text-emerald-600" /> Xem trước email cập nhật khác: {previewRecord.tenNhanVien}
               </h3>
               <button
                 onClick={() => setPreviewRecord(null)}
@@ -3070,7 +3070,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
                 }}
                 dangerouslySetInnerHTML={{
                   __html: generateTaxEmail(previewRecord, {
-                    emailTitle: subject || `Thông báo Thuế Thu Nhập Cá Nhân tháng ${thang}`,
+                    emailTitle: subject || `Thông báo Cập nhật khác Thu Nhập Cá Nhân tháng ${thang}`,
                     customMessage,
                     showKhoanDetail,
                   }),

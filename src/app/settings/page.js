@@ -30,7 +30,7 @@ const SETTING_GROUPS = [
     id: "gmail_pool",
     icon: "✉️",
     title: "Gmail Account Pool",
-    desc: "Danh sách tài khoản Gmail dùng luân phiên để gửi email báo lương & báo thuế tự động.",
+    desc: "Danh sách tài khoản Gmail dùng luân phiên để gửi email thông báo nội bộ & cập nhật thông tin khác tự động.",
     fields: [],
   },
   {

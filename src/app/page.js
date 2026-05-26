@@ -92,7 +92,7 @@ export default async function Dashboard() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Tổng quan hệ thống</h1>
-          <p className="page-desc">Hệ thống quản trị Zalo OA & Quản lý thông tin gửi lương tự động CDC Đà Nẵng.</p>
+          <p className="page-desc">Hệ thống quản trị Zalo OA & Quản lý thông tin gửi thông tin nội bộ tự động CDC Đà Nẵng.</p>
         </div>
         <Link href="/broadcast" className="btn btn-primary">
           <Megaphone size={18} /> Gửi Tin Truyền Thông
@@ -116,7 +116,7 @@ export default async function Dashboard() {
           <div className="stat-info">
             <div className="stat-label">Cán bộ đã liên kết</div>
             <div className="stat-value">{totalStaff.toLocaleString("vi-VN")}</div>
-            <div className="stat-change" style={{ color: "var(--success)" }}>Đã xác thực nhận lương &amp; thuế</div>
+            <div className="stat-change" style={{ color: "var(--success)" }}>Đã xác thực nhận thông tin nội bộ</div>
           </div>
           <div className="stat-icon green"><UserCheck size={24} color="#10b981" /></div>
         </div>
@@ -190,7 +190,7 @@ export default async function Dashboard() {
             </Link>
             <Link href="/salary-email" className="quick-action-btn">
               <Mail size={28} strokeWidth={1.5} color="var(--success)" />
-              <strong>Gửi Lương &amp; Thuế</strong>
+              <strong>Cập Nhật Thông Tin Cơ Quan</strong>
             </Link>
             <Link href="/followers" className="quick-action-btn">
               <Users size={28} strokeWidth={1.5} color="#3b82f6" />

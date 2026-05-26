@@ -1,6 +1,6 @@
 /**
  * POST /api/salary-email/parse-tax-excel
- * Nhận file Excel thuế TNCN → parse danh sách nhân viên + thông tin thuế
+ * Nhận file Excel thông tin nội bộ khác → parse danh sách nhân viên + thông tin cập nhật khác
  */
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
