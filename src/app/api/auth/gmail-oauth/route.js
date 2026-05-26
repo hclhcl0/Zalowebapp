@@ -15,7 +15,7 @@ export async function GET(req) {
     const hintEmail = searchParams.get("email") || "";
 
     // Lấy Client ID + Secret từ database
-    const settings = await prisma.setting.findMany({
+    const settings = await prisma.systemConfig.findMany({
       where: { key: { in: ["gmail_oauth_client_id", "gmail_oauth_client_secret"] } },
     });
     const getVal = (key) => settings.find((s) => s.key === key)?.value || "";

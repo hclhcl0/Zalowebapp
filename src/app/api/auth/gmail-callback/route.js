@@ -45,7 +45,7 @@ export async function GET(req) {
     }
 
     // Lấy credentials từ DB
-    const settings = await prisma.setting.findMany({
+    const settings = await prisma.systemConfig.findMany({
       where: { key: { in: ["gmail_oauth_client_id", "gmail_oauth_client_secret"] } },
     });
     const getVal = (key) => settings.find((s) => s.key === key)?.value || "";
