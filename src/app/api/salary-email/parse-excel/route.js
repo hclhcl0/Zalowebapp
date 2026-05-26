@@ -4,8 +4,24 @@
  */
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+function cleanPhone(p) {
+  if (!p) return null;
+  const s = String(p).replace(/\D/g, "");
+  if (s.startsWith("84")) return "0" + s.slice(2);
+  if (s.startsWith("0")) return s;
+  return "0" + s;
+}
+
+function normalizeName(n) {
+  return String(n || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
 
 function readVal(v) {
   if (v === null || v === undefined) return 0;
@@ -63,12 +79,18 @@ export async function POST(req) {
     const idxEmail = findCol(["Địa chỉ mail", "email", "Email"]);
     const idxTotal = findCol(["Thành tiền", "tongThuNhap", "Tổng thu nhập"]);
     const idxZalo  = findCol(["zalo id", "zalo_id", "zaloid", "zalo userid", "zalo user id", "id zalo", "zalo"]);
+    const idxPhone = findCol(["Điện thoại", "SDT", "Phone", "SĐT", "Số điện thoại"]);
     const idxMonth1 = findCol(["Tháng 1", "Tháng 01", "heSoLieuT1"]);
     const idxMonth2 = findCol(["Tháng 2", "Tháng 02", "heSoLieuT2"], idxMonth1 + 1);
     const idxMonth3 = findCol(["Tháng 3", "Tháng 03", "heSoLieuT3"], idxMonth2 + 1);
 
     const hasSubHdr = subHeaders && JSON.stringify(subHeaders).includes("Hệ số");
     const startDataIdx = hasSubHdr ? headerRowIndex + 2 : headerRowIndex + 1;
+
+    // Tải trước Followers và Links để đối chiếu tự động
+    const allFollowers = await prisma.follower.findMany();
+    const allLinks = await prisma.staffZaloLink.findMany();
+
     const records = [];
 
     for (let i = startDataIdx; i < allRows.length; i++) {
@@ -79,6 +101,60 @@ export async function POST(req) {
       const deptKeywords = ["Phòng", "Ban ", "Khoa", "Tổ ", "Đội "];
       if (deptKeywords.some((k) => name.toLowerCase().startsWith(k.toLowerCase())) || name.toLowerCase().includes("giám đốc")) continue;
       if (!email || !email.includes("@")) continue;
+
+      const phone = idxPhone !== -1 ? String(row[idxPhone] || "").trim() : "";
+      const phoneVal = phone ? cleanPhone(phone) : null;
+      const normName = normalizeName(name);
+
+      let targetZaloId = idxZalo !== -1 ? String(row[idxZalo] || "").trim() : null;
+
+      // Logic tự động đối chiếu
+      if (!targetZaloId) {
+        let match = null;
+        if (phoneVal) {
+          match = allFollowers.find(f => cleanPhone(f.phone) === phoneVal);
+        }
+        if (!match) {
+          match = allFollowers.find(f => normalizeName(f.displayName) === normName);
+        }
+        if (match) {
+          targetZaloId = match.zaloUserId;
+        }
+      }
+
+      // Lưu tự động vào DB nếu khớp Zalo ID
+      if (targetZaloId) {
+        const existingLink = allLinks.find(l => l.zaloUserId === targetZaloId);
+        const needsUpdate = !existingLink || 
+                            existingLink.staffNameRaw !== name || 
+                            (phoneVal && existingLink.phone !== phoneVal);
+
+        if (needsUpdate) {
+          try {
+            await prisma.staffZaloLink.upsert({
+              where: { zaloUserId: targetZaloId },
+              update: {
+                staffNameRaw: name,
+                staffName: normName,
+                ...(phoneVal && { phone: phoneVal }),
+              },
+              create: {
+                staffNameRaw: name,
+                staffName: normName,
+                zaloUserId: targetZaloId,
+                phone: phoneVal,
+              }
+            });
+
+            await prisma.follower.update({
+              where: { zaloUserId: targetZaloId },
+              data: { userType: "staff" }
+            }).catch(() => {});
+          } catch (err) {
+            console.error("Auto link Zalo error for " + name + ":", err);
+          }
+        }
+      }
 
       let idxXL1 = -1, idxXL2 = -1, idxXL3 = -1;
       const idxKqXepLoai = findCol(["Kết quả xếp loại", "Xếp loại"], idxMonth3 + 1);
@@ -102,7 +178,8 @@ export async function POST(req) {
 
       records.push({
         tenNhanVien: name, email,
-        zaloUserId: idxZalo !== -1 ? String(row[idxZalo] || "").trim() : undefined,
+        phone: phone || undefined,
+        zaloUserId: targetZaloId || undefined,
         heSoLieuT1: readVal(row[idxMonth1] || row[idxMonth1 + 1]),
         pcvkT1: readVal(row[idxMonth1 + 1]),
         pccvT1: readVal(row[idxMonth1 + 2]),

@@ -4,8 +4,24 @@
  */
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+function cleanPhone(p) {
+  if (!p) return null;
+  const s = String(p).replace(/\D/g, "");
+  if (s.startsWith("84")) return "0" + s.slice(2);
+  if (s.startsWith("0")) return s;
+  return "0" + s;
+}
+
+function normalizeName(n) {
+  return String(n || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+}
 
 function toNum(v) {
   if (v === null || v === undefined || v === "") return 0;
@@ -104,6 +120,7 @@ export async function POST(req) {
     const idxTNTT = findIdx(headerRow, ["thu nhap tinh thue", "tntt"]);
     const idxThue = findIdx(headerRow, ["thue tncn", "thue phai nop"]);
     const idxZalo = findIdx(headerRow, ["zalo id", "zalo_id", "zaloid", "zalo userid", "zalo user id", "id zalo", "zalo"]);
+    const idxPhone = findIdx(headerRow, ["dien thoai", "sdt", "phone", "so dien thoai"]);
 
     let idxEmail = findIdx(headerRow, ["email", "dia chi mail", "dia chi email"]);
     if (idxEmail === -1) idxEmail = autoDetectEmailCol(dataRows, idxThue > 0 ? idxThue + 1 : 0);
@@ -123,6 +140,10 @@ export async function POST(req) {
       khoanHeaders.push({ idx: c, ten });
     }
 
+    // Tải trước Followers và Links để đối chiếu tự động
+    const allFollowers = await prisma.follower.findMany();
+    const allLinks = await prisma.staffZaloLink.findMany();
+
     const records = [];
     for (const row of dataRows) {
       const name = toStr(row[idxName]);
@@ -137,12 +158,67 @@ export async function POST(req) {
       }
       if (!email || !email.includes("@")) continue;
 
+      const phone = idxPhone !== -1 ? toStr(row[idxPhone]) : "";
+      const phoneVal = phone ? cleanPhone(phone) : null;
+      const normName = normalizeName(name);
+
+      let targetZaloId = idxZalo !== -1 ? toStr(row[idxZalo]) : null;
+
+      // Logic tự động đối chiếu
+      if (!targetZaloId) {
+        let match = null;
+        if (phoneVal) {
+          match = allFollowers.find(f => cleanPhone(f.phone) === phoneVal);
+        }
+        if (!match) {
+          match = allFollowers.find(f => normalizeName(f.displayName) === normName);
+        }
+        if (match) {
+          targetZaloId = match.zaloUserId;
+        }
+      }
+
+      // Lưu tự động vào DB nếu khớp Zalo ID
+      if (targetZaloId) {
+        const existingLink = allLinks.find(l => l.zaloUserId === targetZaloId);
+        const needsUpdate = !existingLink || 
+                            existingLink.staffNameRaw !== name || 
+                            (phoneVal && existingLink.phone !== phoneVal);
+
+        if (needsUpdate) {
+          try {
+            await prisma.staffZaloLink.upsert({
+              where: { zaloUserId: targetZaloId },
+              update: {
+                staffNameRaw: name,
+                staffName: normName,
+                ...(phoneVal && { phone: phoneVal }),
+              },
+              create: {
+                staffNameRaw: name,
+                staffName: normName,
+                zaloUserId: targetZaloId,
+                phone: phoneVal,
+              }
+            });
+
+            await prisma.follower.update({
+              where: { zaloUserId: targetZaloId },
+              data: { userType: "staff" }
+            }).catch(() => {});
+          } catch (err) {
+            console.error("Auto link Zalo error for " + name + ":", err);
+          }
+        }
+      }
+
       const khoans = khoanHeaders.map((kh) => ({ ten: kh.ten, soTien: toNum(row[kh.idx]) }));
 
       records.push({
         phong: toStr(row[0]),
         tenNhanVien: name,
-        zaloUserId: idxZalo !== -1 ? toStr(row[idxZalo]) : undefined,
+        phone: phone || undefined,
+        zaloUserId: targetZaloId || undefined,
         soTK: toStr(idxSoTK !== -1 ? row[idxSoTK] : ""),
         email, khoans, thang,
         cong: toNum(idxCong !== -1 ? row[idxCong] : undefined),
