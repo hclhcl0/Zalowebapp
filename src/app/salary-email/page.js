@@ -30,7 +30,7 @@ const cleanPhone = (p) => {
 };
 
 const normalizeName = (n) => {
-  return String(n || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+  return String(n || "").trim().toLowerCase().replace(/\s+/g, ' ');
 };function ZaloLinkSelect({ value, followers, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");

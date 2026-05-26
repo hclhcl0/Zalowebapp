@@ -25,7 +25,7 @@ function cleanPhone(p) {
 }
 
 function normalizeName(n) {
-  return String(n || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+  return String(n || "").trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 async function findZaloUserId(record, columnMapping) {
@@ -230,7 +230,7 @@ export async function POST(req) {
 import * as XLSX from "xlsx";
 
 function normalizeVi(s) {
-  return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+  return String(s || "").toLowerCase().replace(/\s+/g, ' ');
 }
 
 export async function PUT(req) {

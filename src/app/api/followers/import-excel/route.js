@@ -16,9 +16,7 @@ function normalizeName(n) {
   return String(n || "")
     .trim()
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d");
+    .replace(/\s+/g, ' ');
 }
 
 export async function POST(request) {
