@@ -266,23 +266,9 @@ export default function SalaryEmailPage() {
           <p className="page-desc">Gửi cập nhật thông tin nội bộ cơ quan qua Email đính kèm Excel hoặc gửi tin nhắn Zalo trực tiếp cho cán bộ nhân viên CDC Đà Nẵng</p>
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          <button
-            onClick={refreshFollowers}
-            className="btn btn-outline btn-sm"
-            style={{ height: "36px", gap: "6px", display: "inline-flex", alignItems: "center" }}
-            disabled={isRefreshingFollowers}
-            title="Làm mới danh sách người quan tâm Zalo từ hệ thống"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingFollowers ? "animate-spin" : ""}`} />
-            Làm mới Zalo Followers
-          </button>
-          {accounts.length > 0 ? (
+          {accounts.length > 0 && (
             <span className="badge badge-approved" style={{ padding: "8px 12px", gap: "6px", height: "36px", display: "inline-flex", alignItems: "center" }}>
               <Zap className="w-3.5 h-3.5 fill-current" /> {accounts.length} Gmail Pool
-            </span>
-          ) : (
-            <span className="badge badge-cancelled" style={{ padding: "8px 12px", gap: "6px", height: "36px", display: "inline-flex", alignItems: "center" }}>
-              ⚠️ Chưa cấu hình Gmail Pool
             </span>
           )}
         </div>
