@@ -156,7 +156,9 @@ const normalizeName = (n) => {
                 borderRadius: "4px",
                 color: "var(--danger)",
                 fontWeight: 600,
-                lineHeight: "1.5"
+                lineHeight: "1.5",
+                flexShrink: 0,
+                minHeight: "32px"
               }}
             >
               -- Chưa liên kết --
@@ -188,7 +190,9 @@ const normalizeName = (n) => {
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",
-                    lineHeight: "1.5"
+                    lineHeight: "1.5",
+                    flexShrink: 0,
+                    minHeight: "32px"
                   }}
                 >
                   {f.displayName} {f.phone ? `(${f.phone})` : ""}
