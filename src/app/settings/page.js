@@ -116,6 +116,9 @@ function SettingsPageContent() {
   const [newEmail, setNewEmail] = useState("");
   const [newPass, setNewPass] = useState("");
   const [isLocalLoaded, setIsLocalLoaded] = useState(false);
+  const [addMode, setAddMode] = useState("apppass"); // "apppass" | "oauth2"
+  const [gmailOAuthLoading, setGmailOAuthLoading] = useState(false);
+  const [gmailOAuthMsg, setGmailOAuthMsg] = useState(null);
 
   // Load Gmail configuration from localStorage
   useEffect(() => {
@@ -177,6 +180,27 @@ function SettingsPageContent() {
     setAccounts((prev) =>
       prev.map((a) => (a.id === id ? { ...a, showPass: !a.showPass } : a))
     );
+
+  // Bắt đầu luồng Gmail OAuth2
+  const handleGmailOAuth = async () => {
+    setGmailOAuthLoading(true);
+    setGmailOAuthMsg(null);
+    try {
+      const emailHint = newEmail.trim();
+      const res = await fetch(`/api/auth/gmail-oauth${emailHint ? `?email=${encodeURIComponent(emailHint)}` : ""}`);
+      const data = await res.json();
+      if (data.error) {
+        setGmailOAuthMsg({ type: "error", text: data.error });
+      } else {
+        // Mở tab Google để xác nhận
+        window.open(data.authUrl, "_self");
+      }
+    } catch (e) {
+      setGmailOAuthMsg({ type: "error", text: "Không kết nối được server." });
+    } finally {
+      setGmailOAuthLoading(false);
+    }
+  };
 
   const categoriesList = (() => {
     try {
@@ -251,15 +275,15 @@ function SettingsPageContent() {
 
   useEffect(() => { loadSettings(); }, [loadSettings]);
 
-  // Đọc kết quả OAuth callback từ query params
+  // Đọc kết quả Zalo OAuth callback từ query params
   useEffect(() => {
     const success = searchParams.get("oauth_success");
     const err     = searchParams.get("oauth_error");
     if (success) {
       setOauthMsg({ type: "success", text: "✅ Xác thực thành công! Access Token đã được lưu vào hệ thống." });
       setActiveTab("oauth");
-      loadSettings(); // Tải lại để hiển thị token mới
-      router.replace("/settings"); // Xóa query params
+      loadSettings();
+      router.replace("/settings");
     }
     if (err) {
       setOauthMsg({ type: "error", text: `❌ Lỗi OAuth: ${decodeURIComponent(err)}` });
@@ -267,6 +291,55 @@ function SettingsPageContent() {
       router.replace("/settings");
     }
   }, [searchParams, loadSettings, router]);
+
+  // Đọc kết quả Gmail OAuth2 callback từ query params
+  useEffect(() => {
+    const gmailSuccess = searchParams.get("gmail_oauth_success");
+    const gmailError   = searchParams.get("gmail_oauth_error");
+    const gmailToken   = searchParams.get("gmail_token");
+
+    if (gmailSuccess && gmailToken) {
+      try {
+        const tokenData = JSON.parse(decodeURIComponent(gmailToken));
+        const { email, refreshToken, accessToken } = tokenData;
+        if (email && refreshToken) {
+          setAccounts((prev) => {
+            // Nếu đã có account này → cập nhật token
+            const exists = prev.find((a) => a.user === email);
+            if (exists) {
+              return prev.map((a) =>
+                a.user === email
+                  ? { ...a, refreshToken, accessToken: accessToken || a.accessToken }
+                  : a
+              );
+            }
+            // Chưa có → thêm mới
+            return [
+              ...prev,
+              {
+                id: crypto.randomUUID(),
+                user: email,
+                refreshToken,
+                accessToken: accessToken || "",
+                authType: "oauth2",
+              },
+            ];
+          });
+          setGmailOAuthMsg({ type: "success", text: `✅ Đã kết nối Gmail OAuth2: ${email}` });
+          setActiveTab("gmail_pool");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      router.replace("/settings?tab=gmail_pool");
+    }
+
+    if (gmailError) {
+      setGmailOAuthMsg({ type: "error", text: `❌ ${decodeURIComponent(gmailError)}` });
+      setActiveTab("gmail_pool");
+      router.replace("/settings?tab=gmail_pool");
+    }
+  }, [searchParams, router]);
 
   // Đọc tab hoạt động từ query params (ví dụ: ?tab=gmail_pool)
   useEffect(() => {
@@ -561,157 +634,188 @@ function SettingsPageContent() {
               {/* UI cho tab Gmail Account Pool */}
               {activeGroup.id === "gmail_pool" && (
                 <div style={{ marginTop: "20px", borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr", md: "1.2fr 0.8fr", gap: "24px" }}>
-                    {/* Danh sách & form */}
+
+                  {/* Thông báo OAuth2 */}
+                  {gmailOAuthMsg && (
+                    <div style={{
+                      padding: "12px 16px", borderRadius: "var(--radius)", marginBottom: "16px",
+                      background: gmailOAuthMsg.type === "success" ? "#f0fdf4" : "#fef2f2",
+                      border: `1px solid ${gmailOAuthMsg.type === "success" ? "#bbf7d0" : "#fecaca"}`,
+                      color: gmailOAuthMsg.type === "success" ? "#15803d" : "#dc2626",
+                      fontWeight: 600, fontSize: "0.875rem",
+                      display: "flex", alignItems: "center", gap: "10px"
+                    }}>
+                      {gmailOAuthMsg.text}
+                      <button onClick={() => setGmailOAuthMsg(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", fontSize: "1rem" }}>✕</button>
+                    </div>
+                  )}
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "24px", alignItems: "start" }}>
+                    {/* Cột trái: Danh sách & form thêm */}
                     <div>
                       <h3 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
                         <span>📧 Danh sách tài khoản trong Pool</span>
                         {accounts.length > 0 && <span className="badge badge-info">{accounts.length}</span>}
                       </h3>
 
-                      <div style={{
-                        background: "#fffbeb",
-                        border: "1px solid #fde68a",
-                        color: "#78350f",
-                        borderRadius: "var(--radius)",
-                        padding: "12px",
-                        fontSize: "0.8rem",
-                        lineHeight: "1.5",
-                        marginBottom: "16px",
-                        display: "flex",
-                        gap: "8px"
-                      }}>
-                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-                        <span>
-                          Sử dụng <strong>Mật khẩu ứng dụng (App Password)</strong>. Hãy tạo trong <em>Google Account &rarr; Bảo mật &rarr; Xác minh 2 bước &rarr; Mật khẩu ứng dụng</em>.
-                        </span>
+                      {/* Tab chọn kiểu thêm mới */}
+                      <div style={{ display: "flex", gap: "6px", background: "var(--bg)", padding: "4px", borderRadius: "var(--radius)", border: "1px solid var(--border)", marginBottom: "14px", width: "fit-content" }}>
+                        {[
+                          { id: "apppass", label: "🔑 App Password" },
+                          { id: "oauth2",  label: "🔗 Gmail OAuth2 (khuyến nghị)" },
+                        ].map((m) => (
+                          <button
+                            key={m.id}
+                            onClick={() => setAddMode(m.id)}
+                            style={{
+                              padding: "6px 14px", fontSize: "0.78rem", fontWeight: addMode === m.id ? 700 : 500,
+                              background: addMode === m.id ? "white" : "transparent",
+                              border: "none", borderRadius: "6px", cursor: "pointer",
+                              color: addMode === m.id ? "var(--primary)" : "var(--text-muted)",
+                              boxShadow: addMode === m.id ? "var(--shadow-sm)" : "none",
+                              transition: "all 0.15s"
+                            }}
+                          >{m.label}</button>
+                        ))}
                       </div>
 
-                      {/* Add Form */}
-                      <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px", marginBottom: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <div style={{ fontWeight: 600, fontSize: "0.8rem" }}>➕ Thêm Gmail mới</div>
-                        <div className="form-group" style={{ marginBottom: 0 }}>
-                          <input
-                            type="email"
-                            placeholder="Email gửi (ví dụ: cdc@gmail.com)"
-                            value={newEmail}
-                            onChange={(e) => setNewEmail(e.target.value)}
-                            className="form-input"
-                            style={{ height: "36px" }}
-                          />
+                      {/* Form App Password */}
+                      {addMode === "apppass" && (
+                        <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px", marginBottom: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                          <div style={{ fontSize: "0.78rem", color: "#78350f", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "6px", padding: "8px 12px", lineHeight: 1.6 }}>
+                            ⚠️ App Password có thể gặp lỗi <strong>454 Too many login attempts</strong>. Khuyến nghị dùng <strong>OAuth2</strong>.
+                          </div>
+                          <input type="email" placeholder="Email gửi (vd: cdc@gmail.com)" value={newEmail}
+                            onChange={(e) => setNewEmail(e.target.value)} className="form-input" style={{ height: "36px" }} />
+                          <input type="password" placeholder="Mật khẩu ứng dụng (16 ký tự không dấu cách)" value={newPass}
+                            onChange={(e) => setNewPass(e.target.value)} className="form-input" style={{ height: "36px" }} />
+                          <button onClick={addAccount} disabled={!newEmail.trim() || !newPass.trim()}
+                            className="btn btn-primary btn-sm" style={{ width: "100%", justifyContent: "center" }}>
+                            <Plus className="w-4 h-4" /> Thêm vào Pool
+                          </button>
                         </div>
-                        <div className="form-group" style={{ marginBottom: 0 }}>
-                          <input
-                            type="password"
-                            placeholder="Mật khẩu ứng dụng (16 ký tự)"
-                            value={newPass}
-                            onChange={(e) => setNewPass(e.target.value)}
-                            className="form-input"
-                            style={{ height: "36px" }}
-                          />
+                      )}
+
+                      {/* Form OAuth2 */}
+                      {addMode === "oauth2" && (
+                        <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "var(--radius)", padding: "16px", marginBottom: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ fontSize: "0.8rem", color: "#14532d", lineHeight: 1.6 }}>
+                            ✅ <strong>OAuth2</strong> — Không cần App Password, không bị lỗi 454. Google cấp quyền trực tiếp.
+                          </div>
+                          <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", background: "white", borderRadius: "6px", padding: "10px 12px", border: "1px solid var(--border)", lineHeight: 1.7 }}>
+                            <strong>Yêu cầu trước:</strong> Điền <strong>Client ID</strong> và <strong>Client Secret</strong> vào ô bên phải rồi bấm Lưu cài đặt.<br/>
+                            Sau đó nhập email Gmail muốn kết nối và bấm nút bên dưới.
+                          </div>
+                          <input type="email" placeholder="Gmail muốn kết nối (vd: hclhcl0@gmail.com)" value={newEmail}
+                            onChange={(e) => setNewEmail(e.target.value)} className="form-input" style={{ height: "36px" }} />
+                          <button
+                            onClick={handleGmailOAuth}
+                            disabled={gmailOAuthLoading || !newEmail.trim()}
+                            className="btn btn-success"
+                            style={{ width: "100%", justifyContent: "center", gap: "8px" }}
+                          >
+                            {gmailOAuthLoading
+                              ? <><span className="spinner" style={{ width: 14, height: 14, borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} /> Đang mở Google...</>
+                              : "🔗 Kết nối Gmail qua OAuth2"}
+                          </button>
                         </div>
-                        <button
-                          onClick={addAccount}
-                          disabled={!newEmail.trim() || !newPass.trim()}
-                          className="btn btn-primary btn-sm"
-                          style={{ width: "100%", justifyContent: "center" }}
-                        >
-                          <Plus className="w-4 h-4" /> Thêm vào Pool
-                        </button>
-                      </div>
+                      )}
 
                       {/* Accounts list */}
                       {accounts.length === 0 ? (
-                        <div style={{
-                          textAlign: "center",
-                          padding: "24px 0",
-                          color: "var(--text-muted)",
-                          fontSize: "0.8rem",
-                          border: "2px dashed var(--border)",
-                          borderRadius: "var(--radius)"
-                        }}>
+                        <div style={{ textAlign: "center", padding: "24px 0", color: "var(--text-muted)", fontSize: "0.8rem", border: "2px dashed var(--border)", borderRadius: "var(--radius)" }}>
                           Chưa có tài khoản Gmail nào được cấu hình.
                         </div>
                       ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "250px", overflowY: "auto", paddingRight: "4px" }}>
-                          {accounts.map((acc, idx) => (
-                            <div key={acc.id} style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              background: "white",
-                              border: "1px solid var(--border)",
-                              borderRadius: "var(--radius)",
-                              padding: "8px 12px"
-                            }}>
-                              <div style={{
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "50%",
-                                background: "var(--border)",
-                                color: "var(--text-muted)",
-                                fontSize: "0.7rem",
-                                fontWeight: "bold",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "280px", overflowY: "auto", paddingRight: "4px" }}>
+                          {accounts.map((acc, idx) => {
+                            const isOAuth2 = Boolean(acc.refreshToken);
+                            return (
+                              <div key={acc.id} style={{
+                                display: "flex", alignItems: "center", gap: "8px",
+                                background: isOAuth2 ? "#f0fdf4" : "white",
+                                border: `1px solid ${isOAuth2 ? "#bbf7d0" : "var(--border)"}`,
+                                borderRadius: "var(--radius)", padding: "8px 12px"
                               }}>
-                                {idx + 1}
+                                <div style={{ width: 20, height: 20, borderRadius: "50%", background: isOAuth2 ? "#22c55e" : "var(--border)", color: "white", fontSize: "0.7rem", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                  {idx + 1}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0, fontSize: "0.8rem" }}>
+                                  <p style={{ fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{acc.user}</p>
+                                  <p style={{ margin: 0, fontSize: "0.72rem" }}>
+                                    {isOAuth2
+                                      ? <span style={{ color: "#15803d", fontWeight: 600 }}>🔗 OAuth2 — Đã kết nối</span>
+                                      : <span style={{ color: "var(--text-muted)", fontFamily: "monospace" }}>{acc.showPass ? acc.appPassword : "•••• •••• •••• ••••"}</span>
+                                    }
+                                  </p>
+                                </div>
+                                {!isOAuth2 && (
+                                  <button className="btn btn-ghost btn-sm" style={{ padding: "4px", minWidth: "auto" }} onClick={() => togglePass(acc.id)}>
+                                    {acc.showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                  </button>
+                                )}
+                                <button className="btn btn-ghost btn-sm" style={{ padding: "4px", minWidth: "auto", color: "var(--danger)" }} onClick={() => removeAccount(acc.id)}>
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
-                              <div style={{ flex: 1, minWidth: 0, fontSize: "0.8rem" }}>
-                                <p style={{ fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: 0 }}>{acc.user}</p>
-                                <p style={{ color: "var(--text-muted)", fontFamily: "monospace", fontSize: "0.75rem", margin: 0 }}>
-                                  {acc.showPass ? acc.appPassword : "•••• •••• •••• ••••"}
-                                </p>
-                              </div>
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                style={{ padding: "4px", minWidth: "auto" }}
-                                onClick={() => togglePass(acc.id)}
-                              >
-                                {acc.showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                              </button>
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                style={{ padding: "4px", minWidth: "auto", color: "var(--danger)" }}
-                                onClick={() => removeAccount(acc.id)}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
 
-                    {/* Tốc độ gửi */}
-                    <div>
-                      <h3 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "12px" }}>⚙️ Tốc độ & Giãn cách</h3>
-                      <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                        <div className="form-group" style={{ marginBottom: 0 }}>
-                          <label className="form-label" style={{ fontSize: "0.8rem" }}>Số email mỗi đợt (Batch size)</label>
+                    {/* Cột phải: OAuth2 credentials + Tốc độ gửi */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {/* Google OAuth2 Credentials */}
+                      <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px" }}>
+                        <h4 style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "10px", display: "flex", alignItems: "center", gap: "6px" }}>
+                          🔑 Google OAuth2 Credentials
+                        </h4>
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "12px", lineHeight: 1.6 }}>
+                          Tạo tại <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>Google Cloud Console</a> → OAuth 2.0 Client ID → Web application.
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" style={{ fontSize: "0.78rem" }}>Client ID</label>
                           <input
-                            type="number"
-                            value={batchSize}
-                            onChange={(e) => setBatchSize(Number(e.target.value))}
+                            type="text"
                             className="form-input"
+                            placeholder="xxxx.apps.googleusercontent.com"
+                            value={values.gmail_oauth_client_id || ""}
+                            onChange={(e) => handleChange("gmail_oauth_client_id", e.target.value)}
                           />
-                          <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
-                            Gửi tuần tự từng đợt để tối ưu tài nguyên của Gmail.
-                          </span>
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                          <label className="form-label" style={{ fontSize: "0.8rem" }}>Thời gian giãn cách (ms)</label>
+                          <label className="form-label" style={{ fontSize: "0.78rem" }}>Client Secret</label>
                           <input
-                            type="number"
-                            value={delayMs}
-                            onChange={(e) => setDelayMs(Number(e.target.value))}
+                            type="password"
                             className="form-input"
+                            placeholder="GOCSPX-••••••••••••"
+                            value={values.gmail_oauth_client_secret || ""}
+                            onChange={(e) => handleChange("gmail_oauth_client_secret", e.target.value)}
                           />
-                          <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
-                            Khoảng thời gian nghỉ giữa các đợt (ví dụ: 2000 = 2 giây).
-                          </span>
+                        </div>
+                        <div style={{ marginTop: "10px", fontSize: "0.72rem", color: "var(--text-muted)", lineHeight: 1.6, padding: "8px", background: "white", borderRadius: "6px", border: "1px dashed var(--border)" }}>
+                          <strong>Redirect URI</strong> cần thêm vào Google Cloud:<br/>
+                          <code style={{ fontSize: "0.7rem", wordBreak: "break-all", color: "var(--primary)" }}>
+                            {typeof window !== "undefined" ? window.location.origin : "http://localhost:3000"}/api/auth/gmail-callback
+                          </code>
+                        </div>
+                      </div>
+
+                      {/* Tốc độ gửi */}
+                      <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px" }}>
+                        <h4 style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "12px" }}>⚙️ Tốc độ & Giãn cách</h4>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label" style={{ fontSize: "0.78rem" }}>Số email mỗi đợt</label>
+                            <input type="number" value={batchSize} onChange={(e) => setBatchSize(Number(e.target.value))} className="form-input" />
+                            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>Gửi tuần tự từng đợt để ổn định.</span>
+                          </div>
+                          <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label" style={{ fontSize: "0.78rem" }}>Giãn cách giữa đợt (ms)</label>
+                            <input type="number" value={delayMs} onChange={(e) => setDelayMs(Number(e.target.value))} className="form-input" />
+                            <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>VD: 2000 = 2 giây.</span>
+                          </div>
                         </div>
                       </div>
                     </div>
