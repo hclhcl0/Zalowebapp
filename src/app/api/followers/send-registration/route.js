@@ -75,12 +75,12 @@ export async function POST(request) {
 
       const name = displayName || "bạn";
       const message =
-        `🏥 CDC ĐÀ NẴNG — ĐĂNG KÝ NHÂN VIÊN\n\n` +
+        `🏥 CDC ĐÀ NẴNG — CẬP NHẬT THÔNG TIN NHÂN VIÊN\n\n` +
         `Xin chào ${name}!\n\n` +
-        `Để hệ thống nhận diện bạn là nhân viên CDC và gửi thông báo lương, thuế TNCN đúng người, vui lòng bấm link bên dưới và điền tên thật của bạn:\n\n` +
+        `Để cập nhật và đồng bộ thông tin nhân viên trên hệ thống nội bộ CDC Đà Nẵng, vui lòng bấm vào đường dẫn bên dưới và điền thông tin của bạn:\n\n` +
         `👉 ${regLink}\n\n` +
-        `⏱️ Chỉ mất 30 giây. Thực hiện 1 lần duy nhất.\n` +
-        `🔒 Thông tin của bạn được bảo mật và chỉ sử dụng cho mục đích quản lý nội bộ của CDC Đà Nẵng.`;
+        `⏱️ Thời gian thực hiện khoảng 30 giây, chỉ cần cập nhật một lần.\n` +
+        `🔒 Thông tin được bảo mật và chỉ phục vụ công tác quản lý nội bộ.`;
 
       try {
         const result = await sendTextMessage(zaloUserId, message);
