@@ -8,7 +8,7 @@
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendTextMessage } from "@/lib/zalo";
+import { sendTextMessage, sendButtonMessage } from "@/lib/zalo";
 import { createRegToken } from "@/lib/regToken";
 
 export const dynamic = "force-dynamic";
@@ -77,13 +77,12 @@ export async function POST(request) {
       const message =
         `🏥 CDC ĐÀ NẴNG — CẬP NHẬT THÔNG TIN NHÂN VIÊN\n\n` +
         `Xin chào ${name}!\n\n` +
-        `Để cập nhật và đồng bộ thông tin nhân viên trên hệ thống nội bộ CDC Đà Nẵng, vui lòng bấm vào đường dẫn bên dưới và điền thông tin của bạn:\n\n` +
-        `👉 ${regLink}\n\n` +
+        `Để cập nhật và đồng bộ thông tin nhân viên trên hệ thống nội bộ CDC Đà Nẵng, vui lòng bấm vào nút CẬP NHẬT bên dưới và điền thông tin của bạn:\n\n` +
         `⏱️ Thời gian thực hiện khoảng 30 giây, chỉ cần cập nhật một lần.\n` +
         `🔒 Thông tin được bảo mật và chỉ phục vụ công tác quản lý nội bộ.`;
 
       try {
-        const result = await sendTextMessage(zaloUserId, message);
+        const result = await sendButtonMessage(zaloUserId, message, "CẬP NHẬT NGAY", regLink);
         if (result.error && result.error !== 0) {
           failed++;
           if (errors.length < 5) {

@@ -100,6 +100,34 @@ export async function sendTextMessage(toUserId, text) {
 }
 
 // ============================================================
+// GỬI TIN NHẮN KÈM NÚT BẤM (BUTTON)
+// ============================================================
+export async function sendButtonMessage(toUserId, text, buttonTitle, url) {
+  return callZaloAPI("https://openapi.zalo.me/v2.0/oa/message", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      recipient: { user_id: toUserId },
+      message: {
+        text,
+        attachment: {
+          type: "template",
+          payload: {
+            buttons: [
+              {
+                title: buttonTitle,
+                type: "oa.open.url",
+                payload: { url },
+              },
+            ],
+          },
+        },
+      },
+    }),
+  });
+}
+
+// ============================================================
 // GỬI ZNS (Tin nhắn mẫu)
 // ============================================================
 export async function sendZNS({ phone, templateId, templateData }) {
