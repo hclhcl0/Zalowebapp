@@ -350,7 +350,18 @@ export default function BroadcastPage() {
                             </div>
                           )}
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 600, fontSize: "0.85rem" }}>{f.displayName || "Người dùng Zalo"}</div>
+                            <div style={{ fontWeight: 600, fontSize: "0.85rem" }}>
+                              {f.staffLink?.staffNameRaw ? (
+                                <>
+                                  <span>{f.staffLink.staffNameRaw}</span>
+                                  <span style={{ fontWeight: 400, color: "var(--text-muted)", marginLeft: "8px", fontSize: "0.78rem" }}>
+                                    (Zalo: {f.displayName})
+                                  </span>
+                                </>
+                              ) : (
+                                f.fullName || f.displayName || "Người dùng Zalo"
+                              )}
+                            </div>
                             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{f.phone || f.zaloUserId}</div>
                           </div>
                         </label>

@@ -54,8 +54,26 @@ export default async function Dashboard() {
     userMap[f.zaloUserId] = f.displayName;
   });
 
+  // Lấy danh sách liên kết cán bộ cơ quan để hiển thị tên thật
+  const staffLinks = await prisma.staffZaloLink.findMany({
+    where: { zaloUserId: { in: userIds } },
+    select: { zaloUserId: true, staffNameRaw: true }
+  });
+
+  const staffMap = {};
+  staffLinks.forEach(link => {
+    staffMap[link.zaloUserId] = link.staffNameRaw;
+  });
+
+  const specialNames = {
+    "__broadcast_staff__": "Tất cả cán bộ nhân viên",
+    "__registration_campaign__": "Chiến dịch gửi link đăng ký"
+  };
+
   const formattedActivities = logs.map(log => {
-    const name = userMap[log.zaloUserId] || log.zaloUserId || "Người dùng ẩn danh";
+    const staffName = staffMap[log.zaloUserId];
+    const zaloName = userMap[log.zaloUserId] || specialNames[log.zaloUserId] || log.zaloUserId || "Người dùng ẩn danh";
+    const name = staffName ? `${staffName} (Zalo: ${zaloName})` : zaloName;
     let text = "";
     let dotColor = ""; // green, yellow, red, blue
 

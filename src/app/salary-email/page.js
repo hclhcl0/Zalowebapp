@@ -53,7 +53,8 @@ const normalizeName = (n) => {
     const name = (f.displayName || "").toLowerCase();
     const phone = (f.phone || "").toLowerCase();
     const userId = (f.zaloUserId || "").toLowerCase();
-    return name.includes(term) || phone.includes(term) || userId.includes(term);
+    const staffNameRaw = (f.staffLink?.staffNameRaw || "").toLowerCase();
+    return name.includes(term) || phone.includes(term) || userId.includes(term) || staffNameRaw.includes(term);
   });
 
   return (
@@ -95,7 +96,15 @@ const normalizeName = (n) => {
         }}
       >
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "90%" }}>
-          {selectedFollower ? `${selectedFollower.displayName} ${selectedFollower.phone ? `(${selectedFollower.phone})` : ""}` : "-- Chưa liên kết --"}
+          {selectedFollower ? (
+            selectedFollower.staffLink?.staffNameRaw ? (
+              `${selectedFollower.staffLink.staffNameRaw} (Zalo: ${selectedFollower.displayName})`
+            ) : (
+              `${selectedFollower.displayName} ${selectedFollower.phone ? `(${selectedFollower.phone})` : ""}`
+            )
+          ) : (
+            "-- Chưa liên kết --"
+          )}
         </span>
         <span style={{ fontSize: "0.6rem", color: "var(--text-muted)", marginLeft: "4px" }}>▼</span>
       </button>
@@ -195,7 +204,11 @@ const normalizeName = (n) => {
                     minHeight: "32px"
                   }}
                 >
-                  {f.displayName} {f.phone ? `(${f.phone})` : ""}
+                  {f.staffLink?.staffNameRaw ? (
+                    `${f.staffLink.staffNameRaw} (Zalo: ${f.displayName})`
+                  ) : (
+                    `${f.displayName} ${f.phone ? `(${f.phone})` : ""}`
+                  )}
                 </button>
               ))
             )}
