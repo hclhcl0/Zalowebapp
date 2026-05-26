@@ -208,6 +208,7 @@ const normalizeName = (n) => {
 
 export default function SalaryEmailPage() {
 
+  const [activeTab, setActiveTab] = useState("custom");
 
   // === accounts states ===
   const [accounts, setAccounts] = useState([]);
@@ -261,8 +262,8 @@ export default function SalaryEmailPage() {
       {/* ── HEADER ── */}
       <div className="page-header" style={{ marginBottom: "20px" }}>
         <div>
-          <h1 className="page-title">📧 Gửi Email Thông Tin Nội Bộ Cơ Quan</h1>
-          <p className="page-desc">Gửi cập nhật thông tin nội bộ cơ quan và email đính kèm Excel tùy biến cho nhân viên CDC Đà Nẵng</p>
+          <h1 className="page-title">📧 Gửi tin nội bộ cơ quan</h1>
+          <p className="page-desc">Gửi cập nhật thông tin nội bộ cơ quan qua Email đính kèm Excel hoặc gửi tin nhắn Zalo trực tiếp cho cán bộ nhân viên CDC Đà Nẵng</p>
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <button
@@ -287,68 +288,110 @@ export default function SalaryEmailPage() {
         </div>
       </div>
 
+      {/* Navigation Tabs */}
+      <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+        {[
+          { id: "custom", label: "📧 Email Tùy Chọn", desc: "Gửi email đính kèm Excel tùy biến" },
+          { id: "zalo", label: "💬 Tin Zalo Nội Bộ", desc: "Soạn tin nhắn gửi tới cán bộ nhân viên" }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "4px",
+              padding: "14px 18px",
+              borderRadius: "var(--radius-lg)",
+              border: `1px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
+              background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
+              cursor: "pointer",
+              flex: "1 1 200px",
+              textAlign: "left",
+              transition: "all 0.2s",
+              boxShadow: activeTab === tab.id ? "var(--shadow-md), 0 0 0 3px var(--primary-glow)" : "var(--shadow-sm)"
+            }}
+          >
+            <span style={{ fontSize: "0.95rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>
+              {tab.label}
+            </span>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              {tab.desc}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left main contents: Custom Email component */}
+        {/* Left main contents: active tab component */}
         <div className="lg:col-span-2 space-y-6">
-          <CustomSalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
+          {activeTab === "custom" ? (
+            <CustomSalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
+          ) : (
+            <ZaloStaffTab followers={followers} />
+          )}
         </div>
 
-        {/* Right side config panel: Gmail Pool Settings Link */}
+        {/* Right side config panel: Settings Card or Zalo Staff History Card */}
         <div className="space-y-6">
-          <div className="card" style={{ padding: "20px" }}>
-            <div className="card-header" style={{ marginBottom: "16px" }}>
-              <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>🔑 Gmail Account Pool</span>
+          {activeTab === "custom" ? (
+            <div className="card" style={{ padding: "20px" }}>
+              <div className="card-header" style={{ marginBottom: "16px" }}>
+                <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>🔑 Gmail Account Pool</span>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div style={{
+                  background: accounts.length > 0 ? "#f0fdf4" : "#fef2f2",
+                  border: `1px solid ${accounts.length > 0 ? "#bbf7d0" : "#fecaca"}`,
+                  color: accounts.length > 0 ? "#15803d" : "#dc2626",
+                  borderRadius: "var(--radius)",
+                  padding: "12px",
+                  fontSize: "0.8rem",
+                  lineHeight: "1.5",
+                  display: "flex",
+                  gap: "8px"
+                }}>
+                  <AlertCircle className="w-4 h-4 shrink-0 text-current mt-0.5" />
+                  <div>
+                    <strong>{accounts.length > 0 ? `Đang hoạt động (${accounts.length} Gmail)` : "Chưa cấu hình"}</strong>
+                    <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                      {accounts.length > 0 
+                        ? "Tài khoản Gmail được luân phiên tự động để gửi thông tin nội bộ cơ quan."
+                        : "Vui lòng thêm tài khoản Gmail để bắt đầu thực hiện chiến dịch."}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.8rem", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Số lượng Gmail:</span>
+                    <span style={{ fontWeight: 600 }}>{accounts.length}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Số email mỗi đợt:</span>
+                    <span style={{ fontWeight: 600 }}>{batchSize} email</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Thời gian giãn cách:</span>
+                    <span style={{ fontWeight: 600 }}>{delayMs / 1000} giây</span>
+                  </div>
+                </div>
+
+                <a 
+                  href="/settings?tab=gmail_pool" 
+                  className="btn btn-primary"
+                  style={{ width: "100%", justifyContent: "center", textDecoration: "none", display: "inline-flex", gap: "8px" }}
+                >
+                  <Settings2 className="w-4 h-4" /> Cấu hình Gmail &amp; Tốc độ
+                </a>
               </div>
             </div>
-            <div className="space-y-4">
-              <div style={{
-                background: accounts.length > 0 ? "#f0fdf4" : "#fef2f2",
-                border: `1px solid ${accounts.length > 0 ? "#bbf7d0" : "#fecaca"}`,
-                color: accounts.length > 0 ? "#15803d" : "#dc2626",
-                borderRadius: "var(--radius)",
-                padding: "12px",
-                fontSize: "0.8rem",
-                lineHeight: "1.5",
-                display: "flex",
-                gap: "8px"
-              }}>
-                <AlertCircle className="w-4 h-4 shrink-0 text-current mt-0.5" />
-                <div>
-                  <strong>{accounts.length > 0 ? `Đang hoạt động (${accounts.length} Gmail)` : "Chưa cấu hình"}</strong>
-                  <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                    {accounts.length > 0 
-                      ? "Tài khoản Gmail được luân phiên tự động để gửi thông tin nội bộ cơ quan."
-                      : "Vui lòng thêm tài khoản Gmail để bắt đầu thực hiện chiến dịch."}
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.8rem", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "var(--text-muted)" }}>Số lượng Gmail:</span>
-                  <span style={{ fontWeight: 600 }}>{accounts.length}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "var(--text-muted)" }}>Số email mỗi đợt:</span>
-                  <span style={{ fontWeight: 600 }}>{batchSize} email</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "var(--text-muted)" }}>Thời gian giãn cách:</span>
-                  <span style={{ fontWeight: 600 }}>{delayMs / 1000} giây</span>
-                </div>
-              </div>
-
-              <a 
-                href="/settings?tab=gmail_pool" 
-                className="btn btn-primary"
-                style={{ width: "100%", justifyContent: "center", textDecoration: "none", display: "inline-flex", gap: "8px" }}
-              >
-                <Settings2 className="w-4 h-4" /> Cấu hình Gmail &amp; Tốc độ
-              </a>
-            </div>
-          </div>
-
+          ) : (
+            <ZaloStaffHistoryCard />
+          )}
         </div>
       </div>
     </div>
@@ -3050,6 +3093,755 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ==========================================
+// COMPONENT: ZALO STAFF MESSAGE COMPOSE TAB
+// ==========================================
+function ZaloStaffTab({ followers }) {
+  const [scope, setScope] = useState("all_staff");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [url, setUrl] = useState("");
+  const [messageType, setMessageType] = useState("text"); // 'text' | 'list'
+  
+  const [listElements, setListElements] = useState([
+    { title: "", subtitle: "", imageUrl: "", actionType: "oa.open.url", actionValue: "", actionSmsContent: "" }
+  ]);
+
+  const [uploadingIndex, setUploadingIndex] = useState(null);
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [newsArticles, setNewsArticles] = useState([]);
+  const [targetElementIndex, setTargetElementIndex] = useState(null);
+  const [loadingArticles, setLoadingArticles] = useState(false);
+  
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null);
+  
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [searchQ, setSearchQ] = useState("");
+
+  const staffList = followers.filter(f => f.userType === "staff");
+  
+  const filteredStaff = staffList.filter(f => {
+    const term = searchQ.toLowerCase();
+    const name = (f.displayName || "").toLowerCase();
+    const phone = (f.phone || "").toLowerCase();
+    const dept = (f.department || "").toLowerCase();
+    const staffNameRaw = (f.staffLink?.staffNameRaw || "").toLowerCase();
+    return name.includes(term) || phone.includes(term) || dept.includes(term) || staffNameRaw.includes(term);
+  });
+
+  const charLimit = 1000;
+
+  const handleElementChange = (index, field, value) => {
+    const newElements = [...listElements];
+    newElements[index][field] = value;
+    setListElements(newElements);
+  };
+
+  const addElement = () => {
+    if (listElements.length >= 5) {
+      alert("Zalo chỉ cho phép tối đa 5 thẻ trong tin nhắn danh sách.");
+      return;
+    }
+    setListElements([...listElements, { title: "", subtitle: "", imageUrl: "", actionType: "oa.open.url", actionValue: "", actionSmsContent: "" }]);
+  };
+
+  const removeElement = (index) => {
+    if (listElements.length <= 1) return;
+    const newElements = [...listElements];
+    newElements.splice(index, 1);
+    setListElements(newElements);
+  };
+
+  const openNewsModal = async (index) => {
+    setTargetElementIndex(index);
+    setIsNewsModalOpen(true);
+    setLoadingArticles(true);
+    try {
+      const res = await fetch("/api/news");
+      const json = await res.json();
+      if (json.data) {
+        setNewsArticles(json.data);
+      }
+    } catch (err) {
+      console.error("Lỗi khi tải danh sách tin bài:", err);
+      alert("Không thể tải danh sách tin bài.");
+    } finally {
+      setLoadingArticles(false);
+    }
+  };
+
+  const selectArticle = (article) => {
+    const newElements = [...listElements];
+    newElements[targetElementIndex] = {
+      ...newElements[targetElementIndex],
+      title: article.title.substring(0, 120),
+      subtitle: article.summary ? article.summary.substring(0, 120) : article.content.substring(0, 120),
+      imageUrl: article.coverUrl || "",
+      actionType: "oa.open.url",
+      actionValue: `/news/view/${article.id}`
+    };
+    setListElements(newElements);
+    setIsNewsModalOpen(false);
+  };
+
+  const handleImageUpload = async (index, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Chỉ chấp nhận tệp tin hình ảnh.");
+      return;
+    }
+
+    setUploadingIndex(index);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Tải ảnh thất bại");
+      handleElementChange(index, "imageUrl", data.url);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUploadingIndex(null);
+      e.target.value = "";
+    }
+  };
+
+  const toggleSelect = (zaloUserId) => {
+    setSelectedIds((prev) =>
+      prev.includes(zaloUserId) ? prev.filter((id) => id !== zaloUserId) : [...prev, zaloUserId]
+    );
+  };
+
+  const selectAll = () => {
+    if (selectedIds.length === filteredStaff.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredStaff.map((f) => f.zaloUserId));
+    }
+  };
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    
+    if (messageType === "text") {
+      if (!title.trim() || !content.trim()) {
+        alert("Vui lòng nhập đủ Tiêu đề và Nội dung.");
+        return;
+      }
+    } else {
+      if (listElements.length === 0) {
+        alert("Vui lòng thêm ít nhất 1 thẻ.");
+        return;
+      }
+      for (let i = 0; i < listElements.length; i++) {
+        const el = listElements[i];
+        if (!el.title.trim() || !el.imageUrl.trim()) {
+          alert(`Thẻ số ${i + 1} thiếu Tiêu đề hoặc URL hình ảnh.`);
+          return;
+        }
+      }
+    }
+
+    if (scope === "list_staff" && selectedIds.length === 0) {
+      alert("Vui lòng chọn ít nhất một nhân viên nhận.");
+      return;
+    }
+
+    const previewText = messageType === "text" ? content.substring(0, 80) : `${listElements.length} thẻ tham số`;
+    const previewTitle = messageType === "text" ? title : listElements[0].title;
+    const confirmed = window.confirm(
+      scope === "all_staff"
+        ? `Bạn có chắc muốn gửi tin đến TẤT CẢ cán bộ nhân viên đã liên kết Zalo?\n\nTiêu đề: "${previewTitle}"\nNội dung: "${previewText}..."`
+        : `Gửi tin đến ${selectedIds.length} nhân viên đã chọn?\n\nTiêu đề: "${previewTitle}"`
+    );
+    if (!confirmed) return;
+
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/salary-email/send-zalo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scope,
+          userIds: scope === "list_staff" ? selectedIds : undefined,
+          messageType,
+          title: title.trim(),
+          content: content.trim(),
+          url: url.trim() || undefined,
+          elements: messageType === "list" ? listElements : [],
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Gửi thất bại");
+      setResult({ success: true, successCount: json.successCount, total: json.total, failCount: json.failCount });
+      setTitle("");
+      setContent("");
+      setUrl("");
+      setSelectedIds([]);
+      setListElements([{ title: "", subtitle: "", imageUrl: "", actionType: "oa.open.url", actionValue: "", actionSmsContent: "" }]);
+      
+      window.dispatchEvent(new Event("zalo_staff_sent"));
+    } catch (err) {
+      setResult({ success: false, error: err.message });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSend}>
+        <div className="card" style={{ padding: "20px" }}>
+          <div className="card-header" style={{ marginBottom: "16px", paddingBottom: "12px", borderBottom: "1px solid var(--border)" }}>
+            <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>💬 Soạn tin nhắn gửi Zalo cho Nhân viên</span>
+            </div>
+          </div>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {/* Phạm vi gửi tin */}
+            <div>
+              <label className="form-label" style={{ fontWeight: 600 }}>Phạm vi gửi tin</label>
+              <div className="segmented-control" style={{ display: "flex", marginTop: "6px", width: "100%" }}>
+                <button
+                  type="button"
+                  className={`segmented-btn ${scope === "all_staff" ? "active" : ""}`}
+                  onClick={() => { setScope("all_staff"); setSelectedIds([]); }}
+                  style={{ flex: 1, padding: "8px 12px" }}
+                >
+                  📢 Tất cả nhân viên ({staffList.length})
+                </button>
+                <button
+                  type="button"
+                  className={`segmented-btn ${scope === "list_staff" ? "active" : ""}`}
+                  onClick={() => { setScope("list_staff"); setSelectedIds([]); }}
+                  style={{ flex: 1, padding: "8px 12px" }}
+                >
+                  🎯 Chọn lọc nhân viên
+                </button>
+              </div>
+            </div>
+
+            {/* Danh sách nhân viên */}
+            {scope === "list_staff" && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
+                  <label className="form-label" style={{ marginBottom: 0, fontWeight: 600 }}>
+                    Chọn nhân viên nhận tin
+                    {selectedIds.length > 0 && (
+                      <span style={{ marginLeft: "8px", background: "var(--primary)", color: "white", borderRadius: "20px", padding: "1px 10px", fontSize: "0.75rem" }}>
+                        {selectedIds.length} đã chọn
+                      </span>
+                    )}
+                  </label>
+                  <div style={{ display: "flex", gap: "8px", width: "100%", sm: "auto", flex: "1 1 200px", justifyContent: "flex-end" }}>
+                    <input
+                      type="text"
+                      className="search-input"
+                      placeholder="Tìm tên, SĐT, khoa phòng..."
+                      value={searchQ}
+                      onChange={(e) => setSearchQ(e.target.value)}
+                      style={{ flex: 1, maxWidth: "200px", padding: "6px 10px", fontSize: "0.8rem" }}
+                    />
+                    <button type="button" className="btn btn-outline btn-sm" onClick={selectAll} style={{ fontSize: "0.78rem" }}>
+                      {selectedIds.length === filteredStaff.length && filteredStaff.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                    </button>
+                  </div>
+                </div>
+                
+                <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius)", maxHeight: "250px", overflowY: "auto" }}>
+                  {filteredStaff.length === 0 ? (
+                    <div style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                      Không tìm thấy nhân viên nào đã liên kết Zalo.
+                    </div>
+                  ) : (
+                    filteredStaff.map((f) => (
+                      <label
+                        key={f.zaloUserId}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          padding: "10px 14px",
+                          borderBottom: "1px solid var(--border)",
+                          cursor: "pointer",
+                          background: selectedIds.includes(f.zaloUserId) ? "var(--primary-light)" : "white",
+                          transition: "background 0.1s"
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(f.zaloUserId)}
+                          onChange={() => toggleSelect(f.zaloUserId)}
+                          style={{ accentColor: "var(--primary)", width: "16px", height: "16px" }}
+                        />
+                        {f.avatarUrl ? (
+                          <img src={f.avatarUrl} alt={f.displayName} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
+                        ) : (
+                          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700, flexShrink: 0 }}>
+                            {f.displayName?.[0] || "U"}
+                          </div>
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.85rem" }}>
+                            {f.staffLink?.staffNameRaw || f.displayName}
+                          </div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", gap: "10px" }}>
+                            <span>📞 {f.phone || "--"}</span>
+                            {f.department && <span>🏢 {f.department}</span>}
+                          </div>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Loại tin nhắn */}
+            <div>
+              <label className="form-label" style={{ fontWeight: 600 }}>Loại tin nhắn</label>
+              <div className="segmented-control" style={{ display: "flex", marginTop: "6px", marginBottom: "12px", width: "100%" }}>
+                <button
+                  type="button"
+                  className={`segmented-btn ${messageType === "text" ? "active" : ""}`}
+                  onClick={() => setMessageType("text")}
+                  style={{ flex: 1, padding: "8px 12px" }}
+                >
+                  📄 Văn bản
+                </button>
+                <button
+                  type="button"
+                  className={`segmented-btn ${messageType === "list" ? "active" : ""}`}
+                  onClick={() => setMessageType("list")}
+                  style={{ flex: 1, padding: "8px 12px" }}
+                >
+                  📑 Danh sách Carousel
+                </button>
+              </div>
+            </div>
+
+            {/* Form soạn tin */}
+            {messageType === "text" && (
+              <>
+                <div>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Tiêu đề thông báo</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="VD: Thông báo cập nhật thông tin nội bộ cơ quan"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required={messageType === "text"}
+                  />
+                </div>
+
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <label className="form-label" style={{ marginBottom: 0, fontWeight: 600 }}>Nội dung tin nhắn</label>
+                    <span style={{ fontSize: "0.75rem", color: content.length > charLimit * 0.9 ? "var(--danger)" : "var(--text-muted)" }}>
+                      {content.length}/{charLimit}
+                    </span>
+                  </div>
+                  <textarea
+                    className="form-input"
+                    placeholder="Nhập nội dung thông báo gửi đến nhân viên..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value.slice(0, charLimit))}
+                    style={{ minHeight: "120px", resize: "vertical", lineHeight: 1.6 }}
+                    required={messageType === "text"}
+                  />
+                </div>
+
+                <div>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Đường dẫn kèm theo <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>(tùy chọn)</span></label>
+                  <input
+                    type="url"
+                    className="form-input"
+                    placeholder="https://... — nếu có, sẽ thêm nút 'Xem chi tiết'"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {messageType === "list" && (
+              <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                <h4 style={{ margin: "0 0 16px 0", fontSize: "0.95rem", fontWeight: 700 }}>Thiết kế các thẻ danh sách (Tối đa 5 thẻ)</h4>
+                {listElements.map((el, index) => (
+                  <div key={index} style={{ background: "white", padding: "16px", borderRadius: "6px", border: "1px solid var(--border)", marginBottom: "16px", position: "relative" }}>
+                    <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>Thẻ thứ {index + 1}</span>
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <button 
+                          type="button" 
+                          onClick={() => openNewsModal(index)} 
+                          style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}
+                        >
+                          📰 Chọn tin bài soạn sẵn
+                        </button>
+                        {listElements.length > 1 && (
+                          <button type="button" onClick={() => removeElement(index)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem" }}>
+                            Xóa
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.8rem" }}>Tiêu đề</label>
+                        <input type="text" className="form-input" style={{ padding: "6px 10px" }} value={el.title} onChange={(e) => handleElementChange(index, "title", e.target.value)} required={messageType === "list"} />
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.8rem" }}>Phụ đề (Mô tả)</label>
+                        <input type="text" className="form-input" style={{ padding: "6px 10px" }} value={el.subtitle || ""} placeholder="Bấm xem chi tiết..." onChange={(e) => handleElementChange(index, "subtitle", e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.8rem" }}>Ảnh bìa (URL)</label>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            style={{ padding: "6px 10px", flex: 1 }} 
+                            value={el.imageUrl} 
+                            placeholder="Link hoặc tải ảnh lên"
+                            onChange={(e) => handleElementChange(index, "imageUrl", e.target.value)} 
+                            required={messageType === "list"} 
+                          />
+                          <label 
+                            htmlFor={`file-upload-zalo-${index}`} 
+                            style={{ 
+                              display: "inline-flex", 
+                              alignItems: "center", 
+                              justifyContent: "center", 
+                              cursor: "pointer", 
+                              padding: "6px 12px", 
+                              fontSize: "0.8rem", 
+                              margin: 0,
+                              whiteSpace: "nowrap",
+                              border: "1px solid var(--border)",
+                              borderRadius: "4px",
+                              background: "#f1f5f9",
+                              color: "#334155",
+                              fontWeight: 600
+                            }}
+                          >
+                            {uploadingIndex === index ? "⏳..." : "📁 Tải ảnh"}
+                          </label>
+                          <input 
+                            type="file" 
+                            id={`file-upload-zalo-${index}`} 
+                            accept="image/*" 
+                            style={{ display: "none" }} 
+                            onChange={(e) => handleImageUpload(index, e)} 
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.8rem" }}>Hành động</label>
+                        <select className="form-input" style={{ padding: "6px 10px" }} value={el.actionType} onChange={(e) => handleElementChange(index, "actionType", e.target.value)}>
+                          <option value="oa.open.url">Mở đường dẫn (Link)</option>
+                          <option value="oa.query.show">Gửi tin nhắn đến OA</option>
+                          <option value="oa.query.hide">Gửi tin nhắn ẩn đến OA</option>
+                          <option value="oa.open.sms">Mở app gửi SMS</option>
+                          <option value="oa.open.phone">Mở app gọi điện</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.8rem" }}>
+                          {el.actionType === "oa.open.url" && "Đường dẫn (Link)"}
+                          {el.actionType === "oa.open.phone" && "Số điện thoại"}
+                          {el.actionType === "oa.open.sms" && "Số điện thoại nhận SMS"}
+                          {(el.actionType === "oa.query.show" || el.actionType === "oa.query.hide") && "Nội dung tin nhắn (Payload)"}
+                        </label>
+                        <input 
+                          type={el.actionType.includes("phone") || el.actionType.includes("sms") ? "tel" : "text"} 
+                          className="form-input" 
+                          style={{ padding: "6px 10px" }} 
+                          value={el.actionValue} 
+                          placeholder={
+                            el.actionType === "oa.open.url" ? "https://..." : 
+                            el.actionType.includes("query") ? "VD: Xem thông tin" : 
+                            "090..."
+                          }
+                          onChange={(e) => handleElementChange(index, "actionValue", e.target.value)} 
+                          required={messageType === "list"} 
+                        />
+                      </div>
+
+                      {el.actionType === "oa.open.sms" && (
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <label className="form-label" style={{ fontSize: "0.8rem" }}>Nội dung tin nhắn SMS</label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            style={{ padding: "6px 10px" }} 
+                            value={el.actionSmsContent} 
+                            placeholder="Nội dung soạn sẵn..."
+                            onChange={(e) => handleElementChange(index, "actionSmsContent", e.target.value)} 
+                            required={messageType === "list" && el.actionType === "oa.open.sms"} 
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {listElements.length < 5 && (
+                  <button type="button" className="btn btn-outline btn-sm" onClick={addElement} style={{ width: "100%", padding: "8px" }}>
+                    + Thêm thẻ tham số
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", background: "#f0f9ff", padding: "10px 14px", borderRadius: "var(--radius)", border: "1px solid #bae6fd" }}>
+              💡 <strong>Lưu ý:</strong> Tin nhắn Zalo nội bộ sẽ được gửi trực tiếp qua Zalo OA đến danh sách nhân viên đã được chọn. Vui lòng đảm bảo các tài khoản Zalo của nhân viên đã quan tâm OA để nhận được tin nhắn.
+            </div>
+
+            {/* Thông báo kết quả */}
+            {result && (
+              <div style={{
+                padding: "12px 16px",
+                borderRadius: "var(--radius)",
+                background: result.success ? "#f0fdf4" : "#fff5f5",
+                border: `1px solid ${result.success ? "#86efac" : "#fca5a5"}`,
+                fontSize: "0.875rem",
+                color: result.success ? "#166534" : "#991b1b",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}>
+                <span>{result.success ? "✅" : "❌"}</span>
+                {result.success
+                  ? `Đã gửi thành công ${result.successCount}/${result.total} nhân viên${result.failCount > 0 ? ` (${result.failCount} lỗi)` : ""}`
+                  : `Gửi lỗi: ${result.error}`
+                }
+              </div>
+            )}
+
+            {/* Nút gửi */}
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={sending || (messageType === "text" && (!title.trim() || !content.trim()))}
+                style={{ minWidth: "160px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+              >
+                {sending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" style={{ marginRight: "6px" }} />
+                    Đang gửi Zalo...
+                  </>
+                ) : (
+                  <>
+                    📣 {scope === "all_staff" ? "Gửi tất cả nhân viên" : `Gửi cho ${selectedIds.length || "..."} nhân viên`}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      {/* Modal chọn tin bài soạn sẵn */}
+      {isNewsModalOpen && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.6)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+          backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "12px",
+            width: "90%",
+            maxWidth: "600px",
+            maxHeight: "80vh",
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "var(--shadow-xl)",
+            overflow: "hidden"
+          }}>
+            <div style={{
+              padding: "16px 20px",
+              borderBottom: "1px solid var(--border)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}>
+              <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "var(--text)" }}>
+                📰 Chọn từ tin bài soạn sẵn
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setIsNewsModalOpen(false)}
+                style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>
+              {loadingArticles ? (
+                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                  Đang tải danh sách tin bài...
+                </div>
+              ) : newsArticles.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>
+                  📭 Chưa có tin bài nào soạn sẵn.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {newsArticles.map((article) => (
+                    <div 
+                      key={article.id} 
+                      onClick={() => selectArticle(article)}
+                      style={{
+                        padding: "12px 16px",
+                        borderRadius: "8px",
+                        border: "1px solid var(--border)",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        background: "#fff",
+                        display: "flex",
+                        gap: "12px",
+                        alignItems: "start"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "var(--primary)";
+                        e.currentTarget.style.background = "#f0f9ff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "var(--border)";
+                        e.currentTarget.style.background = "#fff";
+                      }}
+                    >
+                      {article.coverUrl && (
+                        <img 
+                          src={article.coverUrl} 
+                          alt="" 
+                          style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "4px", flexShrink: 0 }}
+                        />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)", marginBottom: "4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {article.title}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                          📅 {new Date(article.createdAt).toLocaleDateString("vi-VN")}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// COMPONENT: ZALO STAFF HISTORY CARD
+// ==========================================
+function ZaloStaffHistoryCard() {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchHistory = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/salary-email/send-zalo");
+      const json = await res.json();
+      if (json.data) setHistory(json.data);
+    } catch (err) {
+      console.error("Lỗi tải lịch sử gửi Zalo nội bộ:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+    
+    // Đăng ký lắng nghe sự kiện khi có đợt gửi tin mới thành công
+    window.addEventListener("zalo_staff_sent", fetchHistory);
+    return () => window.removeEventListener("zalo_staff_sent", fetchHistory);
+  }, []);
+
+  return (
+    <div className="card" style={{ padding: "20px" }}>
+      <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+        <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span>📋 Lịch sử gửi tin Zalo</span>
+        </div>
+        <button className="btn btn-ghost btn-sm" onClick={fetchHistory} style={{ fontSize: "0.75rem", padding: "2px 6px" }}>🔄</button>
+      </div>
+
+      <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+        {loading ? (
+          <div style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+            <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
+            Đang tải lịch sử...
+          </div>
+        ) : history.length === 0 ? (
+          <div style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+            📭 Chưa gửi tin Zalo nào.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {history.map((log) => {
+              let payload = {};
+              try { payload = JSON.parse(log.rawPayload || "{}"); } catch (_) {}
+              return (
+                <div key={log.id} style={{ padding: "10px", border: "1px solid var(--border)", borderRadius: "var(--radius)", fontSize: "0.8rem", background: "var(--bg)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span className="badge badge-info" style={{ fontSize: "0.65rem", padding: "1px 6px" }}>
+                      {payload.scope === "all_staff" ? "Tất cả NV" : "Chọn lọc NV"}
+                    </span>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                      {new Date(log.receivedAt).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {log.content.split("\n")[0]}
+                  </div>
+                  {payload.successCount !== undefined && (
+                    <div style={{ fontSize: "0.75rem", color: "var(--success)", fontWeight: 600 }}>
+                      ✅ Thành công: {payload.successCount}/{payload.total}
+                      {payload.failCount > 0 ? ` (${payload.failCount} lỗi)` : ""}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
