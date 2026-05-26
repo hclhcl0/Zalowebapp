@@ -166,15 +166,28 @@ export async function POST(req) {
 
       // Logic tự động đối chiếu
       if (!targetZaloId) {
-        let match = null;
+        let matchLink = null;
         if (phoneVal) {
-          match = allFollowers.find(f => cleanPhone(f.phone) === phoneVal);
+          matchLink = allLinks.find(l => cleanPhone(l.phone) === phoneVal);
         }
-        if (!match) {
-          match = allFollowers.find(f => normalizeName(f.displayName) === normName);
+        if (!matchLink) {
+          matchLink = allLinks.find(l => normalizeName(l.staffNameRaw) === normName || normalizeName(l.staffName) === normName);
         }
-        if (match) {
-          targetZaloId = match.zaloUserId;
+        
+        if (matchLink) {
+          targetZaloId = matchLink.zaloUserId;
+        } else {
+          // Fallback sang Follower
+          let matchFollower = null;
+          if (phoneVal) {
+            matchFollower = allFollowers.find(f => cleanPhone(f.phone) === phoneVal);
+          }
+          if (!matchFollower) {
+            matchFollower = allFollowers.find(f => normalizeName(f.displayName) === normName);
+          }
+          if (matchFollower) {
+            targetZaloId = matchFollower.zaloUserId;
+          }
         }
       }
 
