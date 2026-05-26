@@ -80,7 +80,7 @@ export async function POST(request) {
         `Để hệ thống nhận diện bạn là nhân viên CDC và gửi thông báo lương, thuế TNCN đúng người, vui lòng bấm link bên dưới và điền tên thật của bạn:\n\n` +
         `👉 ${regLink}\n\n` +
         `⏱️ Chỉ mất 30 giây. Thực hiện 1 lần duy nhất.\n` +
-        `🔒 Thông tin được bảo mật, chỉ dùng nội bộ.`;
+        `🔒 Thông tin của bạn được bảo mật và chỉ sử dụng cho mục đích quản lý nội bộ của CDC Đà Nẵng.`;
 
       try {
         const result = await sendTextMessage(zaloUserId, message);
