@@ -131,6 +131,13 @@ export async function POST(req) {
           }
 
           enc(controller, { type: "progress", index: i + 1, total: records.length, result });
+
+          // Delay nhỏ giữa MỖI email (không chỉ giữa batch) để Gmail không rate-limit
+          if (i < records.length - 1) {
+            const perEmailDelay = 1500; // 1.5 giây/email
+            await new Promise((resolve) => setTimeout(resolve, perEmailDelay));
+          }
+
           if (batchSize > 0 && (i + 1) % batchSize === 0 && i < records.length - 1) {
             await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
           }

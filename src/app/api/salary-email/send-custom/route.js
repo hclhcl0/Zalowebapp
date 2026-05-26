@@ -176,6 +176,11 @@ export async function POST(req) {
 
           enc(controller, { type: "progress", index: i + 1, total: records.length, result });
 
+          // Delay nhỏ giữa MỔI email để Gmail không rate-limit
+          if (i < records.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+          }
+
           if (batchSize > 0 && (i + 1) % batchSize === 0 && i < records.length - 1) {
             await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
           }
