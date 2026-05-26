@@ -207,7 +207,7 @@ const normalizeName = (n) => {
 }
 
 export default function SalaryEmailPage() {
-  const [activeTab, setActiveTab] = useState("salary");
+
 
   // === accounts states ===
   const [accounts, setAccounts] = useState([]);
@@ -287,54 +287,10 @@ export default function SalaryEmailPage() {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
-        {[
-          { id: "salary", label: "📊 Thông Báo Nội Bộ", desc: "Theo mẫu thông báo nội bộ" },
-          { id: "custom", label: "⚙️ Email Tùy Chọn", desc: "Excel cấu trúc bất kỳ" },
-          { id: "tax", label: "🧾 Cập Nhật Thông Tin Khác", desc: "Chỉ gửi người nộp cập nhật khác" }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              gap: "4px",
-              padding: "14px 18px",
-              borderRadius: "var(--radius-lg)",
-              border: `1px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
-              background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
-              cursor: "pointer",
-              flex: "1 1 200px",
-              textAlign: "left",
-              transition: "all 0.2s",
-              boxShadow: activeTab === tab.id ? "var(--shadow-md), 0 0 0 3px var(--primary-glow)" : "var(--shadow-sm)"
-            }}
-          >
-            <span style={{ fontSize: "0.95rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>
-              {tab.label}
-            </span>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-              {tab.desc}
-            </span>
-          </button>
-        ))}
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left main contents: active tab components */}
+        {/* Left main contents: Custom Email component */}
         <div className="lg:col-span-2 space-y-6">
-          {activeTab === "salary" && (
-            <SalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
-          )}
-          {activeTab === "custom" && (
-            <CustomSalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
-          )}
-          {activeTab === "tax" && (
-            <TaxTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
-          )}
+          <CustomSalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
         </div>
 
         {/* Right side config panel: Gmail Pool Settings Link */}
