@@ -18,6 +18,7 @@ export function generateCustomEmail(record, opts) {
     footerText = "© CDC Đà Nẵng",
     customMessage,
     columnMapping,
+    footerNote,
   } = opts;
 
   const blueHdr = "#1565c0";
@@ -85,10 +86,11 @@ export function generateCustomEmail(record, opts) {
       </td></tr>
       <tr><td style="padding:0 24px 12px 24px;">
         <p style="margin:0 0 6px 0;font-size:13px;color:#555555;">Vui lòng kiểm tra lại thông tin. Nếu có sai sót, vui lòng phản hồi lại email này.</p>
+        ${footerNote ? `<div style="margin:10px 0;font-size:13px;color:#1e293b;line-height:1.6;font-weight:600;background-color:#f8fafc;padding:10px;border-left:3px solid ${blueHdr};border-radius:4px;">${footerNote.replace(/\n/g, "<br/>")}</div>` : ""}
         <p style="margin:0;font-size:12px;color:#888888;font-style:italic;">*Thông tin lương là thông tin cá nhân, đề nghị không chia sẻ.</p>
       </td></tr>
       <tr><td style="background-color:${blueHdr};height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
-      <tr><td style="padding:12px 24px;text-align:center;background-color:#f8f8f8;"><p style="margin:0;font-size:12px;color:#888888;">${footerText}</p></td></tr>
+      <tr><td style="padding:12px 24px;text-align:center;background-color:#f8f8f8;"><p style="margin:0;font-size:12px;color:#888888;">${footerNote ? footerNote.replace(/\n/g, " | ") : footerText}</p></td></tr>
     </table>
   </td></tr>
 </table>
