@@ -467,7 +467,18 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               }
               if (!matchedFollower) {
                 const normR = normalizeName(r.tenNhanVien);
-                if (normR) matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                if (normR) {
+                  // Ưu tiên tìm trong staffLink (tên thật đã đăng ký)
+                  matchedFollower = followers.find(f => 
+                    f.staffLink && 
+                    (normalizeName(f.staffLink.staffNameRaw) === normR || 
+                     normalizeName(f.staffLink.staffName) === normR)
+                  );
+                  // Nếu không thấy, tìm theo displayName (tên hiển thị Zalo)
+                  if (!matchedFollower) {
+                    matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                  }
+                }
               }
             }
 
@@ -1363,7 +1374,18 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                 const nameVal = r[columnMapping.nameCol];
                 if (nameVal) {
                   const normR = normalizeName(nameVal);
-                  if (normR) matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                  if (normR) {
+                    // Ưu tiên tìm trong staffLink (tên thật đã đăng ký)
+                    matchedFollower = followers.find(f => 
+                      f.staffLink && 
+                      (normalizeName(f.staffLink.staffNameRaw) === normR || 
+                       normalizeName(f.staffLink.staffName) === normR)
+                    );
+                    // Nếu không thấy, tìm theo displayName (tên hiển thị Zalo)
+                    if (!matchedFollower) {
+                      matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                    }
+                  }
                 }
               }
             }
@@ -2364,7 +2386,18 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               }
               if (!matchedFollower) {
                 const normR = normalizeName(r.tenNhanVien);
-                if (normR) matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                if (normR) {
+                  // Ưu tiên tìm trong staffLink (tên thật đã đăng ký)
+                  matchedFollower = followers.find(f => 
+                    f.staffLink && 
+                    (normalizeName(f.staffLink.staffNameRaw) === normR || 
+                     normalizeName(f.staffLink.staffName) === normR)
+                  );
+                  // Nếu không thấy, tìm theo displayName (tên hiển thị Zalo)
+                  if (!matchedFollower) {
+                    matchedFollower = followers.find(f => normalizeName(f.displayName) === normR);
+                  }
+                }
               }
             }
 
