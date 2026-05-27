@@ -154,3 +154,16 @@ model StaffZaloLink {
   registeredAt DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+// ============================================================
+// PHẦN 8: KHO TRI THỨC AI (Knowledge Base)
+// ============================================================
+
+model AiKnowledge {
+  id        Int      @id @default(autoincrement())
+  title     String   // Tên tài liệu
+  category  String   // Nhãn chuyên môn (Ví dụ: Tiêm chủng, Dịch tễ)
+  content   String   // Nội dung văn bản
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

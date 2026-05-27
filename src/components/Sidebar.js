@@ -7,7 +7,7 @@ import { CDC_LOGO_BASE64 } from "@/lib/logo";
 import { 
   LayoutDashboard, Users, Megaphone, Mail, 
   Newspaper, CalendarDays, AlertTriangle, 
-  Settings, UserCog, LogOut, ChevronRight, Download
+  Settings, UserCog, LogOut, ChevronRight, Download, BrainCircuit
 } from "lucide-react";
 
 // Helper to map string/emoji to Lucide icon component
@@ -25,6 +25,7 @@ const IconMapper = ({ iconName, size = 18 }) => {
     case "AlertTriangle": return <AlertTriangle size={size} />;
     case "Settings": return <Settings size={size} />;
     case "UserCog": return <UserCog size={size} />;
+    case "BrainCircuit": return <BrainCircuit size={size} />;
     default: return <ChevronRight size={size} />; // fallback
   }
 };
@@ -51,6 +52,7 @@ const menuGroups = [
     title: "Hệ thống",
     items: [
       { icon: "Settings", label: "Cài đặt & Zalo API", href: "/settings" },
+      { icon: "BrainCircuit", label: "Kho tri thức AI", href: "/ai-knowledge" },
       { icon: "UserCog", label: "Quản lý tài khoản", href: "/settings/users" },
     ],
   },

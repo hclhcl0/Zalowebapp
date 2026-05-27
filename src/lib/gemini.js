@@ -36,61 +36,35 @@ const MAX_HISTORY_TURNS = 10;            // Tối đa 10 lượt (20 entries)
 // ============================================================
 export async function loadKnowledgeBase() {
   const now = Date.now();
-
-  // Trả về cache nếu còn mới
-  if (knowledgeBaseCache !== null && (now - knowledgeCacheTime) < KNOWLEDGE_CACHE_TTL) {
+  if (knowledgeBaseCache && (now - knowledgeCacheTime < KNOWLEDGE_CACHE_TTL)) {
     return knowledgeBaseCache;
   }
 
-  const docsDir = path.join(process.cwd(), "public", "docs");
+  try {
+    const docs = await prisma.aiKnowledge.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
 
-  if (!fs.existsSync(docsDir)) {
-    console.warn("[Gemini] Thư mục public/docs/ không tồn tại.");
-    knowledgeBaseCache = "";
-    knowledgeCacheTime = now;
-    return "";
-  }
-
-  const files = fs.readdirSync(docsDir).filter(f => {
-    const ext = path.extname(f).toLowerCase();
-    return ext === ".pdf" || ext === ".txt" || ext === ".md";
-  });
-
-  if (files.length === 0) {
-    console.warn("[Gemini] Không có tài liệu nào trong public/docs/");
-    knowledgeBaseCache = "";
-    knowledgeCacheTime = now;
-    return "";
-  }
-
-  let combinedText = "";
-
-  for (const file of files) {
-    const filePath = path.join(docsDir, file);
-    const ext = path.extname(file).toLowerCase();
-
-    try {
-      if (ext === ".pdf") {
-        // Đọc PDF — cần pdf-parse
-        const pdfParse = (await import("pdf-parse")).default;
-        const buffer = fs.readFileSync(filePath);
-        const data = await pdfParse(buffer);
-        combinedText += `\n\n=== TÀI LIỆU: ${file} ===\n${data.text}`;
-        console.log(`[Gemini] Đã đọc PDF: ${file} (${data.text.length} ký tự)`);
-      } else if (ext === ".txt" || ext === ".md") {
-        const text = fs.readFileSync(filePath, "utf-8");
-        combinedText += `\n\n=== TÀI LIỆU: ${file} ===\n${text}`;
-        console.log(`[Gemini] Đã đọc ${ext.toUpperCase()}: ${file} (${text.length} ký tự)`);
-      }
-    } catch (err) {
-      console.error(`[Gemini] Lỗi đọc file ${file}:`, err.message);
+    if (docs.length === 0) {
+      console.warn("[Gemini] Không có tài liệu nào trong Kho Tri Thức AI (Database).");
+      knowledgeBaseCache = "";
+      knowledgeCacheTime = now;
+      return "";
     }
-  }
 
-  knowledgeBaseCache = combinedText;
-  knowledgeCacheTime = now;
-  console.log(`[Gemini] Đã tải ${files.length} tài liệu, tổng ${combinedText.length} ký tự`);
-  return combinedText;
+    let combinedText = "";
+    for (const doc of docs) {
+      combinedText += `\n\n[CHUYÊN MÔN: ${doc.category.toUpperCase()}]\n--- Tài liệu: ${doc.title} ---\n${doc.content}`;
+    }
+
+    knowledgeBaseCache = combinedText;
+    knowledgeCacheTime = now;
+    console.log(`[Gemini] Đã tải ${docs.length} tài liệu từ Kho Tri Thức AI, tổng ${combinedText.length} ký tự`);
+    return combinedText;
+  } catch (err) {
+    console.error("[Gemini] Lỗi khi lấy Kho Tri Thức AI từ Database:", err.message);
+    return knowledgeBaseCache || "";
+  }
 }
 
 // Xóa cache kiến thức (gọi khi cần reload tài liệu mới)
