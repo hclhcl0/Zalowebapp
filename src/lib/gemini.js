@@ -130,12 +130,15 @@ async function prepareAIContext(userId, question) {
   const knowledgeText = await loadKnowledgeBase();
   let hotline = "1900988975";
   let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
+  let customPrompt = "";
   try {
-    const settings = await prisma.systemConfig.findMany({ where: { key: { in: ["hotline_main", "address"] } } });
+    const settings = await prisma.systemConfig.findMany({ where: { key: { in: ["hotline_main", "address", "ai_custom_prompt"] } } });
     const h = settings.find(s => s.key === "hotline_main");
     if (h?.value) hotline = h.value;
     const a = settings.find(s => s.key === "address");
     if (a?.value) address = a.value;
+    const cp = settings.find(s => s.key === "ai_custom_prompt");
+    if (cp?.value) customPrompt = cp.value;
   } catch (err) {}
 
   const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng). Vai trò của bạn là hỗ trợ, giải đáp thắc mắc cho người dân thành phố Đà Nẵng về các vấn đề y tế, dịch tễ, phòng chống dịch bệnh và các dịch vụ của CDC Đà Nẵng.
@@ -154,6 +157,9 @@ KHÔNG viết dính liền thành 1 đoạn văn lộn xộn.
 8. Dùng số thứ tự (1. 2. 3.) hoặc ký tự + để liệt kê thay cho dấu gạch -.
 9. Trả lời bằng tiếng Việt thân thiện, dễ hiểu, KHÔNG bao giờ bị cắt cụt.
 10. Luôn kết thúc bằng: (Địa chỉ: ${address} - Hotline: ${hotline}).
+
+CÁC QUY TẮC BỔ SUNG TỪ ADMIN (ƯU TIÊN CAO):
+${customPrompt}
 
 TÀI LIỆU CHUYÊN MÔN:
 ${knowledgeText || `(Chưa có tài liệu. Vui lòng gọi ${hotline}.)`}`;

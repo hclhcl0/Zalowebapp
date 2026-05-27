@@ -94,6 +94,7 @@ const SETTING_GROUPS = [
     desc: "Lựa chọn nhà cung cấp AI và quản lý danh sách API Key. Hệ thống sẽ tự động luân phiên các key để tránh lỗi rate limit.",
     fields: [
       { key: "ai_daily_limit", label: "Giới hạn câu hỏi/ngày (1 Zalo)", type: "number", placeholder: "Để trống hoặc 0 là không giới hạn" },
+      { key: "ai_custom_prompt", label: "Tùy chỉnh Prompt cho AI (Nâng cao)", type: "textarea", placeholder: "Ví dụ: Luôn xưng hô là 'Bác sĩ CDC' và gọi người dùng là 'Bạn'..." },
     ],
   },
 ];
