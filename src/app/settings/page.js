@@ -92,7 +92,9 @@ const SETTING_GROUPS = [
     icon: "🤖",
     title: "Cấu hình AI (Gemini / Groq)",
     desc: "Lựa chọn nhà cung cấp AI và quản lý danh sách API Key. Hệ thống sẽ tự động luân phiên các key để tránh lỗi rate limit.",
-    fields: [],
+    fields: [
+      { key: "ai_daily_limit", label: "Giới hạn câu hỏi/ngày (1 Zalo)", type: "number", placeholder: "Để trống hoặc 0 là không giới hạn" },
+    ],
   },
 ];
 

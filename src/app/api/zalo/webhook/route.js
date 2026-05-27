@@ -143,6 +143,39 @@ async function handleTextMessage(userId, text) {
 
   // Tất cả tin nhắn còn lại → Xử lý bằng AI
   try {
+    // Kiểm tra giới hạn câu hỏi AI trong ngày
+    const limitConfig = await prisma.systemConfig.findUnique({ where: { key: "ai_daily_limit" } });
+    if (limitConfig && limitConfig.value) {
+      const dailyLimit = parseInt(limitConfig.value, 10);
+      if (!isNaN(dailyLimit) && dailyLimit > 0) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const count = await prisma.messageLog.count({
+          where: {
+            zaloUserId: userId,
+            direction: "inbound",
+            receivedAt: { gte: startOfDay },
+          },
+        });
+
+        if (count > dailyLimit) {
+          const rejectMsg = `Bạn đã hết lượt hỏi đáp AI miễn phí trong hôm nay (giới hạn ${dailyLimit} câu/ngày). Vui lòng liên hệ Hotline 1900988975 hoặc quay lại vào ngày mai để tiếp tục nhé!`;
+          await sendTextMessage(userId, rejectMsg);
+          
+          // Ghi log câu trả lời từ chối
+          try {
+            await prisma.messageLog.create({
+              data: {
+                zaloUserId: userId, direction: "outbound", type: "text", content: rejectMsg, rawPayload: JSON.stringify({ source: "system_quota" }), receivedAt: new Date()
+              }
+            });
+          } catch(e) {}
+          return;
+        }
+      }
+    }
+
     console.log(`[AI] Xử lý câu hỏi từ ${userId}: "${trimmedText.substring(0, 100)}"`);
     const { askAI } = await import("@/lib/gemini");
     const aiReply = await askAI(userId, trimmedText);
