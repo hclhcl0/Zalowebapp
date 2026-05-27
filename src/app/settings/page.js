@@ -1247,7 +1247,64 @@ function SettingsPageContent() {
                     <strong>🔗 Lấy API Key miễn phí:</strong> Truy cập <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: "#1d4ed8" }}>aistudio.google.com/app/apikey</a> rồi tạo key mới (mỗi tài khoản Google cho 1 key miễn phí).
                   </div>
                 </div>
+              </div>
               )}
+
+              {values.ai_provider === "groq" && (
+                <div>
+                  {groqKeyMsg && (
+                    <div style={{ padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", fontWeight: 600, fontSize: "0.875rem", background: groqKeyMsg.type === "success" ? "#f0fdf4" : "#fef2f2", border: `1px solid ${groqKeyMsg.type === "success" ? "#bbf7d0" : "#fecaca"}`, color: groqKeyMsg.type === "success" ? "#15803d" : "#dc2626" }}>
+                      {groqKeyMsg.type === "success" ? "✅" : "❌"} {groqKeyMsg.text}
+                    </div>
+                  )}
+                  <div style={{ fontWeight: 700, marginBottom: "12px", fontSize: "0.875rem" }}>🔑 Danh sách Groq API Keys ({groqKeys.length} key)</div>
+                  {groqKeysLoading ? (
+                    <div style={{ color: "var(--text-muted)", padding: "16px 0" }}>Đang tải...</div>
+                  ) : groqKeys.length === 0 ? (
+                    <div style={{ padding: "20px", textAlign: "center", border: "1px dashed var(--border)", borderRadius: "8px", color: "var(--text-muted)", marginBottom: "20px" }}>
+                      Chưa có API Key nào. Vui lòng thêm Groq API Key bên dưới.
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+                      {groqKeys.map((key, idx) => (
+                        <div key={key.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", background: key.isActive ? "#f0fdf4" : "#f8fafc", border: `1px solid ${key.isActive ? "#bbf7d0" : "var(--border)"}`, borderRadius: "10px" }}>
+                          <div style={{ width: "28px", height: "28px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: key.isActive ? "#22c55e" : "#cbd5e1", color: "white", fontWeight: 700, fontSize: "0.8rem", flexShrink: 0 }}>{idx + 1}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text)" }}>{key.label}</div>
+                            <div style={{ fontFamily: "monospace", fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>{key.maskedKey}</div>
+                          </div>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
+                            <span style={{ padding: "3px 8px", borderRadius: "20px", fontSize: "0.72rem", fontWeight: 700, background: key.isActive ? "#dcfce7" : "#f1f5f9", color: key.isActive ? "#16a34a" : "#64748b" }}>{key.isActive ? "● Đang dùng" : "○ Tắt"}</span>
+                            <button className="btn btn-outline btn-sm" onClick={() => handleToggleGroqKey(key.id, key.isActive)} style={{ fontSize: "0.78rem", padding: "4px 10px" }}>{key.isActive ? "Tắt" : "Bật"}</button>
+                            <button className="btn btn-sm" onClick={() => handleDeleteGroqKey(key.id)} style={{ color: "var(--danger)", background: "none", border: "1px solid var(--border)", fontSize: "0.78rem", padding: "4px 10px" }}>🗑️</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid var(--border)" }}>
+                    <div style={{ fontWeight: 700, fontSize: "0.875rem", marginBottom: "14px" }}>➕ Thêm Groq API Key mới</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.78rem" }}>Tên gợi nhớ</label>
+                        <input type="text" className="form-input" placeholder="VD: Groq Key 1..." value={newGroqLabel} onChange={(e) => setNewGroqLabel(e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.78rem" }}>API Key (gsk_...)</label>
+                        <div style={{ position: "relative" }}>
+                          <input type={showNewGroqKey ? "text" : "password"} className="form-input" placeholder="gsk_..." value={newGroqKey} onChange={(e) => setNewGroqKey(e.target.value)} style={{ paddingRight: "44px", fontFamily: "monospace" }} />
+                          <button type="button" onClick={() => setShowNewGroqKey(!showNewGroqKey)} style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>{showNewGroqKey ? "🙈" : "👁️"}</button>
+                        </div>
+                      </div>
+                      <button type="button" className="btn btn-primary" onClick={handleAddGroqKey} disabled={addingGroqKey} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "6px" }}>
+                        {addingGroqKey && <span className="spinner" style={{ width: 12, height: 12 }} />} {addingGroqKey ? "Đang thêm..." : "➕ Thêm API Key"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
             </div>
 
             {/* Form các trường */}
