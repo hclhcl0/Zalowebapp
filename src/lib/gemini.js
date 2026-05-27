@@ -177,7 +177,7 @@ ${knowledgeText || "(Hệ thống chưa có tài liệu chuyên môn. Vui lòng 
   // Gọi Gemini API
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-3.5-flash",
     contents,
     config: {
       systemInstruction,
