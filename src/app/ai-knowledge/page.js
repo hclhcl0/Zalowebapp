@@ -108,10 +108,20 @@ export default function AiKnowledgePage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: "24px" }}>
         {/* Danh sách tài liệu */}
         <div className="card">
-          <h2 style={{ fontSize: "1.1rem", fontWeight: "bold", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <BrainCircuit className="w-5 h-5 text-primary" />
-            Tài liệu đã nạp ({documents.length})
-          </h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: "bold", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <BrainCircuit className="w-5 h-5 text-primary" />
+              Tài liệu đã nạp ({documents.length})
+            </h2>
+            <a 
+              href="/api/knowledge/backup" 
+              className="btn btn-outline btn-sm" 
+              download 
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "white" }}
+            >
+              📥 Sao lưu (JSON)
+            </a>
+          </div>
 
           {loading ? (
             <div style={{ padding: "40px 0", textAlign: "center", color: "var(--text-muted)" }}>

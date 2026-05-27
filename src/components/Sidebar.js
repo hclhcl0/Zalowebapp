@@ -7,7 +7,7 @@ import { CDC_LOGO_BASE64 } from "@/lib/logo";
 import { 
   LayoutDashboard, Users, Megaphone, Mail, 
   Newspaper, CalendarDays, AlertTriangle, 
-  Settings, UserCog, LogOut, ChevronRight, Download, BrainCircuit
+  Settings, UserCog, LogOut, ChevronRight, Download, BrainCircuit, KeyRound
 } from "lucide-react";
 
 // Helper to map string/emoji to Lucide icon component
@@ -114,6 +114,51 @@ export default function Sidebar() {
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
+
+  // Change Password State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState("");
+  const [isChangingPw, setIsChangingPw] = useState(false);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwError("");
+    setPwSuccess("");
+    
+    if (newPassword !== confirmPassword) {
+      setPwError("Mật khẩu xác nhận không khớp!");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPwError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      return;
+    }
+
+    setIsChangingPw(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Thất bại");
+      
+      setPwSuccess("Đổi mật khẩu thành công!");
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setShowPasswordModal(false), 2000);
+    } catch (err) {
+      setPwError(err.message);
+    } finally {
+      setIsChangingPw(false);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -255,13 +300,28 @@ export default function Sidebar() {
               {session?.user?.role === "admin" ? "Quản trị viên" : "Nhân viên"}
             </div>
           </div>
-          <button
-            className="logout-btn"
-            title="Đăng xuất"
-            onClick={() => signOut({ callbackUrl: "/login" })}
-          >
-            <LogOut size={18} />
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <button
+              className="logout-btn"
+              title="Đổi mật khẩu"
+              onClick={() => {
+                setShowPasswordModal(true);
+                setPwError("");
+                setPwSuccess("");
+              }}
+              style={{ padding: "6px", color: "var(--text)", background: "transparent", border: "1px solid var(--border)", borderRadius: "6px" }}
+            >
+              <KeyRound size={16} />
+            </button>
+            <button
+              className="logout-btn"
+              title="Đăng xuất"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              style={{ padding: "6px", color: "var(--danger)", background: "transparent", border: "1px solid var(--danger)", borderRadius: "6px", opacity: 0.8 }}
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -312,6 +372,78 @@ export default function Sidebar() {
               to { transform: translateY(0); }
             }
           `}} />
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.5)", zIndex: 99999,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          backdropFilter: "blur(2px)"
+        }} onClick={() => setShowPasswordModal(false)}>
+          <div style={{
+            background: "white", padding: "28px", borderRadius: "16px",
+            width: "90%", maxWidth: "400px",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+            animation: "slideUp 0.3s ease-out"
+          }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 20px 0", fontSize: "1.2rem", color: "var(--text)", display: "flex", alignItems: "center", gap: "8px" }}>
+              <KeyRound size={20} className="text-primary" />
+              Đổi mật khẩu
+            </h3>
+            
+            {pwSuccess && (
+              <div style={{ padding: "10px", background: "#f0fdf4", color: "#166534", borderRadius: "8px", marginBottom: "16px", fontSize: "0.9rem", border: "1px solid #bbf7d0" }}>
+                ✅ {pwSuccess}
+              </div>
+            )}
+            {pwError && (
+              <div style={{ padding: "10px", background: "#fef2f2", color: "#991b1b", borderRadius: "8px", marginBottom: "16px", fontSize: "0.9rem", border: "1px solid #fecaca" }}>
+                ⚠️ {pwError}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.9rem", fontWeight: 600 }}>Mật khẩu hiện tại</label>
+                <input 
+                  type="password" 
+                  value={oldPassword} 
+                  onChange={e => setOldPassword(e.target.value)}
+                  className="form-input" 
+                  required 
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.9rem", fontWeight: 600 }}>Mật khẩu mới</label>
+                <input 
+                  type="password" 
+                  value={newPassword} 
+                  onChange={e => setNewPassword(e.target.value)}
+                  className="form-input" 
+                  required 
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: "6px", fontSize: "0.9rem", fontWeight: 600 }}>Xác nhận mật khẩu mới</label>
+                <input 
+                  type="password" 
+                  value={confirmPassword} 
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className="form-input" 
+                  required 
+                />
+              </div>
+              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowPasswordModal(false)}>Hủy</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={isChangingPw}>
+                  {isChangingPw ? "Đang lưu..." : "Xác nhận"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </aside>
