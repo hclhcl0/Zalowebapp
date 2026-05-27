@@ -72,8 +72,16 @@ export async function POST(request) {
       content = data.value;
     } else if (ext === "txt" || ext === "md") {
       content = buffer.toString("utf-8");
+    } else if (ext === "xlsx" || ext === "xls" || ext === "csv") {
+      const xlsx = await import("xlsx");
+      const workbook = xlsx.read(buffer, { type: "buffer" });
+      for (const sheetName of workbook.SheetNames) {
+        const sheet = workbook.Sheets[sheetName];
+        const csv = xlsx.utils.sheet_to_csv(sheet);
+        content += `\n--- Bảng dữ liệu: ${sheetName} ---\n${csv}\n`;
+      }
     } else {
-      return NextResponse.json({ success: false, error: "Định dạng file không hỗ trợ. Chỉ hỗ trợ .pdf, .docx, .txt, .md" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Định dạng file không hỗ trợ. Chỉ hỗ trợ .pdf, .docx, .txt, .md, .xlsx, .csv" }, { status: 400 });
     }
     
     if (!content || content.trim() === "") {

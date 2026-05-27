@@ -45,7 +45,7 @@ export default function AiKnowledgePage() {
     e.preventDefault();
     const file = fileInputRef.current?.files[0];
     if (!file) {
-      alert("Vui lòng chọn file PDF, DOCX hoặc TXT!");
+      alert("Vui lòng chọn file PDF, DOCX, TXT, XLSX hoặc CSV!");
       return;
     }
 
@@ -203,11 +203,11 @@ export default function AiKnowledgePage() {
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Chọn File (Chỉ hỗ trợ .PDF, .DOCX, .TXT)</label>
+              <label className="form-label">Chọn File (Hỗ trợ .PDF, .DOCX, .TXT, .XLSX, .CSV)</label>
               <input
                 type="file"
                 className="form-input"
-                accept=".pdf,.docx,.txt,.md"
+                accept=".pdf,.docx,.txt,.md,.xlsx,.xls,.csv"
                 ref={fileInputRef}
                 required
                 style={{ padding: "8px", background: "var(--bg)" }}
@@ -224,7 +224,7 @@ export default function AiKnowledgePage() {
           </form>
 
           <div style={{ marginTop: "24px", fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.6, padding: "12px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", color: "#166534" }}>
-            <strong>💡 Mẹo:</strong> Tài liệu càng có cấu trúc rõ ràng thì AI học càng nhanh. File Word và PDF sẽ tự động được trích xuất thành văn bản thuần túy để AI có thể ghi nhớ.
+            <strong>💡 Mẹo:</strong> Tài liệu càng có cấu trúc rõ ràng thì AI học càng nhanh. File Word, PDF, Excel sẽ tự động được trích xuất thành văn bản (text/csv) để AI có thể ghi nhớ. Đặc biệt, dữ liệu bảng (Excel) rất hữu ích cho các bảng giá, lịch trực.
           </div>
         </div>
       </div>
