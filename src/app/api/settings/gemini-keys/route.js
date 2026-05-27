@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { clearApiKeyCache } from "@/lib/gemini";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +69,8 @@ export async function POST(request) {
       data: { label: label.trim(), apiKey: apiKey.trim(), isActive: true },
     });
 
+    clearApiKeyCache();
+
     return NextResponse.json({
       success: true,
       data: { id: newKey.id, label: newKey.label, maskedKey: maskKey(newKey.apiKey), isActive: newKey.isActive, createdAt: newKey.createdAt },
@@ -90,6 +93,7 @@ export async function PATCH(request) {
     if (!id) return NextResponse.json({ success: false, error: "Thiếu ID" }, { status: 400 });
 
     await prisma.geminiApiKey.update({ where: { id }, data: { isActive } });
+    clearApiKeyCache();
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
@@ -116,6 +120,7 @@ export async function DELETE(request) {
     }
 
     await prisma.geminiApiKey.delete({ where: { id } });
+    clearApiKeyCache();
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
