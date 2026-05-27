@@ -118,16 +118,16 @@ function cleanStaleConversations() {
 // ============================================================
 function stripMarkdown(text) {
   return text
-    .replace(/\*\*(.+?)\*\*/gs, "$1")      // **bold**
-    .replace(/\*(.+?)\*/gs, "$1")          // *italic*
-    .replace(/__(.+?)__/gs, "$1")          // __bold__
-    .replace(/_(.+?)_/gs, "$1")            // _italic_
+    .replace(/\*\*(.*?)\*\*/g, "$1")       // **bold** (không dùng cờ s để tránh lỗi đa dòng)
+    .replace(/\*(.*?)\*/g, "$1")           // *italic*
+    .replace(/__(.*?)__/g, "$1")           // __bold__
+    .replace(/_(.*?)_/g, "$1")             // _italic_
     .replace(/^#{1,6}\s+/gm, "")           // # Heading
-    .replace(/^>\s+/gm, "")               // > blockquote
-    .replace(/^\s*[-*]\s+/gm, "+ ")       // - bullet → + bullet
-    .replace(/\[(.+?)\]\(.+?\)/g, "$1")   // [text](url) → text
-    .replace(/`(.+?)`/g, "$1")            // `code`
-    .replace(/```[\s\S]*?```/g, "")       // ```code block```
+    .replace(/^>\s+/gm, "")                // > blockquote
+    .replace(/^\s*[-*]\s+/gm, "+ ")        // - bullet → + bullet
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1") // [text](url) → text
+    .replace(/`([^`]+)`/g, "$1")           // `code`
+    .replace(/```[\s\S]*?```/g, "")        // ```code block```
     .trim();
 }
 
@@ -166,10 +166,10 @@ QUY TẮC BẮT BUỘC — KHÔNG ĐƯỢC VI PHẠM:
 1. CHỈ trả lời dựa trên TÀI LIỆU CHUYÊN MÔN được cung cấp bên dưới. Không tự suy đoán thêm thông tin y tế ngoài tài liệu.
 2. Nếu câu hỏi KHÔNG liên quan đến y tế, dịch bệnh, sức khỏe hoặc dịch vụ của CDC Đà Nẵng, hãy trả lời: "Xin lỗi, tôi chỉ có thể hỗ trợ các vấn đề liên quan đến y tế và dịch vụ của CDC Đà Nẵng. Để được tư vấn thêm, vui lòng liên hệ CDC qua hotline ${hotline}."
 3. Nếu tài liệu KHÔNG CÓ ĐỦ thông tin để trả lời chính xác, hãy nói: "Về vấn đề này, tôi đề nghị bạn liên hệ trực tiếp CDC Đà Nẵng qua hotline ${hotline} hoặc đến địa chỉ ${address} để được giải đáp chính xác nhất."
-4. TUYỆT ĐỐI không dùng bất kỳ ký tự Markdown nào: không dùng *, **, _, __, #, ##, >, ---. Đây là quy tắc bắt buộc vì Zalo không hiển thị được Markdown.
+4. TUYỆT ĐỐI không dùng bất kỳ ký tự Markdown nào (như *, **, _, __, #, ##, >, ---). Không dùng các ký hiệu toán học hoặc ký tự lạ (như °, ℃), hãy viết rõ bằng chữ (ví dụ: độ C).
 5. Dùng số thứ tự (1. 2. 3.) hoặc ký tự + để liệt kê thay cho dấu gạch -.
 6. Trả lời bằng tiếng Việt, ngôn ngữ thân thiện và dễ hiểu, phù hợp với người dân bình thường.
-7. Câu trả lời nên ngắn gọn, súc tích, dưới 600 ký tự nếu có thể.
+7. ĐẢM BẢO câu trả lời được viết TRỌN VẸN, KHÔNG bao giờ bị cắt cụt hay bỏ lửng giữa chừng.
 8. Luôn kết thúc bằng thông tin liên hệ CDC nếu người dân cần hỗ trợ thêm (Địa chỉ: ${address} - Hotline: ${hotline}).
 
 TÀI LIỆU CHUYÊN MÔN:
@@ -198,7 +198,7 @@ ${knowledgeText || \`(Hệ thống chưa có tài liệu chuyên môn. Vui lòng
     contents,
     config: {
       systemInstruction,
-      maxOutputTokens: 800,
+      maxOutputTokens: 2048,
       temperature: 0.3,  // Thấp hơn = trả lời nhất quán, ít sáng tạo
     }
   });
