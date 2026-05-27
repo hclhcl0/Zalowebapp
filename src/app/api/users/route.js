@@ -25,6 +25,7 @@ export async function GET() {
         username: true,
         fullName: true,
         role: true,
+        department: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
@@ -45,7 +46,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { username, password, fullName, role } = body;
+    const { username, password, fullName, role, department } = body;
 
     if (!username || !password || !fullName || !role) {
       return NextResponse.json({ error: "Thiếu thông tin bắt buộc" }, { status: 400 });
@@ -69,12 +70,14 @@ export async function POST(request) {
         password: hashedPassword,
         fullName,
         role, // "admin" | "staff"
+        department: role === "staff" ? department : null,
       },
       select: {
         id: true,
         username: true,
         fullName: true,
         role: true,
+        department: true,
         createdAt: true,
       },
     });

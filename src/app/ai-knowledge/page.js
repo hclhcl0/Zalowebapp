@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, FileText, Upload, BrainCircuit } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function AiKnowledgePage() {
+  const { data: session } = useSession();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -31,6 +33,13 @@ export default function AiKnowledgePage() {
     fetchDocuments();
   }, []);
 
+  // Update category if staff has a department
+  useEffect(() => {
+    if (session?.user?.role === "staff" && session?.user?.department) {
+      setCategory(session.user.department);
+    }
+  }, [session]);
+
   const handleUpload = async (e) => {
     e.preventDefault();
     const file = fileInputRef.current?.files[0];
@@ -54,7 +63,9 @@ export default function AiKnowledgePage() {
       if (json.success) {
         alert("Thêm tài liệu thành công!");
         setTitle("");
-        setCategory("Dịch tễ");
+        if (session?.user?.role !== "staff") {
+          setCategory("Dịch tễ");
+        }
         if (fileInputRef.current) fileInputRef.current.value = "";
         fetchDocuments();
       } else {
@@ -167,8 +178,14 @@ export default function AiKnowledgePage() {
                 placeholder="VD: Tiêm chủng, Dịch tễ, Khám bệnh..."
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                disabled={session?.user?.role === "staff"}
                 required
               />
+              {session?.user?.role === "staff" && (
+                <p style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px" }}>
+                  * Tự động gán theo phòng ban của bạn.
+                </p>
+              )}
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>

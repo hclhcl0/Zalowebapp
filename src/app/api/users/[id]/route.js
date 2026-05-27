@@ -21,7 +21,7 @@ export async function PUT(request, { params }) {
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
     const body = await request.json();
-    const { fullName, role, password } = body;
+    const { fullName, role, password, department } = body;
 
     const existingUser = await prisma.admin.findUnique({
       where: { id },
@@ -38,7 +38,15 @@ export async function PUT(request, { params }) {
 
     const updateData = {};
     if (fullName) updateData.fullName = fullName;
-    if (role) updateData.role = role;
+    if (role) {
+      updateData.role = role;
+      if (role === "admin") {
+        updateData.department = null; // Admin không cần phòng ban
+      }
+    }
+    if (department !== undefined && updateData.role !== "admin" && existingUser.role !== "admin") {
+      updateData.department = department; // Cập nhật phòng ban cho staff
+    }
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
@@ -51,6 +59,7 @@ export async function PUT(request, { params }) {
         username: true,
         fullName: true,
         role: true,
+        department: true,
       },
     });
 

@@ -17,6 +17,7 @@ export default function UserManagementPage() {
   const [formUsername, setFormUsername] = useState("");
   const [formPassword, setFormPassword] = useState("");
   const [formRole, setFormRole] = useState("staff");
+  const [formDepartment, setFormDepartment] = useState("");
   
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -48,6 +49,7 @@ export default function UserManagementPage() {
     setFormUsername("");
     setFormPassword("");
     setFormRole("staff");
+    setFormDepartment("");
     setErrorMsg("");
     setSuccessMsg("");
     setIsModalOpen(true);
@@ -59,6 +61,7 @@ export default function UserManagementPage() {
     setFormUsername(user.username);
     setFormPassword(""); // Don't show password
     setFormRole(user.role);
+    setFormDepartment(user.department || "");
     setErrorMsg("");
     setSuccessMsg("");
     setIsModalOpen(true);
@@ -83,6 +86,7 @@ export default function UserManagementPage() {
         fullName: formFullName,
         username: formUsername,
         role: formRole,
+        ...(formRole === "staff" && { department: formDepartment }),
         ...(formPassword && { password: formPassword }),
       };
 
@@ -214,6 +218,7 @@ export default function UserManagementPage() {
                     <th style={{ padding: "12px 8px" }}>Họ và tên</th>
                     <th style={{ padding: "12px 8px" }}>Tên đăng nhập</th>
                     <th style={{ padding: "12px 8px", width: "150px" }}>Vai trò</th>
+                    <th style={{ padding: "12px 8px" }}>Phòng ban</th>
                     <th style={{ padding: "12px 8px", width: "180px" }}>Ngày tạo</th>
                     <th style={{ padding: "12px 8px", width: "180px" }}>Thao tác</th>
                   </tr>
@@ -248,6 +253,9 @@ export default function UserManagementPage() {
                               👥 Nhân viên
                             </span>
                           )}
+                        </td>
+                        <td style={{ padding: "16px 8px", fontSize: "0.85rem", color: "var(--text)" }}>
+                          {u.department || "-"}
                         </td>
                         <td style={{ padding: "16px 8px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
                           {new Date(u.createdAt).toLocaleDateString("vi-VN")}
@@ -319,6 +327,9 @@ export default function UserManagementPage() {
                             <span className="user-badge" style={{ background: "#f3e8ff", color: "#6b21a8", border: "1px solid #d8b4fe", fontSize: "0.65rem", padding: "1px 5px" }}>Admin</span>
                           ) : (
                             <span className="user-badge user-badge-staff" style={{ fontSize: "0.65rem", padding: "1px 5px" }}>Nhân viên</span>
+                          )}
+                          {u.department && (
+                            <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginLeft: "4px" }}>• {u.department}</span>
                           )}
                         </div>
                       </div>
@@ -416,6 +427,21 @@ export default function UserManagementPage() {
                   <option value="admin">Quản trị viên</option>
                 </select>
               </div>
+
+              {formRole === "staff" && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="user-department">Phòng ban (Chuyên môn)</label>
+                  <input
+                    id="user-department"
+                    type="text"
+                    className="form-input"
+                    value={formDepartment}
+                    onChange={(e) => setFormDepartment(e.target.value)}
+                    placeholder="VD: Khoa Dịch Tễ"
+                    required
+                  />
+                </div>
+              )}
 
               <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
                 <button type="button" className="btn btn-outline" onClick={() => setIsModalOpen(false)} disabled={actionLoading}>

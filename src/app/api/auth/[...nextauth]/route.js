@@ -28,6 +28,7 @@ export const authOptions = {
           name: admin.fullName,
           email: admin.username,
           role: admin.role,
+          department: admin.department,
         };
       },
     }),
@@ -36,12 +37,14 @@ export const authOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
+        token.department = user.department;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.role = token.role;
+        session.user.department = token.department;
       }
       return session;
     },

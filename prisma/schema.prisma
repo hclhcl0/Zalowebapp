@@ -20,8 +20,9 @@ model Admin {
   username  String   @unique
   password  String   // Lưu dạng hash (bcrypt)
   fullName  String
-  role      String   @default("staff") // "admin" | "staff"
-  createdAt DateTime @default(now())
+  role       String   @default("staff") // "admin" | "staff"
+  department String?  // Phòng ban quản lý (Ví dụ: "Khoa Dịch Tễ")
+  createdAt  DateTime @default(now())
 }
 
 // ============================================================
