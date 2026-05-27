@@ -1,57 +1,51 @@
 /**
  * ZALO WEBHOOK ENDPOINT
  * Route: POST /api/zalo/webhook
- * 
- * Khi có sự kiện (tin nhắn mới, follow, unfollow...) xảy ra trên Zalo OA,
- * Zalo sẽ gửi dữ liệu JSON đến URL này.
- * 
- * Cấu hình URL này tại: https://developers.zalo.me/
- * → Chọn ứng dụng của bạn → OA → Webhook
- * 
- * URL Webhook khi deploy: https://yourdomain.com/api/zalo/webhook
+ *
+ * Nhận sự kiện từ Zalo OA (tin nhắn, follow, unfollow...).
+ * Dùng after() của Next.js để xử lý AI trong nền, tránh timeout 5 giây của Zalo.
+ *
+ * Cấu hình URL tại: https://developers.zalo.me/ → App → OA → Webhook
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendTextMessage } from "@/lib/zalo";
+import { askGemini } from "@/lib/gemini";
 
 export const dynamic = "force-dynamic";
-import { sendTextMessage } from "@/lib/zalo";
-import crypto from "crypto";
 
 // ============================================================
-// GET: Xác minh Webhook với Zalo (Bước đầu tiên khi cấu hình)
+// GET: Xác minh Webhook với Zalo
 // ============================================================
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const verifyToken = searchParams.get("challenge");
+  const challenge = searchParams.get("challenge");
 
-  // Zalo gửi một chuỗi "challenge", chúng ta trả lại y nguyên để xác minh
-  if (verifyToken) {
-    return new NextResponse(verifyToken, { status: 200 });
+  if (challenge) {
+    return new NextResponse(challenge, { status: 200 });
   }
 
-  return NextResponse.json({ status: "Zalo Webhook is running" });
+  return NextResponse.json({ status: "Zalo AI Webhook is running" });
 }
 
 // ============================================================
 // POST: Nhận sự kiện từ Zalo
 // ============================================================
 export async function POST(request) {
+  // Đọc body TRƯỚC khi gọi after() (request stream chỉ đọc được 1 lần)
+  let body = {};
   try {
-    let body = {};
+    body = await request.json();
+  } catch (e) {
+    console.warn("[ZALO WEBHOOK] Body không hợp lệ:", e.message);
+  }
+
+  const { event_name, user_id_by_app, message, timestamp } = body;
+
+  // Lưu log vào DB (không chặn response)
+  after(async () => {
     try {
-      body = await request.json();
-    } catch (e) {
-      console.warn("[ZALO WEBHOOK] Non-JSON or empty body received:", e.message);
-    }
-
-    const { event_name, user_id_by_app, message, timestamp } = body;
-
-    console.log("[ZALO WEBHOOK]", JSON.stringify(body, null, 2));
-
-    // Luôn bắt lỗi DB riêng để không làm sập webhook
-    try {
-      // Lưu log toàn bộ sự kiện vào database
       await prisma.messageLog.create({
         data: {
           zaloUserId: user_id_by_app || "unknown",
@@ -63,24 +57,21 @@ export async function POST(request) {
         },
       });
     } catch (dbErr) {
-      console.error("[ZALO WEBHOOK DB ERROR]", dbErr);
+      console.error("[ZALO WEBHOOK DB ERROR]", dbErr.message);
     }
 
-    // Xử lý các loại sự kiện (chỉ khi có event_name)
+    // Xử lý từng loại sự kiện trong nền
     if (event_name) {
       try {
         switch (event_name) {
-          // Người dùng nhắn tin
           case "user_send_text":
             await handleTextMessage(user_id_by_app, message?.text);
             break;
 
-          // Người dùng mới theo dõi OA
           case "follow":
-            await handleFollow(user_id_by_app, body, request);
+            await handleFollow(user_id_by_app, body);
             break;
 
-          // Người dùng bỏ theo dõi OA
           case "unfollow":
             await handleUnfollow(user_id_by_app);
             break;
@@ -89,34 +80,31 @@ export async function POST(request) {
             console.log(`[ZALO WEBHOOK] Unhandled event: ${event_name}`);
         }
       } catch (procErr) {
-        console.error("[ZALO WEBHOOK PROCESS ERROR]", procErr);
+        console.error("[ZALO WEBHOOK PROCESS ERROR]", procErr.message);
       }
     }
+  });
 
-    // Trả về 200 OK để Zalo biết đã nhận thành công
-    return NextResponse.json({ error: 0, status: "success" });
-  } catch (err) {
-    console.error("[ZALO WEBHOOK CRITICAL ERROR]", err);
-    // Luôn trả về 200 OK để xác minh webhook thành công ngay cả khi có lỗi cực kỳ nghiêm trọng
-    return NextResponse.json({ error: 0, warning: err.message });
-  }
+  // Trả về 200 OK NGAY LẬP TỨC để Zalo không báo lỗi timeout
+  return NextResponse.json({ error: 0, status: "received" });
 }
 
 // ============================================================
-// Xử lý: Người dùng gửi tin nhắn văn bản
+// Xử lý: Tin nhắn văn bản — Chuyển toàn bộ qua Gemini AI
 // ============================================================
 async function handleTextMessage(userId, text) {
-  if (!text) return;
-  const lowerText = text.toLowerCase().trim();
+  if (!userId || !text) return;
+  const trimmedText = text.trim();
+  if (!trimmedText) return;
 
-  // Đảm bảo người dùng có trong cơ sở dữ liệu (phòng trường hợp lỗi lúc Follow)
+  // Đảm bảo người dùng có trong DB (cập nhật profile Zalo)
   try {
     const { getUserProfile } = await import("@/lib/zalo");
     const profile = await getUserProfile(userId);
-    if (profile && !profile.error && profile.data) {
+    if (profile?.data) {
       await prisma.follower.upsert({
         where: { zaloUserId: userId },
-        update: { 
+        update: {
           displayName: profile.data.display_name,
           avatarUrl: profile.data.avatar,
         },
@@ -128,92 +116,81 @@ async function handleTextMessage(userId, text) {
       });
     }
   } catch (e) {
-    console.error("[ZALO WEBHOOK] Lỗi cập nhật profile khi nhận tin nhắn:", e);
+    console.error("[ZALO WEBHOOK] Lỗi cập nhật profile:", e.message);
   }
 
-  // Từ khoá kích hoạt chatbot tự động
-  if (lowerText.includes("đặt lịch") || lowerText.includes("tiêm chủng")) {
-    await sendTextMessage(
-      userId,
-      "Để đặt lịch tiêm chủng, bạn vui lòng truy cập Mini App của chúng tôi hoặc gọi đường dây hỗ trợ 0236.xxx.xxxx. Nhân viên sẽ hỗ trợ bạn nhanh chóng! 💉"
-    );
-  } else if (lowerText.includes("kết quả") || lowerText.includes("xét nghiệm")) {
-    await sendTextMessage(
-      userId,
-      "Để tra cứu kết quả xét nghiệm, vui lòng cung cấp mã tra cứu theo cú pháp: KQ [MÃ_CỦA_BẠN]\nVí dụ: KQ 12345 🔍"
-    );
-  } else if (lowerText.startsWith("kq ")) {
-    const code = text.split(" ")[1];
+  // Lệnh đặc biệt: Tra cứu kết quả xét nghiệm (KQ <mã>)
+  const lowerText = trimmedText.toLowerCase();
+  if (lowerText.startsWith("kq ") && trimmedText.split(" ").length >= 2) {
+    const code = trimmedText.split(" ")[1];
     await handleTestResultLookup(userId, code);
-  } else if (lowerText.includes("giá") || lowerText.includes("bảng giá")) {
+    return;
+  }
+
+  // Lệnh đặc biệt: Đặt lại hội thoại
+  if (lowerText === "reset" || lowerText === "bắt đầu lại" || lowerText === "bắt đầu") {
+    const { clearUserHistory } = await import("@/lib/gemini");
+    clearUserHistory(userId);
     await sendTextMessage(
       userId,
-      "Bảng giá dịch vụ CDC Đà Nẵng:\n💊 Tiêm vắc xin cúm: 220.000đ\n🩺 Xét nghiệm HIV: 80.000đ\n🔬 Xét nghiệm viêm gan B: 65.000đ\n\nXem đầy đủ tại: https://sender.ksbtdanang.vn/"
+      "Xin chào! Tôi là Trợ lý AI của CDC Đà Nẵng. Bạn có thể hỏi tôi về phòng chống dịch bệnh, vắc-xin, an toàn thực phẩm và các dịch vụ y tế của CDC.\n\nHotline hỗ trợ: 0236.3822.116"
     );
-  } else {
-    // Tin nhắn không khớp từ khoá → trả lời mặc định
+    return;
+  }
+
+  // Tất cả tin nhắn còn lại → Xử lý bằng Gemini AI
+  try {
+    console.log(`[Gemini] Xử lý câu hỏi từ ${userId}: "${trimmedText.substring(0, 100)}"`);
+    const aiReply = await askGemini(userId, trimmedText);
+    await sendTextMessage(userId, aiReply);
+    console.log(`[Gemini] Đã trả lời ${userId} (${aiReply.length} ký tự)`);
+  } catch (err) {
+    console.error("[Gemini] Lỗi khi gọi AI:", err.message);
+    // Fallback thân thiện khi AI lỗi
     await sendTextMessage(
       userId,
-      "Xin chào! Tôi là trợ lý tự động của CDC Đà Nẵng 🏥\nBạn có thể hỏi về:\n• Đặt lịch tiêm chủng\n• Tra cứu kết quả xét nghiệm\n• Bảng giá dịch vụ\n\nHoặc gọi đường dây nóng: 0236.xxx.xxxx"
+      "Xin lỗi, hệ thống đang gặp sự cố nhỏ. Vui lòng thử lại sau hoặc liên hệ trực tiếp CDC Đà Nẵng qua hotline 0236.3822.116 để được hỗ trợ nhanh nhất."
     );
   }
 }
 
 // ============================================================
-// Xử lý: Người dùng mới theo dõi OA
+// Xử lý: Người dùng mới theo dõi OA — Gửi tin chào mừng
 // ============================================================
-async function handleFollow(userId, data, request) {
-  // Zalo webhook đôi khi không có sẵn display_name trong payload, cần gọi API lấy profile
+async function handleFollow(userId, data) {
   let displayName = data.follower?.display_name || "Người dùng Zalo";
   let avatarUrl = data.follower?.avatar || null;
 
   try {
     const { getUserProfile } = await import("@/lib/zalo");
     const profile = await getUserProfile(userId);
-    if (profile && !profile.error && profile.data) {
+    if (profile?.data) {
       displayName = profile.data.display_name || displayName;
       avatarUrl = profile.data.avatar || avatarUrl;
     }
   } catch (err) {
-    console.error("[ZALO WEBHOOK] Error fetching user profile:", err);
+    console.error("[ZALO WEBHOOK] Lỗi lấy profile follow:", err.message);
   }
 
-  // Lưu hoặc cập nhật follower vào database
+  // Lưu hoặc cập nhật follower vào DB
   await prisma.follower.upsert({
     where: { zaloUserId: userId },
-    update: { 
-      displayName: displayName,
-      ...(avatarUrl && { avatarUrl })
-    },
-    create: {
-      zaloUserId: userId,
-      displayName: displayName,
-      avatarUrl: avatarUrl,
-    },
+    update: { displayName, ...(avatarUrl && { avatarUrl }) },
+    create: { zaloUserId: userId, displayName, avatarUrl },
   });
 
-  // Lấy base URL từ request headers để đảm bảo link luôn trỏ về đúng domain đang chạy
-  // Nếu có biến môi trường NEXT_PUBLIC_APP_URL thì ưu tiên dùng
-  // (Vì request.headers đôi khi trong webhook không chứa port chuẩn nếu config qua Nginx/Ngrok)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  let baseUrl = "https://zalo-cdc-test.vercel.app";
-  if (appUrl) {
-    baseUrl = appUrl;
-  } else if (request && request.headers.get("host")) {
-    const proto = request.headers.get("x-forwarded-proto") || "https";
-    baseUrl = `${proto}://${request.headers.get("host")}`;
-  }
+  // Gửi tin chào mừng
+  const welcomeMsg =
+    `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm Zalo OA CDC Đà Nẵng.\n\n` +
+    `Tôi là Trợ lý AI sẵn sàng giải đáp thắc mắc của bạn về:\n` +
+    `+ Phòng chống dịch bệnh (sốt xuất huyết, cúm, COVID-19...)\n` +
+    `+ Dịch vụ tiêm chủng và lịch vaccine\n` +
+    `+ An toàn thực phẩm\n` +
+    `+ HIV/AIDS và các bệnh truyền nhiễm\n\n` +
+    `Hotline CDC Đà Nẵng: 0236.3822.116\n` +
+    `Hỏi tôi bất cứ điều gì về sức khỏe và dịch vụ CDC!`;
 
-  const staffLink = `${baseUrl}/register?uid=${userId}`;
-  const patientLink = `${baseUrl}/patient-register?uid=${userId}`;
-
-  const welcomeMessage = `Xin chào! Cảm ơn bạn đã quan tâm đến Zalo OA của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng) 🏥\n\n` + 
-    `Để chúng tôi phục vụ tốt nhất, vui lòng xác nhận bạn là Khách hàng hay Nhân viên CDC bằng cách bấm vào 1 trong 2 link dưới đây:\n\n` +
-    `▶️ DÀNH CHO KHÁCH HÀNG (Nhận kết quả xét nghiệm, tiêm chủng):\n${patientLink}\n\n` +
-    `▶️ DÀNH CHO NHÂN VIÊN CDC (Nhận thông tin nội bộ, cập nhật khác):\n${staffLink}\n\n` +
-    `Lưu ý: Chỉ cần đăng ký 1 lần duy nhất để hệ thống tự động nhận diện.`;
-
-  await sendTextMessage(userId, welcomeMessage);
+  await sendTextMessage(userId, welcomeMsg);
 }
 
 // ============================================================
@@ -221,34 +198,34 @@ async function handleFollow(userId, data, request) {
 // ============================================================
 async function handleUnfollow(userId) {
   try {
-    // Tìm liên kết nhân viên xem có tồn tại không
-    const link = await prisma.staffZaloLink.findUnique({
-      where: { zaloUserId: userId },
-    });
-
+    // Xóa liên kết nhân viên nếu có
+    const link = await prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } });
     if (link) {
-      console.log(`[WEBHOOK] Unfollow: Tự động xóa liên kết của nhân viên ${link.staffNameRaw} (${userId})`);
-      await prisma.staffZaloLink.delete({
-        where: { zaloUserId: userId },
-      });
+      await prisma.staffZaloLink.delete({ where: { zaloUserId: userId } });
+      console.log(`[WEBHOOK] Xóa liên kết nhân viên: ${link.staffNameRaw} (${userId})`);
     }
 
-    // Reset loại người dùng về citizen trong bảng Follower
+    // Reset loại người dùng về citizen
     await prisma.follower.update({
       where: { zaloUserId: userId },
       data: { userType: "citizen", department: null, phone: null },
     }).catch(() => {});
 
-    console.log(`[WEBHOOK] User unfollowed and cleaned up successfully: ${userId}`);
+    // Xóa lịch sử hội thoại AI
+    const { clearUserHistory } = await import("@/lib/gemini");
+    clearUserHistory(userId);
+
+    console.log(`[WEBHOOK] Unfollow xử lý xong: ${userId}`);
   } catch (e) {
-    console.error(`[WEBHOOK] Error handling unfollow for ${userId}:`, e);
+    console.error(`[WEBHOOK] Lỗi xử lý unfollow ${userId}:`, e.message);
   }
 }
 
 // ============================================================
-// Xử lý: Tra cứu kết quả xét nghiệm tự động
+// Xử lý: Tra cứu kết quả xét nghiệm (lệnh KQ <mã>)
 // ============================================================
 async function handleTestResultLookup(userId, code) {
+  if (!code) return;
   const result = await prisma.testResult.findUnique({
     where: { resultCode: code.toUpperCase() },
   });
@@ -256,12 +233,16 @@ async function handleTestResultLookup(userId, code) {
   if (result) {
     await sendTextMessage(
       userId,
-      `🔬 Kết quả xét nghiệm - Mã: ${result.resultCode}\n👤 Họ tên: ${result.fullName}\n📅 Ngày xét nghiệm: ${new Date(result.testedAt).toLocaleDateString("vi-VN")}\n📋 Kết quả:\n${result.content}`
+      `Kết quả xét nghiệm - Mã: ${result.resultCode}\n` +
+      `Họ tên: ${result.fullName}\n` +
+      `Ngày xét nghiệm: ${new Date(result.testedAt).toLocaleDateString("vi-VN")}\n` +
+      `Kết quả:\n${result.content}`
     );
   } else {
     await sendTextMessage(
       userId,
-      `❌ Không tìm thấy kết quả với mã "${code}".\nVui lòng kiểm tra lại mã tra cứu hoặc liên hệ 0236.xxx.xxxx để được hỗ trợ.`
+      `Không tìm thấy kết quả với mã "${code.toUpperCase()}".\n` +
+      `Vui lòng kiểm tra lại mã tra cứu hoặc liên hệ CDC Đà Nẵng: 0236.3822.116`
     );
   }
 }
