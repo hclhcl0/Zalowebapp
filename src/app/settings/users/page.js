@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { CDC_DEPARTMENTS } from "@/lib/departments";
 
 export default function UserManagementPage() {
   const { data: session } = useSession();
@@ -431,15 +432,19 @@ export default function UserManagementPage() {
               {formRole === "staff" && (
                 <div className="form-group">
                   <label className="form-label" htmlFor="user-department">Phòng ban (Chuyên môn)</label>
-                  <input
+                  <select
                     id="user-department"
-                    type="text"
                     className="form-input"
                     value={formDepartment}
                     onChange={(e) => setFormDepartment(e.target.value)}
-                    placeholder="VD: Khoa Dịch Tễ"
                     required
-                  />
+                    style={{ cursor: "pointer" }}
+                  >
+                    <option value="">-- Chọn đơn vị công tác --</option>
+                    {CDC_DEPARTMENTS.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
               )}
 

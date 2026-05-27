@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, FileText, Upload, BrainCircuit } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { CDC_DEPARTMENTS } from "@/lib/departments";
 
 export default function AiKnowledgePage() {
   const { data: session } = useSession();
@@ -11,7 +12,7 @@ export default function AiKnowledgePage() {
   const [uploading, setUploading] = useState(false);
   
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("Dịch tễ");
+  const [category, setCategory] = useState(CDC_DEPARTMENTS[0]);
   const fileInputRef = useRef(null);
 
   const fetchDocuments = async () => {
@@ -64,7 +65,7 @@ export default function AiKnowledgePage() {
         alert("Thêm tài liệu thành công!");
         setTitle("");
         if (session?.user?.role !== "staff") {
-          setCategory("Dịch tễ");
+          setCategory(CDC_DEPARTMENTS[0]);
         }
         if (fileInputRef.current) fileInputRef.current.value = "";
         fetchDocuments();
@@ -172,15 +173,18 @@ export default function AiKnowledgePage() {
 
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Chuyên môn (Tag)</label>
-              <input
-                type="text"
+              <select
                 className="form-input"
-                placeholder="VD: Tiêm chủng, Dịch tễ, Khám bệnh..."
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disabled={session?.user?.role === "staff"}
                 required
-              />
+                style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
+              >
+                {CDC_DEPARTMENTS.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
               {session?.user?.role === "staff" && (
                 <p style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px" }}>
                   * Tự động gán theo phòng ban của bạn.

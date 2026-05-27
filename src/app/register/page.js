@@ -3,27 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CDC_LOGO_BASE64 } from "@/lib/logo";
 
-// ============================================================
-// DANH SÁCH PHÒNG BAN CDC ĐÀ NẴNG
-// ============================================================
-const DEPARTMENTS = [
-  "Phòng chống bệnh truyền nhiễm",
-  "Kiểm dịch Y tế quốc tế",
-  "Ký sinh trùng - Côn trùng",
-  "Phòng chống bệnh không lây nhiễm",
-  "Sức khoẻ môi trường - YTTH",
-  "Sức khoẻ sinh sản",
-  "Dinh dưỡng",
-  "Phòng chống HIV/AIDS - ĐTNC",
-  "Truyền thông giáo dục sức khoẻ",
-  "Phòng khám đa khoa",
-  "Bệnh nghề nghiệp",
-  "Xét nghiệm – CĐHA - TDCN",
-  "Dược – VTYT",
-  "Tổ chức - Hành chính",
-  "Tài chính - Kế toán",
-  "Kế hoạch - Nghiệp vụ"
-];
+import { CDC_DEPARTMENTS } from "@/lib/departments";
 
 // ============================================================
 // SVG LOGO CDC
@@ -378,7 +358,7 @@ function RegisterForm() {
                     style={{ cursor: "pointer" }}
                   >
                     <option value="">-- Chọn đơn vị công tác --</option>
-                    {DEPARTMENTS.map(d => (
+                    {CDC_DEPARTMENTS.map(d => (
                       <option key={d} value={d}>{d}</option>
                     ))}
                   </select>
