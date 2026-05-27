@@ -180,3 +180,15 @@ model GeminiApiKey {
   isActive  Boolean  @default(true)  // Có đang kích hoạt không
   createdAt DateTime @default(now())
 }
+
+// ============================================================
+// PHẦN 10: DANH SÁCH API KEY GROQ (Round-Robin Pool)
+// ============================================================
+
+model GroqApiKey {
+  id        Int      @id @default(autoincrement())
+  label     String   // Tên gợi nhớ
+  apiKey    String   // Giá trị API Key
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

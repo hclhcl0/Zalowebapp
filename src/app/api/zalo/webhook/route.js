@@ -138,10 +138,11 @@ async function handleTextMessage(userId, text) {
     return;
   }
 
-  // Tất cả tin nhắn còn lại → Xử lý bằng Gemini AI
+  // Tất cả tin nhắn còn lại → Xử lý bằng AI
   try {
-    console.log(`[Gemini] Xử lý câu hỏi từ ${userId}: "${trimmedText.substring(0, 100)}"`);
-    const aiReply = await askGemini(userId, trimmedText);
+    console.log(`[AI] Xử lý câu hỏi từ ${userId}: "${trimmedText.substring(0, 100)}"`);
+    const { askAI } = await import("@/lib/gemini");
+    const aiReply = await askAI(userId, trimmedText);
     await sendTextMessage(userId, aiReply);
     console.log(`[Gemini] Đã trả lời ${userId} (${aiReply.length} ký tự)`);
   } catch (err) {

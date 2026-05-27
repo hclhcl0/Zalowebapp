@@ -88,10 +88,10 @@ const SETTING_GROUPS = [
     fields: [],
   },
   {
-    id: "gemini_keys",
+    id: "ai_config",
     icon: "🤖",
-    title: "Gemini AI Keys (Xoay vòng)",
-    desc: "Quản lý danh sách API Key Gemini. Hệ thống sẽ tự động luân phiên các key để tối đa tốc độ và tránh lỗi rate limit.",
+    title: "Cấu hình AI (Gemini / Groq)",
+    desc: "Lựa chọn nhà cung cấp AI và quản lý danh sách API Key. Hệ thống sẽ tự động luân phiên các key để tránh lỗi rate limit.",
     fields: [],
   },
 ];
@@ -200,6 +200,79 @@ function SettingsPageContent() {
     }
   };
 
+  // Groq API Keys Pool states
+  const [groqKeys, setGroqKeys] = useState([]);
+  const [groqKeysLoading, setGroqKeysLoading] = useState(false);
+  const [newGroqLabel, setNewGroqLabel] = useState("");
+  const [newGroqKey, setNewGroqKey] = useState("");
+  const [showNewGroqKey, setShowNewGroqKey] = useState(false);
+  const [groqKeyMsg, setGroqKeyMsg] = useState(null);
+  const [addingGroqKey, setAddingGroqKey] = useState(false);
+
+  const fetchGroqKeys = async () => {
+    setGroqKeysLoading(true);
+    try {
+      const res = await fetch("/api/settings/groq-keys");
+      const json = await res.json();
+      if (json.success) setGroqKeys(json.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setGroqKeysLoading(false);
+    }
+  };
+
+  const handleAddGroqKey = async () => {
+    if (!newGroqLabel.trim() || !newGroqKey.trim()) {
+      setGroqKeyMsg({ type: "error", text: "Vui lòng nhập cả tên gợi nhớ và API Key." });
+      return;
+    }
+    setAddingGroqKey(true);
+    setGroqKeyMsg(null);
+    try {
+      const res = await fetch("/api/settings/groq-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: newGroqLabel, apiKey: newGroqKey }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setGroqKeyMsg({ type: "success", text: "Đã thêm API Key thành công!" });
+        setNewGroqLabel("");
+        setNewGroqKey("");
+        fetchGroqKeys();
+      } else {
+        setGroqKeyMsg({ type: "error", text: json.error || "Thêm key thất bại" });
+      }
+    } catch (e) {
+      setGroqKeyMsg({ type: "error", text: "Lỗi kết nối server." });
+    } finally {
+      setAddingGroqKey(false);
+    }
+  };
+
+  const handleToggleGroqKey = async (id, isActive) => {
+    try {
+      await fetch("/api/settings/groq-keys", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, isActive: !isActive }),
+      });
+      fetchGroqKeys();
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteGroqKey = async (id) => {
+    if (!confirm("Bạn có chắc muốn xóa API Key này không?")) return;
+    const res = await fetch(`/api/settings/groq-keys?id=${id}`, { method: "DELETE" });
+    const json = await res.json();
+    if (json.success) {
+      fetchGroqKeys();
+    } else {
+      alert("Lỗi: " + json.error);
+    }
+  };
+
   // Load Gmail configuration from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -219,10 +292,11 @@ function SettingsPageContent() {
     }
   }, []);
 
-  // Load Gemini API Keys khi chuyển sang tab gemini_keys
+  // Load AI Keys khi chuyển sang tab ai_config
   useEffect(() => {
-    if (activeTab === "gemini_keys") {
+    if (activeTab === "ai_config") {
       fetchGeminiKeys();
+      fetchGroqKeys();
     }
   }, [activeTab]);
 
@@ -1033,7 +1107,25 @@ function SettingsPageContent() {
               )}
 
               {/* UI cho tab Gemini AI Keys */}
-              {activeGroup.id === "gemini_keys" && (
+              {activeGroup.id === "ai_config" && (
+  <div style={{ marginTop: "20px", borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
+    <div style={{ marginBottom: "24px" }}>
+      <div style={{ fontWeight: 700, marginBottom: "12px", fontSize: "0.875rem" }}>⚙️ Chọn Nhà Cung Cấp AI Chính</div>
+      <div style={{ display: "flex", gap: "16px" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+          <input type="radio" name="aiProvider" value="gemini" checked={values.ai_provider === "gemini" || !values.ai_provider} onChange={() => { handleChange("ai_provider", "gemini"); }} />
+          <span>Google Gemini</span>
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+          <input type="radio" name="aiProvider" value="groq" checked={values.ai_provider === "groq"} onChange={() => { handleChange("ai_provider", "groq"); }} />
+          <span>Groq (Llama-3)</span>
+        </label>
+      </div>
+    </div>
+
+    {(!values.ai_provider || values.ai_provider === "gemini") && (
+      <div>
+
                 <div style={{ marginTop: "20px", borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
 
                   {/* Thông báo */}
