@@ -207,9 +207,10 @@ async function askGemini(userId, question) {
     : [fallbackKey];
 
   const geminiModels = [
-    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
-    "gemini-2.5-flash"
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b"
   ];
 
   if (pool.length > 0) geminiCurrentIndex = (geminiCurrentIndex + 1) % pool.length;
