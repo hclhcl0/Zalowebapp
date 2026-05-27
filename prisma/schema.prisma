@@ -168,3 +168,15 @@ model AiKnowledge {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ============================================================
+// PHẦN 9: DANH SÁCH API KEY GEMINI (Round-Robin Pool)
+// ============================================================
+
+model GeminiApiKey {
+  id        Int      @id @default(autoincrement())
+  label     String   // Tên gợi nhớ (VD: "Key CDC chính", "Key dự phòng 1")
+  apiKey    String   // Giá trị API Key
+  isActive  Boolean  @default(true)  // Có đang kích hoạt không
+  createdAt DateTime @default(now())
+}

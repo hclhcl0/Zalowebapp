@@ -87,6 +87,13 @@ const SETTING_GROUPS = [
     desc: "Quản lý các chuyên mục tin tức tuyên truyền trên hệ thống CDC Đà Nẵng.",
     fields: [],
   },
+  {
+    id: "gemini_keys",
+    icon: "🤖",
+    title: "Gemini AI Keys (Xoay vòng)",
+    desc: "Quản lý danh sách API Key Gemini. Hệ thống sẽ tự động luân phiên các key để tối đa tốc độ và tránh lỗi rate limit.",
+    fields: [],
+  },
 ];
 
 function SettingsPageContent() {
@@ -120,6 +127,79 @@ function SettingsPageContent() {
   const [gmailOAuthLoading, setGmailOAuthLoading] = useState(false);
   const [gmailOAuthMsg, setGmailOAuthMsg] = useState(null);
 
+  // Gemini API Keys Pool states
+  const [geminiKeys, setGeminiKeys] = useState([]);
+  const [geminiKeysLoading, setGeminiKeysLoading] = useState(false);
+  const [newGeminiLabel, setNewGeminiLabel] = useState("");
+  const [newGeminiKey, setNewGeminiKey] = useState("");
+  const [showNewGeminiKey, setShowNewGeminiKey] = useState(false);
+  const [geminiKeyMsg, setGeminiKeyMsg] = useState(null);
+  const [addingGeminiKey, setAddingGeminiKey] = useState(false);
+
+  const fetchGeminiKeys = async () => {
+    setGeminiKeysLoading(true);
+    try {
+      const res = await fetch("/api/settings/gemini-keys");
+      const json = await res.json();
+      if (json.success) setGeminiKeys(json.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setGeminiKeysLoading(false);
+    }
+  };
+
+  const handleAddGeminiKey = async () => {
+    if (!newGeminiLabel.trim() || !newGeminiKey.trim()) {
+      setGeminiKeyMsg({ type: "error", text: "Vui lòng nhập cả tên gợi nhớ và API Key." });
+      return;
+    }
+    setAddingGeminiKey(true);
+    setGeminiKeyMsg(null);
+    try {
+      const res = await fetch("/api/settings/gemini-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: newGeminiLabel, apiKey: newGeminiKey }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setGeminiKeyMsg({ type: "success", text: "Đã thêm API Key thành công!" });
+        setNewGeminiLabel("");
+        setNewGeminiKey("");
+        fetchGeminiKeys();
+      } else {
+        setGeminiKeyMsg({ type: "error", text: json.error || "Thêm key thất bại" });
+      }
+    } catch (e) {
+      setGeminiKeyMsg({ type: "error", text: "Lỗi kết nối server." });
+    } finally {
+      setAddingGeminiKey(false);
+    }
+  };
+
+  const handleToggleGeminiKey = async (id, isActive) => {
+    try {
+      await fetch("/api/settings/gemini-keys", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, isActive: !isActive }),
+      });
+      fetchGeminiKeys();
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteGeminiKey = async (id) => {
+    if (!confirm("Bạn có chắc muốn xóa API Key này không?")) return;
+    const res = await fetch(`/api/settings/gemini-keys?id=${id}`, { method: "DELETE" });
+    const json = await res.json();
+    if (json.success) {
+      fetchGeminiKeys();
+    } else {
+      alert("Lỗi: " + json.error);
+    }
+  };
+
   // Load Gmail configuration from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -138,6 +218,13 @@ function SettingsPageContent() {
       setIsLocalLoaded(true);
     }
   }, []);
+
+  // Load Gemini API Keys khi chuyển sang tab gemini_keys
+  useEffect(() => {
+    if (activeTab === "gemini_keys") {
+      fetchGeminiKeys();
+    }
+  }, [activeTab]);
 
   // Save Gmail pool to localStorage on change
   useEffect(() => {
@@ -941,6 +1028,131 @@ function SettingsPageContent() {
                     >
                       ➕ Thêm danh mục
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* UI cho tab Gemini AI Keys */}
+              {activeGroup.id === "gemini_keys" && (
+                <div style={{ marginTop: "20px", borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
+
+                  {/* Thông báo */}
+                  {geminiKeyMsg && (
+                    <div style={{
+                      padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", fontWeight: 600, fontSize: "0.875rem",
+                      background: geminiKeyMsg.type === "success" ? "#f0fdf4" : "#fef2f2",
+                      border: `1px solid ${geminiKeyMsg.type === "success" ? "#bbf7d0" : "#fecaca"}`,
+                      color: geminiKeyMsg.type === "success" ? "#15803d" : "#dc2626",
+                    }}>
+                      {geminiKeyMsg.type === "success" ? "✅" : "❌"} {geminiKeyMsg.text}
+                    </div>
+                  )}
+
+                  {/* Danh sách key hiện tại */}
+                  <div style={{ fontWeight: 700, marginBottom: "12px", fontSize: "0.875rem" }}>🔑 Danh sách API Keys ({geminiKeys.length} key)</div>
+                  {geminiKeysLoading ? (
+                    <div style={{ color: "var(--text-muted)", padding: "16px 0" }}>Đang tải...</div>
+                  ) : geminiKeys.length === 0 ? (
+                    <div style={{ padding: "20px", textAlign: "center", border: "1px dashed var(--border)", borderRadius: "8px", color: "var(--text-muted)", marginBottom: "20px" }}>
+                      Chưa có API Key nào. Hệ thống sẽ dùng key mặc định từ .env
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+                      {geminiKeys.map((key, idx) => (
+                        <div key={key.id} style={{
+                          display: "flex", alignItems: "center", gap: "12px",
+                          padding: "12px 16px", background: key.isActive ? "#f0fdf4" : "#f8fafc",
+                          border: `1px solid ${key.isActive ? "#bbf7d0" : "var(--border)"}`,
+                          borderRadius: "10px",
+                        }}>
+                          <div style={{
+                            width: "28px", height: "28px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                            background: key.isActive ? "#22c55e" : "#cbd5e1", color: "white", fontWeight: 700, fontSize: "0.8rem", flexShrink: 0
+                          }}>{idx + 1}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text)" }}>{key.label}</div>
+                            <div style={{ fontFamily: "monospace", fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>{key.maskedKey}</div>
+                          </div>
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
+                            <span style={{
+                              padding: "3px 8px", borderRadius: "20px", fontSize: "0.72rem", fontWeight: 700,
+                              background: key.isActive ? "#dcfce7" : "#f1f5f9",
+                              color: key.isActive ? "#16a34a" : "#64748b",
+                            }}>
+                              {key.isActive ? "● Đang dùng" : "○ Tắt"}
+                            </span>
+                            <button
+                              className="btn btn-outline btn-sm"
+                              onClick={() => handleToggleGeminiKey(key.id, key.isActive)}
+                              style={{ fontSize: "0.78rem", padding: "4px 10px" }}
+                            >
+                              {key.isActive ? "Tắt" : "Bật"}
+                            </button>
+                            <button
+                              className="btn btn-sm"
+                              onClick={() => handleDeleteGeminiKey(key.id)}
+                              style={{ color: "var(--danger)", background: "none", border: "1px solid var(--border)", fontSize: "0.78rem", padding: "4px 10px" }}
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Form thêm key mới */}
+                  <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid var(--border)" }}>
+                    <div style={{ fontWeight: 700, fontSize: "0.875rem", marginBottom: "14px" }}>➕ Thêm API Key mới</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.78rem" }}>Tên gợi nhớ</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="VD: Key CDC chính, Key dự phòng 1..."
+                          value={newGeminiLabel}
+                          onChange={(e) => setNewGeminiLabel(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: "0.78rem" }}>API Key (bắt đầu bằng AIza...)</label>
+                        <div style={{ position: "relative" }}>
+                          <input
+                            type={showNewGeminiKey ? "text" : "password"}
+                            className="form-input"
+                            placeholder="AIzaSy..."
+                            value={newGeminiKey}
+                            onChange={(e) => setNewGeminiKey(e.target.value)}
+                            style={{ paddingRight: "44px", fontFamily: "monospace" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewGeminiKey(!showNewGeminiKey)}
+                            style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
+                          >
+                            {showNewGeminiKey ? "🙈" : "👁️"}
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleAddGeminiKey}
+                        disabled={addingGeminiKey}
+                        style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "6px" }}
+                      >
+                        {addingGeminiKey && <span className="spinner" style={{ width: 12, height: 12 }} />}
+                        {addingGeminiKey ? "Đang thêm..." : "➕ Thêm API Key"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Hướng dẫn */}
+                  <div style={{ marginTop: "16px", padding: "12px 16px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "0.8rem", color: "#1e40af", lineHeight: 1.7 }}>
+                    <strong>💡 Cách hoạt động:</strong> Hệ thống sẽ tự động luân phiên (Round-Robin) qua từng API Key. Nếu một key bị rate limit (429), hệ thống tự chuyển sang key tiếp theo mà không gián đoạn dịch vụ. Key trong file <code>.env</code> vẫn là key dự phòng cuối cùng.
+                    <br /><br />
+                    <strong>🔗 Lấy API Key miễn phí:</strong> Truy cập <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{ color: "#1d4ed8" }}>aistudio.google.com/app/apikey</a> rồi tạo key mới (mỗi tài khoản Google cho 1 key miễn phí).
                   </div>
                 </div>
               )}
