@@ -131,6 +131,8 @@ async function prepareAIContext(userId, question) {
   let hotline = "1900988975";
   let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
   let customPrompt = "";
+  let userProfile = { displayName: "Bạn", role: "CÔNG DÂN" };
+  
   try {
     const settings = await prisma.systemConfig.findMany({ where: { key: { in: ["hotline_main", "address", "ai_custom_prompt"] } } });
     const h = settings.find(s => s.key === "hotline_main");
@@ -139,9 +141,21 @@ async function prepareAIContext(userId, question) {
     if (a?.value) address = a.value;
     const cp = settings.find(s => s.key === "ai_custom_prompt");
     if (cp?.value) customPrompt = cp.value;
+    
+    // Fetch Follower info to determine if they are staff or citizen
+    const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
+    if (follower) {
+      if (follower.displayName) userProfile.displayName = follower.displayName;
+      if (follower.userType === "staff") userProfile.role = "NHÂN VIÊN CỦA CDC (CÁN BỘ NỘI BỘ)";
+    }
   } catch (err) {}
 
-  const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng). Vai trò của bạn là hỗ trợ, giải đáp thắc mắc cho người dân thành phố Đà Nẵng về các vấn đề y tế, dịch tễ, phòng chống dịch bệnh và các dịch vụ của CDC Đà Nẵng.
+  const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng). Vai trò của bạn là hỗ trợ, giải đáp thắc mắc cho người dân và cán bộ của CDC Đà Nẵng.
+
+THÔNG TIN NGƯỜI ĐANG TRÒ CHUYỆN:
+- Tên Zalo của họ: ${userProfile.displayName}
+- Phân loại: ${userProfile.role}
+(Nếu là NHÂN VIÊN, hãy hỗ trợ họ tra cứu các thông tin nội bộ một cách thoải mái. Nếu là CÔNG DÂN, hãy xưng hô lịch sự và chỉ cung cấp thông tin y tế công cộng).
 
 QUY TẮC BẮT BUỘC:
 1. CHỈ trả lời dựa trên TÀI LIỆU CHUYÊN MÔN được cung cấp bên dưới. Không tự suy đoán.
