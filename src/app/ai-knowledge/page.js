@@ -44,7 +44,7 @@ export default function AiKnowledgePage() {
     e.preventDefault();
     const file = fileInputRef.current?.files[0];
     if (!file) {
-      alert("Vui lòng chọn file PDF hoặc TXT!");
+      alert("Vui lòng chọn file PDF, DOCX hoặc TXT!");
       return;
     }
 
@@ -189,11 +189,11 @@ export default function AiKnowledgePage() {
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Chọn File (Chỉ hỗ trợ .PDF, .TXT)</label>
+              <label className="form-label">Chọn File (Chỉ hỗ trợ .PDF, .DOCX, .TXT)</label>
               <input
                 type="file"
                 className="form-input"
-                accept=".pdf,.txt,.md"
+                accept=".pdf,.docx,.txt,.md"
                 ref={fileInputRef}
                 required
                 style={{ padding: "8px", background: "var(--bg)" }}
@@ -210,7 +210,7 @@ export default function AiKnowledgePage() {
           </form>
 
           <div style={{ marginTop: "24px", fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.6, padding: "12px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", color: "#166534" }}>
-            <strong>💡 Mẹo:</strong> Tài liệu càng có cấu trúc rõ ràng thì AI học càng nhanh. File PDF sẽ tự động được trích xuất thành văn bản để AI có thể đọc và ghi nhớ.
+            <strong>💡 Mẹo:</strong> Tài liệu càng có cấu trúc rõ ràng thì AI học càng nhanh. File Word và PDF sẽ tự động được trích xuất thành văn bản thuần túy để AI có thể ghi nhớ.
           </div>
         </div>
       </div>
