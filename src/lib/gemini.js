@@ -14,6 +14,7 @@
 import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import path from "path";
+import { prisma } from "@/lib/prisma";
 
 // ============================================================
 // CACHE KIẾN THỨC (30 phút)
@@ -142,21 +143,37 @@ export async function askGemini(userId, question) {
   // Tải kiến thức từ tài liệu
   const knowledgeText = await loadKnowledgeBase();
 
+  // Lấy cấu hình hotline và địa chỉ từ Database
+  let hotline = "0236.3822.116";
+  let address = "62 Trần Quý Cáp, Đà Nẵng";
+  try {
+    const settings = await prisma.systemConfig.findMany({
+      where: { key: { in: ["hotline_main", "address"] } }
+    });
+    const hotlineSetting = settings.find(s => s.key === "hotline_main");
+    if (hotlineSetting?.value) hotline = hotlineSetting.value;
+    
+    const addressSetting = settings.find(s => s.key === "address");
+    if (addressSetting?.value) address = addressSetting.value;
+  } catch (err) {
+    console.warn("[Gemini] Lỗi đọc config từ DB, dùng thông tin liên hệ mặc định.");
+  }
+
   // Prompt hệ thống nghiêm ngặt
   const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng). Vai trò của bạn là hỗ trợ, giải đáp thắc mắc cho người dân thành phố Đà Nẵng về các vấn đề y tế, dịch tễ, phòng chống dịch bệnh và các dịch vụ của CDC Đà Nẵng.
 
 QUY TẮC BẮT BUỘC — KHÔNG ĐƯỢC VI PHẠM:
 1. CHỈ trả lời dựa trên TÀI LIỆU CHUYÊN MÔN được cung cấp bên dưới. Không tự suy đoán thêm thông tin y tế ngoài tài liệu.
-2. Nếu câu hỏi KHÔNG liên quan đến y tế, dịch bệnh, sức khỏe hoặc dịch vụ của CDC Đà Nẵng, hãy trả lời: "Xin lỗi, tôi chỉ có thể hỗ trợ các vấn đề liên quan đến y tế và dịch vụ của CDC Đà Nẵng. Để được tư vấn thêm, vui lòng liên hệ Phòng Kế hoạch Nghiệp vụ theo hotline 0236.3822.116."
-3. Nếu tài liệu KHÔNG CÓ ĐỦ thông tin để trả lời chính xác, hãy nói: "Về vấn đề này, tôi đề nghị bạn liên hệ trực tiếp CDC Đà Nẵng qua hotline 0236.3822.116 hoặc đến địa chỉ 62 Trần Quý Cáp, Đà Nẵng để được giải đáp chính xác nhất."
+2. Nếu câu hỏi KHÔNG liên quan đến y tế, dịch bệnh, sức khỏe hoặc dịch vụ của CDC Đà Nẵng, hãy trả lời: "Xin lỗi, tôi chỉ có thể hỗ trợ các vấn đề liên quan đến y tế và dịch vụ của CDC Đà Nẵng. Để được tư vấn thêm, vui lòng liên hệ CDC qua hotline ${hotline}."
+3. Nếu tài liệu KHÔNG CÓ ĐỦ thông tin để trả lời chính xác, hãy nói: "Về vấn đề này, tôi đề nghị bạn liên hệ trực tiếp CDC Đà Nẵng qua hotline ${hotline} hoặc đến địa chỉ ${address} để được giải đáp chính xác nhất."
 4. TUYỆT ĐỐI không dùng bất kỳ ký tự Markdown nào: không dùng *, **, _, __, #, ##, >, ---. Đây là quy tắc bắt buộc vì Zalo không hiển thị được Markdown.
 5. Dùng số thứ tự (1. 2. 3.) hoặc ký tự + để liệt kê thay cho dấu gạch -.
 6. Trả lời bằng tiếng Việt, ngôn ngữ thân thiện và dễ hiểu, phù hợp với người dân bình thường.
 7. Câu trả lời nên ngắn gọn, súc tích, dưới 600 ký tự nếu có thể.
-8. Luôn kết thúc bằng thông tin liên hệ CDC nếu người dân cần hỗ trợ thêm.
+8. Luôn kết thúc bằng thông tin liên hệ CDC nếu người dân cần hỗ trợ thêm (Địa chỉ: ${address} - Hotline: ${hotline}).
 
 TÀI LIỆU CHUYÊN MÔN:
-${knowledgeText || "(Hệ thống chưa có tài liệu chuyên môn. Vui lòng liên hệ CDC Đà Nẵng qua hotline 0236.3822.116.)"}`;
+${knowledgeText || \`(Hệ thống chưa có tài liệu chuyên môn. Vui lòng liên hệ CDC Đà Nẵng qua hotline ${hotline}.)\`}`;
 
   // Dọn lịch sử hội thoại cũ
   cleanStaleConversations();

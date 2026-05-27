@@ -147,9 +147,14 @@ async function handleTextMessage(userId, text) {
   } catch (err) {
     console.error("[Gemini] Lỗi khi gọi AI:", err.message);
     // Fallback thân thiện khi AI lỗi
+    let hotline = "0236.3822.116";
+    try {
+      const dbConfig = await prisma.systemConfig.findUnique({ where: { key: "hotline_main" } });
+      if (dbConfig?.value) hotline = dbConfig.value;
+    } catch(e) {}
     await sendTextMessage(
       userId,
-      "LỖI HỆ THỐNG: " + err.message
+      \`Xin lỗi, hệ thống đang gặp sự cố nhỏ. Vui lòng thử lại sau hoặc liên hệ trực tiếp CDC Đà Nẵng qua hotline \${hotline} để được hỗ trợ nhanh nhất.\`
     );
   }
 }
