@@ -103,16 +103,6 @@ export function clearKnowledgeCache() {
   knowledgeCacheTime = 0;
 }
 
-function cleanStaleConversations() {
-  const now = Date.now();
-  for (const [userId, ts] of conversationTimestamps.entries()) {
-    if (now - ts > CONVERSATION_TTL) {
-      conversationHistory.delete(userId);
-      conversationTimestamps.delete(userId);
-    }
-  }
-}
-
 function stripMarkdown(text) {
   return text
     .replace(/\*\*(.*?)\*\*/g, "$1")
@@ -129,8 +119,8 @@ function stripMarkdown(text) {
 }
 
 export function clearUserHistory(userId) {
-  conversationHistory.delete(userId);
-  conversationTimestamps.delete(userId);
+  // Không cần xử lý ở đây vì memory map đã xoá.
+  // Ghi chú: Nếu muốn thực sự reset, có thể chèn một tin nhắn "reset" vào DB hoặc xoá history của user đó trong DB
 }
 
 // ============================================================
@@ -168,10 +158,33 @@ KHÔNG viết dính liền thành 1 đoạn văn lộn xộn.
 TÀI LIỆU CHUYÊN MÔN:
 ${knowledgeText || `(Chưa có tài liệu. Vui lòng gọi ${hotline}.)`}`;
 
-  cleanStaleConversations();
-  if (!conversationHistory.has(userId)) conversationHistory.set(userId, []);
-  const history = conversationHistory.get(userId);
-  conversationTimestamps.set(userId, Date.now());
+  // Lấy lịch sử 12 tin nhắn gần nhất từ Database
+  const recentLogs = await prisma.messageLog.findMany({
+    where: { zaloUserId: userId },
+    orderBy: { receivedAt: "desc" },
+    take: 12,
+  });
+  recentLogs.reverse(); // Sắp xếp lại theo trình tự thời gian
+
+  const history = [];
+  for (let i = 0; i < recentLogs.length; i++) {
+    const log = recentLogs[i];
+    // Bỏ qua tin nhắn cuối cùng nếu đó là câu hỏi hiện tại (do webhook đã lưu trước khi gọi AI)
+    if (i === recentLogs.length - 1 && log.direction === "inbound") break;
+    
+    if (!log.content || !log.content.trim()) continue;
+    const role = log.direction === "inbound" ? "user" : "model";
+    
+    if (history.length === 0) {
+      if (role === "user") history.push({ role, parts: [{ text: log.content }] });
+    } else {
+      if (history[history.length - 1].role !== role) {
+        history.push({ role, parts: [{ text: log.content }] });
+      } else {
+        history[history.length - 1].parts[0].text += "\n" + log.content;
+      }
+    }
+  }
 
   return { systemInstruction, history, hotline, address };
 }
@@ -236,10 +249,6 @@ async function askGemini(userId, question) {
       });
 
       const cleanedAnswer = stripMarkdown(response.text || "Xin lỗi, hệ thống bị lỗi.");
-      history.push({ role: "user", parts: [{ text: question }] });
-      history.push({ role: "model", parts: [{ text: cleanedAnswer }] });
-      while (history.length > MAX_HISTORY_TURNS * 2) history.splice(0, 2);
-      conversationHistory.set(userId, history);
       return cleanedAnswer;
     } catch (err) {
       lastError = err;
@@ -284,12 +293,6 @@ async function askGroq(userId, question) {
 
       const rawAnswer = chatCompletion.choices[0]?.message?.content || "Xin lỗi, không có phản hồi từ AI.";
       const cleanedAnswer = stripMarkdown(rawAnswer);
-      
-      // Store back in gemini format so we can switch seamlessly between them
-      history.push({ role: "user", parts: [{ text: question }] });
-      history.push({ role: "model", parts: [{ text: cleanedAnswer }] });
-      while (history.length > MAX_HISTORY_TURNS * 2) history.splice(0, 2);
-      conversationHistory.set(userId, history);
       return cleanedAnswer;
     } catch (err) {
       lastError = err;

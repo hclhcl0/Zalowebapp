@@ -148,6 +148,22 @@ async function handleTextMessage(userId, text) {
     const aiReply = await askAI(userId, trimmedText);
     await sendTextMessage(userId, aiReply);
     console.log(`[Gemini] Đã trả lời ${userId} (${aiReply.length} ký tự)`);
+    
+    // Ghi log câu trả lời của AI vào DB để giữ ngữ cảnh (history) cho các câu hỏi sau
+    try {
+      await prisma.messageLog.create({
+        data: {
+          zaloUserId: userId,
+          direction: "outbound",
+          type: "text",
+          content: aiReply,
+          rawPayload: JSON.stringify({ source: "ai" }),
+          receivedAt: new Date(),
+        },
+      });
+    } catch (dbErr) {
+      console.error("[ZALO WEBHOOK DB ERROR - OUTBOUND]", dbErr.message);
+    }
   } catch (err) {
     console.error("[Gemini] Lỗi khi gọi AI:", err.message);
     // Fallback thân thiện khi AI lỗi
