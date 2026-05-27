@@ -41,14 +41,17 @@ export async function POST(request) {
     console.warn("[ZALO WEBHOOK] Body không hợp lệ:", e.message);
   }
 
-  const { event_name, user_id_by_app, message, timestamp } = body;
+  const event_name = body.event_name;
+  const message = body.message;
+  const timestamp = body.timestamp;
+  const senderId = body.sender?.id || body.user_id_by_app;
 
   // Lưu log vào DB (không chặn response)
   after(async () => {
     try {
       await prisma.messageLog.create({
         data: {
-          zaloUserId: user_id_by_app || "unknown",
+          zaloUserId: senderId || "unknown",
           direction: "inbound",
           type: event_name || "unknown",
           content: message?.text || null,
@@ -65,15 +68,15 @@ export async function POST(request) {
       try {
         switch (event_name) {
           case "user_send_text":
-            await handleTextMessage(user_id_by_app, message?.text);
+            await handleTextMessage(senderId, message?.text);
             break;
 
           case "follow":
-            await handleFollow(user_id_by_app, body);
+            await handleFollow(senderId, body);
             break;
 
           case "unfollow":
-            await handleUnfollow(user_id_by_app);
+            await handleUnfollow(senderId);
             break;
 
           default:
