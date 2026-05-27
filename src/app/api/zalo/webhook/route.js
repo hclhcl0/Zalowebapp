@@ -149,7 +149,7 @@ async function handleTextMessage(userId, text) {
     // Fallback thân thiện khi AI lỗi
     await sendTextMessage(
       userId,
-      "Xin lỗi, hệ thống đang gặp sự cố nhỏ. Vui lòng thử lại sau hoặc liên hệ trực tiếp CDC Đà Nẵng qua hotline 0236.3822.116 để được hỗ trợ nhanh nhất."
+      "LỖI HỆ THỐNG: " + err.message
     );
   }
 }
