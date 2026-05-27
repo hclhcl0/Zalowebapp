@@ -173,7 +173,7 @@ QUY TẮC BẮT BUỘC — KHÔNG ĐƯỢC VI PHẠM:
 8. Luôn kết thúc bằng thông tin liên hệ CDC nếu người dân cần hỗ trợ thêm (Địa chỉ: ${address} - Hotline: ${hotline}).
 
 TÀI LIỆU CHUYÊN MÔN:
-${knowledgeText || \`(Hệ thống chưa có tài liệu chuyên môn. Vui lòng liên hệ CDC Đà Nẵng qua hotline ${hotline}.)\`}`;
+${knowledgeText || `(Hệ thống chưa có tài liệu chuyên môn. Vui lòng liên hệ CDC Đà Nẵng qua hotline ${hotline}.)`}`;
 
   // Dọn lịch sử hội thoại cũ
   cleanStaleConversations();
