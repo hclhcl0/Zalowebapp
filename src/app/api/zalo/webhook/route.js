@@ -147,7 +147,7 @@ async function handleTextMessage(userId, text) {
   } catch (err) {
     console.error("[Gemini] Lỗi khi gọi AI:", err.message);
     // Fallback thân thiện khi AI lỗi
-    let hotline = "0236.3822.116";
+    let hotline = "1900988975";
     try {
       const dbConfig = await prisma.systemConfig.findUnique({ where: { key: "hotline_main" } });
       if (dbConfig?.value) hotline = dbConfig.value;

@@ -62,11 +62,11 @@ const SETTING_GROUPS = [
     title: "Thông tin Liên hệ & Cơ sở",
     desc: "Hiển thị trên Mini App và phản hồi Chatbot khi người dân hỏi.",
     fields: [
-      { key: "hotline_main",   label: "Hotline chính",          type: "tel",  placeholder: "VD: 0236.3.828.928" },
+      { key: "hotline_main",   label: "Hotline chính",          type: "tel",  placeholder: "VD: 1900988975" },
       { key: "hotline_zns",    label: "Hotline hỗ trợ Zalo",    type: "tel",  placeholder: "VD: 0905.123.456"   },
-      { key: "address",        label: "Địa chỉ trụ sở CDC",     type: "text", placeholder: "VD: 103 Nguyễn Chí Thanh, Hải Châu, Đà Nẵng" },
+      { key: "address",        label: "Địa chỉ trụ sở CDC",     type: "text", placeholder: "VD: 118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng" },
       { key: "map_embed_url",  label: "Link Google Maps (Embed)", type: "text", placeholder: "https://www.google.com/maps/embed?..." },
-      { key: "working_hours",  label: "Giờ làm việc",           type: "text", placeholder: "VD: T2 – T6: 7h30 – 17h00" },
+      { key: "working_hours",  label: "Giờ làm việc",           type: "text", placeholder: "VD: 07:30 - 16:30" },
     ],
   },
   {

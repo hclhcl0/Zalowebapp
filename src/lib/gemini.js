@@ -144,8 +144,8 @@ export async function askGemini(userId, question) {
   const knowledgeText = await loadKnowledgeBase();
 
   // Lấy cấu hình hotline và địa chỉ từ Database
-  let hotline = "0236.3822.116";
-  let address = "62 Trần Quý Cáp, Đà Nẵng";
+  let hotline = "1900988975";
+  let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
   try {
     const settings = await prisma.systemConfig.findMany({
       where: { key: { in: ["hotline_main", "address"] } }
