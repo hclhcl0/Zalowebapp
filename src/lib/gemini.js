@@ -212,7 +212,7 @@ async function askGemini(userId, question) {
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.1-flash-lite",
         contents,
         config: { systemInstruction, maxOutputTokens: 2048, temperature: 0.3 }
       });
