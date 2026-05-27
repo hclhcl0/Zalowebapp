@@ -27,6 +27,7 @@ const PROVIDER_CACHE_TTL = 60 * 1000; // 1 phút
 let geminiKeyPool = [];
 let geminiKeyPoolTime = 0;
 let geminiCurrentIndex = 0;
+let geminiModelIndex = 0;
 
 let groqKeyPool = [];
 let groqKeyPoolTime = 0;
@@ -57,6 +58,7 @@ export function clearApiKeyCache() {
   geminiKeyPool = [];
   geminiKeyPoolTime = 0;
   geminiCurrentIndex = 0;
+  geminiModelIndex = 0;
 }
 
 export function clearGroqKeyCache() {
@@ -204,15 +206,24 @@ async function askGemini(userId, question) {
     ? [...pool.slice(startIdx).map(k => k.apiKey), ...pool.slice(0, startIdx).map(k => k.apiKey), fallbackKey].filter(Boolean)
     : [fallbackKey];
 
+  const geminiModels = [
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash"
+  ];
+
   if (pool.length > 0) geminiCurrentIndex = (geminiCurrentIndex + 1) % pool.length;
 
   let lastError = null;
   for (let i = 0; i < orderedKeys.length; i++) {
     const apiKey = orderedKeys[i];
+    const currentModel = geminiModels[geminiModelIndex % geminiModels.length];
+    geminiModelIndex++;
+
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite",
+        model: currentModel,
         contents,
         config: { systemInstruction, maxOutputTokens: 2048, temperature: 0.3 }
       });
