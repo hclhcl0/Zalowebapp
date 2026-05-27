@@ -145,8 +145,16 @@ async function prepareAIContext(userId, question) {
     // Fetch Follower info to determine if they are staff or citizen
     const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
     if (follower) {
-      if (follower.displayName) userProfile.displayName = follower.displayName;
+      userProfile.displayName = follower.fullName || follower.displayName || "Bạn";
       if (follower.userType === "staff") userProfile.role = "NHÂN VIÊN CỦA CDC (CÁN BỘ NỘI BỘ)";
+    }
+    
+    // Nếu là nhân viên, thử lấy tên thật từ bảng StaffZaloLink để xưng hô cho chuẩn xác
+    if (userProfile.role.includes("NHÂN VIÊN")) {
+      const staffLink = await prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } });
+      if (staffLink && staffLink.staffNameRaw) {
+        userProfile.displayName = staffLink.staffNameRaw;
+      }
     }
   } catch (err) {}
 
