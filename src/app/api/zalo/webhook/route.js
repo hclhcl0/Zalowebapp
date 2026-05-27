@@ -56,7 +56,7 @@ export async function POST(request) {
           type: event_name || "unknown",
           content: message?.text || null,
           rawPayload: JSON.stringify(body),
-          receivedAt: timestamp ? new Date(timestamp * 1000) : new Date(),
+          receivedAt: timestamp ? new Date(parseInt(timestamp)) : new Date(),
         },
       });
     } catch (dbErr) {
