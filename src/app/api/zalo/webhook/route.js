@@ -44,7 +44,7 @@ export async function POST(request) {
   const event_name = body.event_name;
   const message = body.message;
   const timestamp = body.timestamp;
-  const senderId = body.sender?.id || body.user_id_by_app;
+  const senderId = body.sender?.id || body.user_id_by_app || body.follower?.id;
 
   // Lưu log vào DB (không chặn response)
   after(async () => {
