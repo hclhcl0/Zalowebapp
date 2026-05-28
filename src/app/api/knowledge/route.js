@@ -63,17 +63,8 @@ export async function POST(request) {
     const ext = file.name.split(".").pop().toLowerCase();
     
     if (ext === "pdf") {
-      // Polyfill DOMMatrix cho Node.js version cũ hoặc môi trường thiếu Web API
-      if (typeof global.DOMMatrix === "undefined") {
-        global.DOMMatrix = class DOMMatrix {
-          constructor() { this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.e = 0; this.f = 0; }
-        };
-      }
-      
-      const { PDFParse } = await import("pdf-parse");
-      const pdf = new PDFParse({ data: buffer });
-      await pdf.load();
-      const data = await pdf.getText();
+      const pdfParse = require("pdf-parse");
+      const data = await pdfParse(buffer);
       content = data.text;
     } else if (ext === "docx") {
       const mammoth = (await import("mammoth")).default;
