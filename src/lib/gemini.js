@@ -429,9 +429,7 @@ async function askGemini(userId, question) {
     : [fallbackKey];
 
   const geminiModels = [
-    "gemini-2.5-flash-lite",
     "gemini-2.5-flash",
-    "gemini-1.5-flash-8b",
     "gemini-1.5-flash"
   ];
 
@@ -456,7 +454,10 @@ async function askGemini(userId, question) {
       return cleanedAnswer;
     } catch (err) {
       lastError = err;
-      if (err.message?.includes("429") || err.message?.includes("RESOURCE_EXHAUSTED") || err.message?.includes("quota")) continue;
+      const errMsg = err.message?.toLowerCase() || "";
+      if (errMsg.includes("429") || errMsg.includes("resource_exhausted") || errMsg.includes("quota") || errMsg.includes("404") || errMsg.includes("not found")) {
+          continue;
+      }
       throw err;
     }
   }
