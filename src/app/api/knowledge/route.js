@@ -77,8 +77,23 @@ export async function POST(request) {
       const workbook = xlsx.read(buffer, { type: "buffer" });
       for (const sheetName of workbook.SheetNames) {
         const sheet = workbook.Sheets[sheetName];
-        const csv = xlsx.utils.sheet_to_csv(sheet);
-        content += `\n--- Bảng dữ liệu: ${sheetName} ---\n${csv}\n`;
+        const rows = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+        if (rows.length === 0) continue;
+        
+        content += `\n--- Bảng dữ liệu: ${sheetName} ---\n`;
+        for (const row of rows) {
+          // Bỏ qua các dòng rỗng hoàn toàn
+          if (!row || row.length === 0 || row.every(cell => cell === null || cell === undefined || cell === "")) continue;
+          
+          // Nối các ô bằng dấu | và thay khoảng trống bằng chuỗi rỗng
+          const rowStr = row.map(cell => {
+            if (cell === null || cell === undefined || cell === "") return " ";
+            // Xóa dấu xuống dòng trong ô để không làm hỏng bảng
+            return String(cell).replace(/\r?\n|\r/g, " ").trim();
+          }).join(" | ");
+          
+          content += `| ${rowStr} |\n`;
+        }
       }
     } else {
       return NextResponse.json({ success: false, error: "Định dạng file không hỗ trợ. Chỉ hỗ trợ .pdf, .docx, .txt, .md, .xlsx, .csv" }, { status: 400 });
