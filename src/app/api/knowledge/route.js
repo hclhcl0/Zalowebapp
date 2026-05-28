@@ -31,7 +31,7 @@ export async function GET() {
 }
 
 // POST /api/knowledge
-// Nhận FormData chứa file (pdf, txt) và category
+// Nhận FormData chứa file (pdf, docx, pptx, txt, xlsx, csv) và category
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -63,15 +63,30 @@ export async function POST(request) {
     const ext = file.name.split(".").pop().toLowerCase();
     
     if (ext === "pdf") {
-      const PDFParser = require("pdf2json");
-      content = await new Promise((resolve, reject) => {
-        const pdfParser = new PDFParser(this, 1);
-        pdfParser.on("pdfParser_dataError", errData => reject(errData.parserError));
-        pdfParser.on("pdfParser_dataReady", () => {
-          resolve(pdfParser.getRawTextContent());
-        });
-        pdfParser.parseBuffer(buffer);
+      // Dùng Gemini Vision để OCR trực tiếp – đọc được cả PDF scan hình ảnh
+      const { GoogleGenAI } = await import("@google/genai");
+      const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const base64 = buffer.toString("base64");
+      const result = await genai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  mimeType: "application/pdf",
+                  data: base64,
+                },
+              },
+              {
+                text: "Hãy trích xuất TOÀN BỘ nội dung văn bản trong tài liệu PDF này. Giữ nguyên cấu trúc đoạn văn, tiêu đề, danh sách, bảng biểu. Chỉ trả về nội dung văn bản thuần, không thêm ghi chú hay giải thích.",
+              },
+            ],
+          },
+        ],
       });
+      content = result.text ?? "";
     } else if (ext === "docx") {
       const mammoth = (await import("mammoth")).default;
       const data = await mammoth.extractRawText({ buffer });
