@@ -63,9 +63,15 @@ export async function POST(request) {
     const ext = file.name.split(".").pop().toLowerCase();
     
     if (ext === "pdf") {
-      const pdfParse = require("pdf-parse");
-      const data = await pdfParse(buffer);
-      content = data.text;
+      const PDFParser = require("pdf2json");
+      content = await new Promise((resolve, reject) => {
+        const pdfParser = new PDFParser(this, 1);
+        pdfParser.on("pdfParser_dataError", errData => reject(errData.parserError));
+        pdfParser.on("pdfParser_dataReady", () => {
+          resolve(pdfParser.getRawTextContent());
+        });
+        pdfParser.parseBuffer(buffer);
+      });
     } else if (ext === "docx") {
       const mammoth = (await import("mammoth")).default;
       const data = await mammoth.extractRawText({ buffer });
