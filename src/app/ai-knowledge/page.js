@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, FileText, Upload, BrainCircuit } from "lucide-react";
+import { Plus, Trash2, FileText, Upload, BrainCircuit, Download } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { CDC_DEPARTMENTS } from "@/lib/departments";
 
@@ -96,6 +96,19 @@ export default function AiKnowledgePage() {
     }
   };
 
+  const handleDownload = (doc) => {
+    const blob = new Blob([doc.content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const baseName = doc.title.replace(/\.[^.]+$/, "");
+    a.download = `${baseName}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -155,6 +168,9 @@ export default function AiKnowledgePage() {
                   </div>
                   <button onClick={() => handleDelete(doc.id, doc.title)} className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", padding: "8px" }} title="Xóa tài liệu này">
                     <Trash2 className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDownload(doc)} className="btn btn-ghost btn-sm" style={{ color: "var(--primary)", padding: "8px" }} title="Tải về dạng .txt">
+                    <Download className="w-4 h-4" />
                   </button>
                 </div>
               ))}
