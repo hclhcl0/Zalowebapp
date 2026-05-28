@@ -155,25 +155,91 @@ export async function loadKnowledgeBase() {
   try {
     const docs = await prisma.aiKnowledge.findMany({ orderBy: { createdAt: "desc" } });
     if (docs.length === 0) {
-      knowledgeBaseCache = "";
+      knowledgeBaseCache = [];
       knowledgeCacheTime = now;
-      return "";
+      return [];
     }
-    let combinedText = "";
+    
+    let chunks = [];
     for (const doc of docs) {
-      combinedText += `\n\n[CHUYÊN MÔN: ${doc.category.toUpperCase()}]\n--- Tài liệu: ${doc.title} ---\n${doc.content}`;
+      chunks.push({
+        title: doc.title,
+        category: doc.category,
+        content: doc.content,
+        normalized: removeVietnameseTones(doc.title + " " + doc.category + " " + doc.content).toLowerCase()
+      });
     }
-    knowledgeBaseCache = combinedText;
+    
+    knowledgeBaseCache = chunks;
     knowledgeCacheTime = now;
-    return combinedText;
+    return chunks;
   } catch (err) {
-    return knowledgeBaseCache || "";
+    return knowledgeBaseCache || [];
   }
 }
 
 export function clearKnowledgeCache() {
   knowledgeBaseCache = null;
   knowledgeCacheTime = 0;
+}
+
+function removeVietnameseTones(str) {
+  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
+  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
+  str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
+  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
+  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
+  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
+  str = str.replace(/đ/g,"d");
+  str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+  str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+  str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+  str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+  str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+  str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+  str = str.replace(/Đ/g, "D");
+  return str;
+}
+
+function retrieveRelevantKnowledge(question, chunks) {
+  if (!chunks || chunks.length === 0) return "";
+  
+  const normalizedQ = removeVietnameseTones(question).toLowerCase();
+  const keywords = normalizedQ.split(/\s+/).filter(w => w.length > 1);
+  
+  if (keywords.length === 0) return "";
+
+  // Score each chunk based on keyword frequency
+  const scoredChunks = chunks.map(chunk => {
+    let score = 0;
+    for (const kw of keywords) {
+      // Basic keyword counting
+      const regex = new RegExp(kw, 'g');
+      const matches = chunk.normalized.match(regex);
+      if (matches) {
+        score += matches.length;
+      }
+    }
+    return { ...chunk, score };
+  });
+
+  // Sort by score descending
+  scoredChunks.sort((a, b) => b.score - a.score);
+
+  // Take top 3 relevant chunks that have at least score > 0
+  const topChunks = scoredChunks.filter(c => c.score > 0).slice(0, 3);
+  
+  // If no chunks matched any keywords, we can optionally return all chunks (fallback)
+  // or return an empty string. Let's return top 3 chunks anyway if score > 0, 
+  // else if everything is 0, we just return the first 3 chunks as fallback to avoid AI knowing nothing.
+  const selectedChunks = topChunks.length > 0 ? topChunks : chunks.slice(0, 3);
+  
+  let combinedText = "";
+  for (const chunk of selectedChunks) {
+    combinedText += `\n\n[CHUYÊN MÔN: ${chunk.category.toUpperCase()}]\n--- Tài liệu: ${chunk.title} ---\n${chunk.content}`;
+  }
+  
+  return combinedText;
 }
 
 function stripMarkdown(text) {
@@ -200,10 +266,13 @@ export function clearUserHistory(userId) {
 // HÀM CHUNG LẤY THÔNG TIN
 // ============================================================
 async function prepareAIContext(userId, question) {
-  const [knowledgeText, driveDocuments] = await Promise.all([
+  const [knowledgeChunks, driveDocuments] = await Promise.all([
     loadKnowledgeBase(),
     loadDriveDocuments(),
   ]);
+  
+  const knowledgeText = retrieveRelevantKnowledge(question, knowledgeChunks);
+  
   const driveSection = driveDocuments.length > 0
     ? `KHO T\u00c0I LI\u1ec6U M\u1eaau (Google Drive):\n` +
       driveDocuments.map((d, i) => `${i + 1}. ${d.name} - Link xem: ${d.link}`).join("\n") +
@@ -360,10 +429,10 @@ async function askGemini(userId, question) {
     : [fallbackKey];
 
   const geminiModels = [
-    "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b"
+    "gemini-2.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-flash"
   ];
 
   if (pool.length > 0) geminiCurrentIndex = (geminiCurrentIndex + 1) % pool.length;
