@@ -207,7 +207,7 @@ async function handleTextMessage(userId, text) {
     } catch(e) {}
     await sendTextMessage(
       userId,
-      `Xin lỗi, hệ thống đang gặp sự cố nhỏ. Vui lòng thử lại sau hoặc liên hệ trực tiếp CDC Đà Nẵng qua hotline ${hotline} để được hỗ trợ nhanh nhất.`
+      `Xin lỗi, hệ thống đang gặp sự cố nhỏ (Chi tiết: ${err.message}). Vui lòng thử lại sau hoặc liên hệ trực tiếp CDC Đà Nẵng qua hotline ${hotline} để được hỗ trợ nhanh nhất.`
     );
   }
 }
