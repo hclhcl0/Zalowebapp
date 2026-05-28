@@ -144,7 +144,17 @@ async function handleTextMessage(userId, text) {
   // Lệnh đặc biệt: Xem danh mục chủ đề (Option 1)
   if (["menu", "hd", "hướng dẫn", "chủ đề", "help"].includes(lowerText)) {
     try {
-      const customCat = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories" } });
+      const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
+      const isStaff = follower?.userType === "staff";
+      
+      let customCat = null;
+      if (isStaff) {
+        customCat = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories_staff" } });
+      }
+      if (!customCat || !customCat.value || customCat.value.trim().length === 0) {
+        customCat = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories" } });
+      }
+
       let menuText = "📚 DANH MỤC HỖ TRỢ CỦA AI\n\nBạn có thể đặt câu hỏi về các chủ đề sau:\n";
       
       if (customCat && customCat.value && customCat.value.trim().length > 0) {

@@ -275,11 +275,6 @@ async function prepareAIContext(userId, question) {
   const uniqueCategories = [...new Set(knowledgeChunks.map(c => c.category).filter(Boolean))];
   let categoryList = uniqueCategories.length > 0 ? uniqueCategories.join(", ") : "Đang cập nhật dữ liệu";
   
-  const customCatConfig = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories" } });
-  if (customCatConfig && customCatConfig.value && customCatConfig.value.trim().length > 0) {
-    categoryList = customCatConfig.value.split('\n').map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean).join(", ");
-  }
-  
   const driveSection = driveDocuments.length > 0
     ? `KHO T\u00c0I LI\u1ec6U M\u1eaau (Google Drive):\n` +
       driveDocuments.map((d, i) => `${i + 1}. ${d.name} - Link xem: ${d.link}`).join("\n") +
@@ -320,6 +315,18 @@ async function prepareAIContext(userId, question) {
       if (staffLink && staffLink.staffNameRaw) {
         userProfile.displayName = staffLink.staffNameRaw;
       }
+    }
+    
+    // Ghi đè categoryList dựa theo quyền hạn
+    let customCatConfig = null;
+    if (userProfile.role.includes("NHÂN VIÊN")) {
+      customCatConfig = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories_staff" } });
+    }
+    if (!customCatConfig || !customCatConfig.value || customCatConfig.value.trim().length === 0) {
+      customCatConfig = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories" } });
+    }
+    if (customCatConfig && customCatConfig.value && customCatConfig.value.trim().length > 0) {
+      categoryList = customCatConfig.value.split('\n').map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean).join(", ");
     }
   } catch (err) {}
 
