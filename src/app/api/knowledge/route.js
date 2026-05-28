@@ -70,8 +70,10 @@ export async function POST(request) {
         };
       }
       
-      const pdfParse = (await import("pdf-parse")).default;
-      const data = await pdfParse(buffer);
+      const { PDFParse } = await import("pdf-parse");
+      const pdf = new PDFParse({ data: buffer });
+      await pdf.load();
+      const data = await pdf.getText();
       content = data.text;
     } else if (ext === "docx") {
       const mammoth = (await import("mammoth")).default;
