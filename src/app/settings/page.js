@@ -102,9 +102,10 @@ const SETTING_GROUPS = [
     id: "drive_docs",
     icon: "📂",
     title: "Kho Tài liệu Mẫu (Google Drive)",
-    desc: "Kết nối thư mục Google Drive chứa các mẫu biểu, mẫu báo cáo nội bộ. AI sẽ tự động đọc danh sách file và gửi link cho nhân viên khi được yêu cầu. Dùng lại Google OAuth Client ID/Secret từ phần cài đặt Gmail.",
+    desc: "Kết nối thư mục Google Drive để AI gửi link mẫu biểu cho nhân viên. Hỗ trợ 2 chế độ: (1) Folder công khai + Google API Key — đơn giản hơn. (2) Folder riêng tư + Kết nối OAuth2 bên dưới — bảo mật hơn.",
     fields: [
       { key: "drive_folder_id", label: "ID Thư mục Google Drive", type: "text", placeholder: "VD: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs (lấy từ URL folder)" },
+      { key: "google_api_key",  label: "Google API Key — dùng khi folder Công khai (Anyone with link)", type: "password", secret: true, placeholder: "••••••••••••••••" },
     ],
   },
 ];

@@ -28,44 +28,47 @@ async function loadDriveDocuments() {
   }
   try {
     const configs = await prisma.systemConfig.findMany({
-      where: { key: { in: ["drive_folder_id", "drive_refresh_token", "gmail_oauth_client_id", "gmail_oauth_client_secret"] } },
+      where: { key: { in: ["drive_folder_id", "google_api_key", "drive_refresh_token", "gmail_oauth_client_id", "gmail_oauth_client_secret"] } },
     });
     const folderId     = configs.find(c => c.key === "drive_folder_id")?.value;
+    const apiKey       = configs.find(c => c.key === "google_api_key")?.value;
     const refreshToken = configs.find(c => c.key === "drive_refresh_token")?.value;
     const clientId     = configs.find(c => c.key === "gmail_oauth_client_id")?.value;
     const clientSecret = configs.find(c => c.key === "gmail_oauth_client_secret")?.value;
 
-    if (!folderId || !refreshToken || !clientId || !clientSecret) {
-      driveDocCache = []; driveDocCacheTime = now; return [];
-    }
-
-    // Lấy access_token mới từ refresh_token bằng OAuth2
-    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: refreshToken,
-        grant_type: "refresh_token",
-      }),
-    });
-    const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) {
-      console.error("[Drive OAuth] Không lấy được access_token:", tokenData);
-      driveDocCache = []; driveDocCacheTime = now; return [];
-    }
+    if (!folderId) { driveDocCache = []; driveDocCacheTime = now; return []; }
 
     const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
     const fields = encodeURIComponent("files(id,name,mimeType)");
-    const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=${fields}&pageSize=100`;
+    let headers = {};
+    let url;
 
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
+    if (apiKey) {
+      // Chế độ đơn giản: Folder công khai + Google API Key
+      url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=${fields}&pageSize=100&key=${apiKey}`;
+    } else if (refreshToken && clientId && clientSecret) {
+      // Chế độ OAuth2: Folder riêng tư, dùng refresh token
+      const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, grant_type: "refresh_token" }),
+      });
+      const tokenData = await tokenRes.json();
+      if (!tokenData.access_token) {
+        console.error("[Drive OAuth] Không lấy được access_token:", tokenData);
+        driveDocCache = []; driveDocCacheTime = now; return [];
+      }
+      url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=${fields}&pageSize=100`;
+      headers = { Authorization: `Bearer ${tokenData.access_token}` };
+    } else {
+      // Chưa cấu hình đủ
+      driveDocCache = []; driveDocCacheTime = now; return [];
+    }
+
+    const res = await fetch(url, { headers });
     const json = await res.json();
     if (!res.ok || !json.files) {
-      console.error("[Drive OAuth] Lỗi liệt kê file:", json);
+      console.error("[Drive] Lỗi liệt kê file:", json);
       driveDocCache = []; driveDocCacheTime = now; return [];
     }
 
@@ -77,7 +80,7 @@ async function loadDriveDocuments() {
     driveDocCacheTime = now;
     return driveDocCache;
   } catch (e) {
-    console.error("[Drive OAuth] Exception:", e.message);
+    console.error("[Drive] Exception:", e.message);
     driveDocCache = [];
     driveDocCacheTime = now;
     return [];
