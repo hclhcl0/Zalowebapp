@@ -63,6 +63,13 @@ export async function POST(request) {
     const ext = file.name.split(".").pop().toLowerCase();
     
     if (ext === "pdf") {
+      // Polyfill DOMMatrix cho Node.js version cũ hoặc môi trường thiếu Web API
+      if (typeof global.DOMMatrix === "undefined") {
+        global.DOMMatrix = class DOMMatrix {
+          constructor() { this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.e = 0; this.f = 0; }
+        };
+      }
+      
       const pdfParse = (await import("pdf-parse")).default;
       const data = await pdfParse(buffer);
       content = data.text;
