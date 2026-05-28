@@ -302,6 +302,11 @@ ${driveSection}`;
     let text = log.content;
     if (role === "model") {
       text = text.replace(/\(Địa chỉ:.*?\)/g, "").trim();
+      if (footerMsg && footerMsg.trim() !== "") {
+        const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const footerRegex = new RegExp(escapeRegExp(footerMsg), "g");
+        text = text.replace(footerRegex, "").trim();
+      }
     }
     
     if (history.length === 0) {
