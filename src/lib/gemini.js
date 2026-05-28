@@ -345,7 +345,7 @@ async function askGemini(userId, question) {
   const fallbackKey = process.env.GEMINI_API_KEY;
   if (pool.length === 0 && !fallbackKey) throw new Error("Chưa có cấu hình Gemini API Key.");
 
-  const { systemInstruction, history, hotline } = await prepareAIContext(userId, question);
+  const { systemInstruction, history, hotline, footerMsg } = await prepareAIContext(userId, question);
   
   const contents = [...history, { role: "user", parts: [{ text: question }] }];
   
