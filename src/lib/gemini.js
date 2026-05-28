@@ -429,6 +429,7 @@ async function askGemini(userId, question) {
     : [fallbackKey];
 
   const geminiModels = [
+    "gemini-3.1-flash-lite",
     "gemini-1.5-flash",
     "gemini-2.5-flash"
   ];
