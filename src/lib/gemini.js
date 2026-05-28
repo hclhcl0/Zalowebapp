@@ -131,16 +131,23 @@ async function prepareAIContext(userId, question) {
   let hotline = "1900988975";
   let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
   let customPrompt = "";
+  let footerMsg = "(Địa chỉ: {address} - Hotline: {hotline})"; // Default
   let userProfile = { displayName: "Bạn", role: "CÔNG DÂN" };
   
   try {
-    const settings = await prisma.systemConfig.findMany({ where: { key: { in: ["hotline_main", "address", "ai_custom_prompt"] } } });
+    const settings = await prisma.systemConfig.findMany({ where: { key: { in: ["hotline_main", "address", "ai_custom_prompt", "ai_footer_msg"] } } });
     const h = settings.find(s => s.key === "hotline_main");
     if (h?.value) hotline = h.value;
     const a = settings.find(s => s.key === "address");
     if (a?.value) address = a.value;
     const cp = settings.find(s => s.key === "ai_custom_prompt");
     if (cp?.value) customPrompt = cp.value;
+    const fm = settings.find(s => s.key === "ai_footer_msg");
+    if (fm) footerMsg = fm.value; // Có thể rỗng nếu user cố tình để trống
+    else footerMsg = `(Địa chỉ: ${address} - Hotline: ${hotline})`; // Nếu chưa set thì dùng default
+    
+    // Replace placeholders just in case they use them
+    footerMsg = footerMsg.replace("{address}", address).replace("{hotline}", hotline);
     
     // Fetch Follower info to determine if they are staff or citizen
     const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
@@ -178,7 +185,7 @@ KHÔNG viết dính liền thành 1 đoạn văn lộn xộn.
 7. TUYỆT ĐỐI không dùng ký tự Markdown in đậm, in nghiêng (*, **, _, __, #, >, ---). KHÔNG dùng ký hiệu toán học.
 8. Dùng số thứ tự (1. 2. 3.) hoặc ký tự + để liệt kê thay cho dấu gạch -.
 9. Trả lời bằng tiếng Việt thân thiện, dễ hiểu, KHÔNG bao giờ bị cắt cụt.
-10. Luôn kết thúc bằng: (Địa chỉ: ${address} - Hotline: ${hotline}).
+${footerMsg ? `10. Luôn kết thúc bằng: ${footerMsg}` : ""}
 
 CÁC QUY TẮC BỔ SUNG TỪ ADMIN (ƯU TIÊN CAO):
 ${customPrompt}

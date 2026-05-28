@@ -95,6 +95,7 @@ const SETTING_GROUPS = [
     fields: [
       { key: "ai_daily_limit", label: "Giới hạn câu hỏi/ngày (1 Zalo)", type: "number", placeholder: "Để trống hoặc 0 là không giới hạn" },
       { key: "ai_custom_prompt", label: "Tùy chỉnh Prompt cho AI (Nâng cao)", type: "textarea", placeholder: "Ví dụ: Luôn xưng hô là 'Bác sĩ CDC' và gọi người dùng là 'Bạn'..." },
+      { key: "ai_footer_msg", label: "Câu kết thúc dưới mỗi tin trả lời của AI", type: "text", placeholder: "VD: (Địa chỉ: 118 Lê Đình Lý - Hotline: 1900988975) - Để trống để tắt" },
     ],
   },
 ];
