@@ -80,13 +80,22 @@ export async function POST(request) {
                 },
               },
               {
-                text: "Hãy trích xuất TOÀN BỘ nội dung văn bản trong tài liệu PDF này. Giữ nguyên cấu trúc đoạn văn, tiêu đề, danh sách, bảng biểu. Chỉ trả về nội dung văn bản thuần, không thêm ghi chú hay giải thích.",
+                text: `Đây là tài liệu PDF có thể chứa font chữ bị mã hóa sai hoặc PDF scan.
+Nhiệm vụ của bạn: Nhìn VÀO HÌNH ẢNH thực tế của từng trang PDF (KHÔNG dùng text layer có sẵn) và thực hiện OCR thị giác.
+
+Yêu cầu cụ thể:
+1. Đọc văn bản trực tiếp từ hình ảnh trang PDF như con người đọc
+2. Tự động sửa lỗi font chữ tiếng Việt bị mã hóa sai (ví dụ: "xiri" → "xử lý", "hành chính" có thể bị viết sai)
+3. Xuất ra văn bản tiếng Việt chuẩn Unicode UTF-8 với đầy đủ dấu thanh điệu
+4. Giữ nguyên cấu trúc: tiêu đề, đoạn văn, danh sách, bảng biểu, số thứ tự
+5. Chỉ trả về nội dung văn bản thuần, KHÔNG thêm ghi chú hay giải thích thêm`,
               },
             ],
           },
         ],
       });
       content = result.text ?? "";
+
     } else if (ext === "docx") {
       const mammoth = (await import("mammoth")).default;
       const data = await mammoth.extractRawText({ buffer });
