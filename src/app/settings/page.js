@@ -102,10 +102,9 @@ const SETTING_GROUPS = [
     id: "drive_docs",
     icon: "📂",
     title: "Kho Tài liệu Mẫu (Google Drive)",
-    desc: "Kết nối thư mục Google Drive chứa các mẫu biểu, mẫu báo cáo nội bộ. AI sẽ tự động đọc danh sách file và gửi link cho nhân viên khi được yêu cầu.",
+    desc: "Kết nối thư mục Google Drive chứa các mẫu biểu, mẫu báo cáo nội bộ. AI sẽ tự động đọc danh sách file và gửi link cho nhân viên khi được yêu cầu. Dùng lại Google OAuth Client ID/Secret từ phần cài đặt Gmail.",
     fields: [
       { key: "drive_folder_id", label: "ID Thư mục Google Drive", type: "text", placeholder: "VD: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs (lấy từ URL folder)" },
-      { key: "google_api_key",  label: "Google API Key (Drive API v3)", type: "password", secret: true, placeholder: "••••••••••••••••" },
     ],
   },
 ];
@@ -222,6 +221,11 @@ function SettingsPageContent() {
   const [showNewGroqKey, setShowNewGroqKey] = useState(false);
   const [groqKeyMsg, setGroqKeyMsg] = useState(null);
   const [addingGroqKey, setAddingGroqKey] = useState(false);
+
+  // Google Drive OAuth states
+  const [driveOAuthLoading, setDriveOAuthLoading] = useState(false);
+  const [driveOAuthMsg, setDriveOAuthMsg] = useState(null);
+  const [driveConnected, setDriveConnected] = useState(false);
 
   const fetchGroqKeys = async () => {
     setGroqKeysLoading(true);
@@ -1321,7 +1325,54 @@ function SettingsPageContent() {
           )}
             </div>
 
-            {/* Form các trường */}
+              {/* UI cho tab Kho tài liệu Drive */}
+              {activeGroup.id === "drive_docs" && (
+                <div style={{ marginTop: "20px", borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
+                  <div style={{ fontWeight: 700, marginBottom: "12px", fontSize: "0.875rem" }}>🔗 Kết nối Google Drive bằng OAuth2</div>
+                  <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "16px", lineHeight: 1.6 }}>
+                    Nhấn nút bên dưới để ủy quyền cho hệ thống đọc thư mục Drive của bạn. Hệ thống dùng lại <strong>Google OAuth Client ID/Secret</strong> đã nhập ở phần cài đặt Gmail. Chỉ cần kết nối 1 lần — token sẽ được lưu tự động.
+                  </p>
+                  {driveOAuthMsg && (
+                    <div style={{ padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", fontWeight: 600, fontSize: "0.875rem",
+                      background: driveOAuthMsg.type === "success" ? "#f0fdf4" : "#fef2f2",
+                      border: `1px solid ${driveOAuthMsg.type === "success" ? "#bbf7d0" : "#fecaca"}`,
+                      color: driveOAuthMsg.type === "success" ? "#15803d" : "#dc2626" }}>
+                      {driveOAuthMsg.type === "success" ? "✅" : "❌"} {driveOAuthMsg.text}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={driveOAuthLoading}
+                    style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                    onClick={async () => {
+                      setDriveOAuthLoading(true);
+                      setDriveOAuthMsg(null);
+                      try {
+                        const res = await fetch("/api/auth/drive-oauth");
+                        const data = await res.json();
+                        if (!res.ok || !data.authUrl) {
+                          setDriveOAuthMsg({ type: "error", text: data.error || "Không lấy được link xác thực." });
+                        } else {
+                          window.location.href = data.authUrl;
+                        }
+                      } catch {
+                        setDriveOAuthMsg({ type: "error", text: "Không kết nối được server." });
+                      } finally {
+                        setDriveOAuthLoading(false);
+                      }
+                    }}
+                  >
+                    {driveOAuthLoading && <span className="spinner" style={{ width: 14, height: 14 }} />}
+                    📂 Kết nối Google Drive
+                  </button>
+                  <div style={{ marginTop: "16px", padding: "12px 16px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "0.8rem", color: "#1e40af", lineHeight: 1.7 }}>
+                    <strong>💡 Lưu ý:</strong> Thư mục Drive KHÔNG cần chia sẻ công khai. OAuth2 cho phép đọc file riêng tư trong Drive của bạn. Nhân viên nhận link xem — họ cần đăng nhập Google nội bộ để tải.
+                  </div>
+                </div>
+              )}
+
+
             {(activeGroup.fields?.length > 0 || activeGroup.readonly?.length > 0 || (activeGroup.id === "contact" && values["map_embed_url"])) && (
               <div className="card">
                 {/* Readonly info (Webhook URL) */}
