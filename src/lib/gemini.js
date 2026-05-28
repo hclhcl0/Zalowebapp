@@ -271,7 +271,7 @@ KHÔNG viết dính liền thành 1 đoạn văn lộn xộn.
 8. Dùng số thứ tự (1. 2. 3.) hoặc ký tự + để liệt kê thay cho dấu gạch -.
 9. Trả lời bằng tiếng Việt thân thiện, dễ hiểu, KHÔNG bao giờ bị cắt cụt.
 10. BẢO MẬT THÔNG TIN: Tuyệt đối KHÔNG cung cấp thông tin cá nhân (lương, thưởng, xếp loại, điểm số...) của người khác. Khi có người hỏi thông tin cá nhân, hãy đối chiếu tên của họ ở phần "THÔNG TIN NGƯỜI ĐANG TRÒ CHUYỆN". Nếu KHÔNG trùng khớp, hãy từ chối lịch sự.
-${footerMsg ? `11. Luôn kết thúc bằng: ${footerMsg}` : ""}
+11. BẠN KHÔNG ĐƯỢC PHÉP tự ý thêm câu "(Địa chỉ: ... Hotline: ...)" vào cuối tin nhắn. Hệ thống sẽ tự động thực hiện việc đó.
 
 CÁC QUY TẮC BỔ SUNG TỪ ADMIN (ƯU TIÊN CAO):
 ${customPrompt}
@@ -298,18 +298,24 @@ ${driveSection}`;
     if (!log.content || !log.content.trim()) continue;
     const role = log.direction === "inbound" ? "user" : "model";
     
+    // Xóa các footer rác trong lịch sử để AI không học theo
+    let text = log.content;
+    if (role === "model") {
+      text = text.replace(/\(Địa chỉ:.*?\)/g, "").trim();
+    }
+    
     if (history.length === 0) {
-      if (role === "user") history.push({ role, parts: [{ text: log.content }] });
+      if (role === "user") history.push({ role, parts: [{ text }] });
     } else {
       if (history[history.length - 1].role !== role) {
-        history.push({ role, parts: [{ text: log.content }] });
+        history.push({ role, parts: [{ text }] });
       } else {
-        history[history.length - 1].parts[0].text += "\n" + log.content;
+        history[history.length - 1].parts[0].text += "\n" + text;
       }
     }
   }
 
-  return { systemInstruction, history, hotline, address };
+  return { systemInstruction, history, hotline, address, footerMsg };
 }
 
 // ============================================================
@@ -371,7 +377,8 @@ async function askGemini(userId, question) {
         config: { systemInstruction, maxOutputTokens: 2048, temperature: 0.3 }
       });
 
-      const cleanedAnswer = stripMarkdown(response.text || "Xin lỗi, hệ thống bị lỗi.");
+      let cleanedAnswer = stripMarkdown(response.text || "Xin lỗi, hệ thống bị lỗi.");
+      if (footerMsg) cleanedAnswer += "\n\n" + footerMsg;
       return cleanedAnswer;
     } catch (err) {
       lastError = err;
@@ -386,7 +393,7 @@ async function askGroq(userId, question) {
   const pool = await loadKeyPool("groq");
   if (pool.length === 0) throw new Error("Chưa có cấu hình Groq API Key.");
 
-  const { systemInstruction, history, hotline } = await prepareAIContext(userId, question);
+  const { systemInstruction, history, hotline, footerMsg } = await prepareAIContext(userId, question);
   
   // Groq messages format: [{role: "system", content: "..."}, {role: "user", content: "..."}, {role: "assistant", content: "..."}]
   const groqMessages = [{ role: "system", content: systemInstruction }];
@@ -415,7 +422,8 @@ async function askGroq(userId, question) {
       });
 
       const rawAnswer = chatCompletion.choices[0]?.message?.content || "Xin lỗi, không có phản hồi từ AI.";
-      const cleanedAnswer = stripMarkdown(rawAnswer);
+      let cleanedAnswer = stripMarkdown(rawAnswer);
+      if (footerMsg) cleanedAnswer += "\n\n" + footerMsg;
       return cleanedAnswer;
     } catch (err) {
       lastError = err;
