@@ -76,6 +76,10 @@ export async function POST(request) {
       const mammoth = (await import("mammoth")).default;
       const data = await mammoth.extractRawText({ buffer });
       content = data.value;
+    } else if (ext === "pptx") {
+      const officeParser = require("officeparser");
+      const res = await officeParser.parseOffice(buffer, { fileType: "pptx" });
+      content = res.toText();
     } else if (ext === "txt" || ext === "md") {
       content = buffer.toString("utf-8");
     } else if (ext === "xlsx" || ext === "xls" || ext === "csv") {
@@ -102,7 +106,7 @@ export async function POST(request) {
         }
       }
     } else {
-      return NextResponse.json({ success: false, error: "Định dạng file không hỗ trợ. Chỉ hỗ trợ .pdf, .docx, .txt, .md, .xlsx, .csv" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Định dạng file không hỗ trợ. Chỉ hỗ trợ .pdf, .docx, .pptx, .txt, .md, .xlsx, .csv" }, { status: 400 });
     }
     
     if (!content || content.trim() === "") {
