@@ -272,6 +272,13 @@ async function prepareAIContext(userId, question) {
   ]);
   
   const knowledgeText = retrieveRelevantKnowledge(question, knowledgeChunks);
+  const uniqueCategories = [...new Set(knowledgeChunks.map(c => c.category).filter(Boolean))];
+  let categoryList = uniqueCategories.length > 0 ? uniqueCategories.join(", ") : "Đang cập nhật dữ liệu";
+  
+  const customCatConfig = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories" } });
+  if (customCatConfig && customCatConfig.value && customCatConfig.value.trim().length > 0) {
+    categoryList = customCatConfig.value.split('\n').map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean).join(", ");
+  }
   
   const driveSection = driveDocuments.length > 0
     ? `KHO T\u00c0I LI\u1ec6U M\u1eaau (Google Drive):\n` +
@@ -341,6 +348,7 @@ KHÔNG viết dính liền thành 1 đoạn văn lộn xộn.
 9. Trả lời bằng tiếng Việt thân thiện, dễ hiểu, KHÔNG bao giờ bị cắt cụt.
 10. BẢO MẬT THÔNG TIN: Tuyệt đối KHÔNG cung cấp thông tin cá nhân (lương, thưởng, xếp loại, điểm số...) của người khác. Khi có người hỏi thông tin cá nhân, hãy đối chiếu tên của họ ở phần "THÔNG TIN NGƯỜI ĐANG TRÒ CHUYỆN". Nếu KHÔNG trùng khớp, hãy từ chối lịch sự.
 11. BẠN KHÔNG ĐƯỢC PHÉP tự ý thêm câu "(Địa chỉ: ... Hotline: ...)" vào cuối tin nhắn. Hệ thống sẽ tự động thực hiện việc đó.
+12. GIAO TIẾP GỢI Ý: Nếu người dùng gửi lời chào ("chào", "hi") hoặc hỏi bạn biết làm gì, hãy vui vẻ giới thiệu bản thân là Trợ lý AI và gợi ý rằng bạn có thể hỗ trợ các chuyên mục sau: ${categoryList}.
 
 CÁC QUY TẮC BỔ SUNG TỪ ADMIN (ƯU TIÊN CAO):
 ${customPrompt}

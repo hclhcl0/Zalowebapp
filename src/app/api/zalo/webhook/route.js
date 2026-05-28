@@ -141,6 +141,33 @@ async function handleTextMessage(userId, text) {
     return;
   }
 
+  // Lệnh đặc biệt: Xem danh mục chủ đề (Option 1)
+  if (["menu", "hd", "hướng dẫn", "chủ đề", "help"].includes(lowerText)) {
+    try {
+      const customCat = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories" } });
+      let menuText = "📚 DANH MỤC HỖ TRỢ CỦA AI\n\nBạn có thể đặt câu hỏi về các chủ đề sau:\n";
+      
+      if (customCat && customCat.value && customCat.value.trim().length > 0) {
+        menuText += customCat.value + "\n";
+      } else {
+        const categories = await prisma.aiKnowledge.findMany({ select: { category: true }, distinct: ['category'] });
+        const catList = categories.map(c => c.category).filter(Boolean);
+        if (catList.length === 0) {
+          menuText += "(Hệ thống đang cập nhật dữ liệu...)\n";
+        } else {
+          catList.forEach((cat, index) => {
+            menuText += `${index + 1}. ${cat}\n`;
+          });
+        }
+      }
+      menuText += "\n💡 Bạn chỉ cần nhắn tin (ví dụ: 'Giá vắc xin dại là bao nhiêu?'), AI sẽ lập tức kiểm tra và phản hồi.";
+      await sendTextMessage(userId, menuText);
+      return;
+    } catch (e) {
+      console.error("[ZALO WEBHOOK] Lỗi lấy menu chủ đề:", e.message);
+    }
+  }
+
   // Tất cả tin nhắn còn lại → Xử lý bằng AI
   try {
     // Kiểm tra giới hạn câu hỏi AI trong ngày
