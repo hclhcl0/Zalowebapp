@@ -15,6 +15,48 @@ let knowledgeCacheTime = 0;
 const KNOWLEDGE_CACHE_TTL = 30 * 60 * 1000;
 
 // ============================================================
+// CACHE DANH SÁCH TÀI LIỆU GOOGLE DRIVE (10 phút)
+// ============================================================
+let driveDocCache = null;
+let driveDocCacheTime = 0;
+const DRIVE_CACHE_TTL = 10 * 60 * 1000;
+
+async function loadDriveDocuments() {
+  const now = Date.now();
+  if (driveDocCache !== null && (now - driveDocCacheTime < DRIVE_CACHE_TTL)) {
+    return driveDocCache;
+  }
+  try {
+    const configs = await prisma.systemConfig.findMany({
+      where: { key: { in: ["drive_folder_id", "google_api_key"] } },
+    });
+    const folderId = configs.find(c => c.key === "drive_folder_id")?.value;
+    const apiKey   = configs.find(c => c.key === "google_api_key")?.value;
+    if (!folderId || !apiKey) { driveDocCache = []; driveDocCacheTime = now; return []; }
+
+    const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
+    const fields = encodeURIComponent("files(id,name,mimeType)");
+    const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=${fields}&key=${apiKey}&pageSize=100`;
+
+    const res = await fetch(url);
+    const json = await res.json();
+    if (!res.ok || !json.files) { driveDocCache = []; driveDocCacheTime = now; return []; }
+
+    driveDocCache = json.files.map(f => ({
+      name: f.name,
+      link: `https://drive.google.com/file/d/${f.id}/view`,
+      download: `https://drive.google.com/uc?export=download&id=${f.id}`,
+    }));
+    driveDocCacheTime = now;
+    return driveDocCache;
+  } catch (e) {
+    driveDocCache = [];
+    driveDocCacheTime = now;
+    return [];
+  }
+}
+
+// ============================================================
 // CACHE PROVIDER
 // ============================================================
 let cachedProvider = null;
@@ -127,7 +169,16 @@ export function clearUserHistory(userId) {
 // HÀM CHUNG LẤY THÔNG TIN
 // ============================================================
 async function prepareAIContext(userId, question) {
-  const knowledgeText = await loadKnowledgeBase();
+  const [knowledgeText, driveDocuments] = await Promise.all([
+    loadKnowledgeBase(),
+    loadDriveDocuments(),
+  ]);
+  const driveSection = driveDocuments.length > 0
+    ? `KHO T\u00c0I LI\u1ec6U M\u1eaau (Google Drive):\n` +
+      driveDocuments.map((d, i) => `${i + 1}. ${d.name} - Link xem: ${d.link}`).join("\n") +
+      `\n\n(Khi nh\u00e2n vi\u00ean y\u00eau c\u1ea7u m\u1eabu t\u00e0i li\u1ec7u, h\u00e3y cung c\u1ea5p t\u00ean file v\u00e0 link x\u00e0 t\u01b0\u01a1ng \u1ee9ng b\u00ean tr\u00ean. Ch\u1ec9 NHÂN VIÊN m\u1edbi \u0111\u01b0\u1ee3c truy c\u1eadp kho t\u00e0i li\u1ec7u n\u00e0y.)`
+    : "";
+
   let hotline = "1900988975";
   let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
   let customPrompt = "";
@@ -191,7 +242,9 @@ CÁC QUY TẮC BỔ SUNG TỪ ADMIN (ƯU TIÊN CAO):
 ${customPrompt}
 
 TÀI LIỆU CHUYÊN MÔN:
-${knowledgeText || `(Chưa có tài liệu. Vui lòng gọi ${hotline}.)`}`;
+${knowledgeText || `(Chưa có tài liệu. Vui lòng gọi ${hotline}.)`}
+
+${driveSection}`;
 
   // Lấy lịch sử 12 tin nhắn gần nhất từ Database
   const recentLogs = await prisma.messageLog.findMany({

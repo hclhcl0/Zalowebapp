@@ -98,6 +98,16 @@ const SETTING_GROUPS = [
       { key: "ai_footer_msg", label: "Câu kết thúc dưới mỗi tin trả lời của AI", type: "text", placeholder: "VD: (Địa chỉ: 118 Lê Đình Lý - Hotline: 1900988975) - Để trống để tắt" },
     ],
   },
+  {
+    id: "drive_docs",
+    icon: "📂",
+    title: "Kho Tài liệu Mẫu (Google Drive)",
+    desc: "Kết nối thư mục Google Drive chứa các mẫu biểu, mẫu báo cáo nội bộ. AI sẽ tự động đọc danh sách file và gửi link cho nhân viên khi được yêu cầu.",
+    fields: [
+      { key: "drive_folder_id", label: "ID Thư mục Google Drive", type: "text", placeholder: "VD: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs (lấy từ URL folder)" },
+      { key: "google_api_key",  label: "Google API Key (Drive API v3)", type: "password", secret: true, placeholder: "••••••••••••••••" },
+    ],
+  },
 ];
 
 function SettingsPageContent() {
