@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, FileText, Upload, BrainCircuit, Download } from "lucide-react";
+import { Plus, Trash2, FileText, Upload, BrainCircuit, Download, RefreshCw, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { CDC_DEPARTMENTS } from "@/lib/departments";
 
@@ -10,6 +10,8 @@ export default function AiKnowledgePage() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [syncingId, setSyncingId] = useState(null);
+  
   const [uploadType, setUploadType] = useState("file"); // "file" or "link"
   const [driveUrl, setDriveUrl] = useState("");
   const [driveExt, setDriveExt] = useState("pdf");
@@ -18,13 +20,23 @@ export default function AiKnowledgePage() {
   const [category, setCategory] = useState(CDC_DEPARTMENTS[0]);
   const fileInputRef = useRef(null);
 
-  const fetchDocuments = async () => {
+  // Phân trang & Tìm kiếm
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalDocs, setTotalDocs] = useState(0);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // Lưu giá trị input đang gõ
+
+  const fetchDocuments = async (currentPage = page, searchStr = searchKeyword) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/knowledge");
+      const res = await fetch(`/api/knowledge?page=${currentPage}&limit=${limit}&search=${encodeURIComponent(searchStr)}`);
       const json = await res.json();
       if (json.success) {
         setDocuments(json.data);
+        setTotalPages(json.totalPages);
+        setTotalDocs(json.total);
       }
     } catch (err) {
       console.error(err);
@@ -34,8 +46,8 @@ export default function AiKnowledgePage() {
   };
 
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    fetchDocuments(page, searchKeyword);
+  }, [page, searchKeyword]);
 
   // Update category if staff has a department
   useEffect(() => {
@@ -43,6 +55,12 @@ export default function AiKnowledgePage() {
       setCategory(session.user.department);
     }
   }, [session]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchKeyword(searchInput);
+    setPage(1); // Reset về trang 1 khi tìm kiếm mới
+  };
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -83,7 +101,7 @@ export default function AiKnowledgePage() {
           setCategory(CDC_DEPARTMENTS[0]);
         }
         if (fileInputRef.current) fileInputRef.current.value = "";
-        fetchDocuments();
+        fetchDocuments(1, searchKeyword); // Tải lại danh sách
       } else {
         alert("Lỗi: " + json.error);
       }
@@ -102,7 +120,7 @@ export default function AiKnowledgePage() {
       const res = await fetch(`/api/knowledge/${id}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
-        setDocuments(documents.filter((d) => d.id !== id));
+        fetchDocuments(page, searchKeyword);
       } else {
         alert("Lỗi: " + json.error);
       }
@@ -111,17 +129,47 @@ export default function AiKnowledgePage() {
     }
   };
 
-  const handleDownload = (doc) => {
-    const blob = new Blob([doc.content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const baseName = doc.title.replace(/\.[^.]+$/, "");
-    a.download = `${baseName}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDownload = async (doc) => {
+    try {
+      // Vì danh sách ko còn content, ta phải gọi API lấy detail
+      const res = await fetch(`/api/knowledge/${doc.id}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const blob = new Blob([json.data.content], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const baseName = doc.title.replace(/\.[^.]+$/, "");
+        a.download = `${baseName}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        alert("Không thể lấy nội dung tài liệu.");
+      }
+    } catch (err) {
+      alert("Lỗi kết nối tải file.");
+    }
+  };
+
+  const handleSync = async (doc) => {
+    if (!confirm(`Bạn muốn hệ thống kết nối vào Google Drive và làm mới lại nội dung của "${doc.title}"?`)) return;
+    setSyncingId(doc.id);
+    try {
+      const res = await fetch(`/api/knowledge/${doc.id}/sync`, { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        alert("Đồng bộ thành công! Nội dung mới nhất đã được nạp cho AI.");
+        fetchDocuments(page, searchKeyword);
+      } else {
+        alert("Lỗi đồng bộ: " + json.error);
+      }
+    } catch (err) {
+      alert("Lỗi kết nối khi đồng bộ.");
+    } finally {
+      setSyncingId(null);
+    }
   };
 
   return (
@@ -135,33 +183,48 @@ export default function AiKnowledgePage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: "24px" }}>
         {/* Danh sách tài liệu */}
-        <div className="card">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+        <div className="card" style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: "bold", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
               <BrainCircuit className="w-5 h-5 text-primary" />
-              Tài liệu đã nạp ({documents.length})
+              Tài liệu đã nạp {totalDocs > 0 ? `(${totalDocs})` : ""}
             </h2>
-            <a 
-              href="/api/knowledge/backup" 
-              className="btn btn-outline btn-sm" 
-              download 
-              style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "white" }}
-            >
-              📥 Sao lưu (JSON)
-            </a>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <form onSubmit={handleSearch} style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm tài liệu..."
+                  className="form-input"
+                  style={{ padding: "6px 12px", minWidth: "200px" }}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                />
+                <button type="submit" className="btn btn-outline btn-sm" style={{ padding: "6px 10px" }}>
+                  <Search className="w-4 h-4" />
+                </button>
+              </form>
+              <a 
+                href="/api/knowledge/backup" 
+                className="btn btn-outline btn-sm" 
+                download 
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "white" }}
+              >
+                📥 Sao lưu (JSON)
+              </a>
+            </div>
           </div>
 
           {loading ? (
-            <div style={{ padding: "40px 0", textAlign: "center", color: "var(--text-muted)" }}>
+            <div style={{ padding: "40px 0", textAlign: "center", color: "var(--text-muted)", flex: 1 }}>
               <div className="spinner" style={{ margin: "0 auto 12px", width: 24, height: 24, borderColor: "var(--border)", borderTopColor: "var(--primary)" }} />
               Đang tải danh sách...
             </div>
           ) : documents.length === 0 ? (
-            <div style={{ padding: "40px 0", textAlign: "center", color: "var(--text-muted)", background: "var(--bg)", borderRadius: "var(--radius)", border: "1px dashed var(--border)" }}>
-              Chưa có tài liệu nào trong Kho tri thức AI.
+            <div style={{ padding: "40px 0", textAlign: "center", color: "var(--text-muted)", background: "var(--bg)", borderRadius: "var(--radius)", border: "1px dashed var(--border)", flex: 1 }}>
+              Không tìm thấy tài liệu nào.
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", flex: 1 }}>
               {documents.map((doc) => (
                 <div key={doc.id} style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "16px", border: "1px solid var(--border)", borderRadius: "var(--radius)", background: "white" }}>
                   <div style={{ padding: "10px", background: "var(--primary-light)", borderRadius: "8px", color: "var(--primary)" }}>
@@ -174,21 +237,65 @@ export default function AiKnowledgePage() {
                         {doc.category}
                       </span>
                     </div>
-                    <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0 0 8px 0" }}>
-                      Đã nạp: {new Date(doc.createdAt).toLocaleString("vi-VN")} • {doc.content.length.toLocaleString("vi-VN")} ký tự
-                    </p>
-                    <p style={{ fontSize: "0.8rem", color: "var(--text)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", opacity: 0.8, background: "var(--bg)", padding: "8px", borderRadius: "6px" }}>
-                      {doc.content}
+                    <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0 0 8px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span>Đã nạp: {new Date(doc.createdAt).toLocaleString("vi-VN")}</span>
+                      {doc.sourceUrl && (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#dcfce7", color: "#166534", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem" }}>
+                          🔗 Google Drive
+                        </span>
+                      )}
                     </p>
                   </div>
-                  <button onClick={() => handleDelete(doc.id, doc.title)} className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", padding: "8px" }} title="Xóa tài liệu này">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handleDownload(doc)} className="btn btn-ghost btn-sm" style={{ color: "var(--primary)", padding: "8px" }} title="Tải về dạng .txt">
-                    <Download className="w-4 h-4" />
-                  </button>
+                  
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {doc.sourceUrl && (
+                      <button 
+                        onClick={() => handleSync(doc)} 
+                        disabled={syncingId === doc.id}
+                        className="btn btn-ghost btn-sm" 
+                        style={{ color: "#0ea5e9", padding: "8px" }} 
+                        title="Đồng bộ lại từ Google Drive"
+                      >
+                        {syncingId === doc.id ? (
+                           <span className="spinner" style={{ width: 14, height: 14, borderColor: "var(--border)", borderTopColor: "#0ea5e9" }} />
+                        ) : (
+                           <RefreshCw className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
+                    <button onClick={() => handleDownload(doc)} className="btn btn-ghost btn-sm" style={{ color: "var(--primary)", padding: "8px" }} title="Tải về dạng .txt">
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(doc.id, doc.title)} className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", padding: "8px" }} title="Xóa tài liệu này">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Phân trang */}
+          {totalPages > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginTop: "24px", gap: "16px" }}>
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page === 1}
+                className="btn btn-outline btn-sm"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>
+                Trang {page} / {totalPages}
+              </span>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                disabled={page === totalPages}
+                className="btn btn-outline btn-sm"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>

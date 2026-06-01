@@ -4,26 +4,70 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 // GET /api/knowledge
-export async function GET() {
+// Hỗ trợ phân trang và tìm kiếm: /api/knowledge?page=1&limit=10&search=keyword
+export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const search = searchParams.get("search") || "";
+
+    const skip = (page - 1) * limit;
+
     let whereClause = {};
     if (session.user.role === "staff") {
       if (!session.user.department) {
-        return NextResponse.json({ success: true, data: [] }); // Staff chưa có phòng ban ko xem đc gì
+        return NextResponse.json({ success: true, data: [], total: 0, page: 1, totalPages: 0 });
       }
-      whereClause = { category: session.user.department };
+      whereClause.category = session.user.department;
     }
 
-    const docs = await prisma.aiKnowledge.findMany({
-      where: whereClause,
-      orderBy: { createdAt: "desc" },
+    if (search) {
+      // Tìm chậm: Tìm cả trong title, category và nội dung
+      whereClause.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { category: { contains: search, mode: "insensitive" } },
+        { content: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    const [docs, total] = await Promise.all([
+      prisma.aiKnowledge.findMany({
+        where: whereClause,
+        orderBy: { createdAt: "desc" },
+        skip: skip,
+        take: limit,
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          sourceUrl: true,
+          sourceExt: true,
+          createdAt: true,
+          updatedAt: true,
+          // Bỏ qua field content để trả về danh sách nhẹ hơn
+        }
+      }),
+      prisma.aiKnowledge.count({
+        where: whereClause,
+      })
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json({ 
+      success: true, 
+      data: docs,
+      total,
+      page,
+      totalPages,
+      limit
     });
-    return NextResponse.json({ success: true, data: docs });
   } catch (error) {
     console.error("[GET /api/knowledge] Error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -197,6 +241,8 @@ Yêu cầu cụ thể:
         title: title,
         category: category,
         content: content.trim(),
+        sourceUrl: driveUrl || null,
+        sourceExt: driveUrl ? ext : null,
       },
     });
 
