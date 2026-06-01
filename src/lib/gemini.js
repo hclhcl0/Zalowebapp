@@ -471,7 +471,11 @@ async function askGemini(userId, question) {
     } catch (err) {
       lastError = err;
       const errMsg = err.message?.toLowerCase() || "";
-      if (errMsg.includes("429") || errMsg.includes("resource_exhausted") || errMsg.includes("quota") || errMsg.includes("404") || errMsg.includes("not found")) {
+      if (
+        errMsg.includes("429") || errMsg.includes("resource_exhausted") || errMsg.includes("quota") || 
+        errMsg.includes("404") || errMsg.includes("not found") ||
+        errMsg.includes("503") || errMsg.includes("unavailable") || errMsg.includes("high demand") || errMsg.includes("overloaded")
+      ) {
           continue;
       }
       throw err;
@@ -518,7 +522,7 @@ async function askGroq(userId, question) {
       return cleanedAnswer;
     } catch (err) {
       lastError = err;
-      if (err.status === 429) continue;
+      if (err.status === 429 || err.status === 503 || err.status === 500) continue;
       throw err;
     }
   }
