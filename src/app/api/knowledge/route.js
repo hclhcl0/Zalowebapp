@@ -71,7 +71,19 @@ export async function POST(request) {
         return NextResponse.json({ success: false, error: "Link Google Drive không hợp lệ" }, { status: 400 });
       }
       const fileId = match[0];
-      const fetchUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+      let fetchUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+      
+      if (driveUrl.includes("spreadsheets")) {
+        fetchUrl = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
+        ext = "xlsx";
+      } else if (driveUrl.includes("document")) {
+        fetchUrl = `https://docs.google.com/document/d/${fileId}/export?format=docx`;
+        ext = "docx";
+      } else if (driveUrl.includes("presentation")) {
+        fetchUrl = `https://docs.google.com/presentation/d/${fileId}/export/pptx`;
+        ext = "pptx";
+      }
+
       const res = await fetch(fetchUrl);
       
       if (!res.ok) {

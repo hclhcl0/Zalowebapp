@@ -57,8 +57,8 @@ export default function AiKnowledgePage() {
       formData.append("file", file);
       formData.append("title", title || file.name);
     } else {
-      if (!driveUrl.includes("drive.google.com")) {
-        alert("Vui lòng nhập link Google Drive hợp lệ!");
+      if (!driveUrl.includes("google.com")) {
+        alert("Vui lòng nhập link Google Drive/Docs/Sheets hợp lệ!");
         return;
       }
       formData.append("driveUrl", driveUrl);
