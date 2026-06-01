@@ -40,9 +40,7 @@ export async function POST(request) {
     }
 
     const formData = await request.formData();
-    const file = formData.get("file");
     let category = formData.get("category");
-    const title = formData.get("title") || file?.name || "Tài liệu không tên";
 
     if (session.user.role === "staff") {
       if (!session.user.department) {
@@ -51,16 +49,61 @@ export async function POST(request) {
       category = session.user.department; // Cưỡng ép dùng department của staff
     }
 
-    if (!file || !category) {
-      return NextResponse.json({ success: false, error: "Thiếu file hoặc chuyên mục" }, { status: 400 });
+    if (!category) {
+      return NextResponse.json({ success: false, error: "Thiếu chuyên mục" }, { status: 400 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    
+    let buffer;
+    let title = formData.get("title");
+    let ext = "";
+
+    const file = formData.get("file");
+    const driveUrl = formData.get("driveUrl");
+
+    if (file && file.size > 0) {
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      title = title || file.name;
+      ext = file.name.split(".").pop().toLowerCase();
+    } else if (driveUrl) {
+      const match = driveUrl.match(/[-\w]{25,}/);
+      if (!match) {
+        return NextResponse.json({ success: false, error: "Link Google Drive không hợp lệ" }, { status: 400 });
+      }
+      const fileId = match[0];
+      const fetchUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+      const res = await fetch(fetchUrl);
+      
+      if (!res.ok) {
+        return NextResponse.json({ success: false, error: "Không thể tải file từ Drive. Đảm bảo file đã bật 'Bất kỳ ai có liên kết'." }, { status: 400 });
+      }
+      
+      const arrayBuffer = await res.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+
+      // Cố gắng lấy tên file và đuôi từ header
+      const disposition = res.headers.get("content-disposition");
+      if (disposition && disposition.includes("filename=")) {
+        const filenameMatch = disposition.match(/filename\*?=['"]?(?:UTF-\d['"]*)?([^'";]+)['"]?/i);
+        if (filenameMatch) {
+          const originalName = decodeURIComponent(filenameMatch[1]);
+          ext = originalName.split(".").pop().toLowerCase();
+          if (!title) title = originalName;
+        }
+      }
+      
+      // Fallback cho đuôi file nếu Drive ko trả về
+      if (!ext) {
+        ext = formData.get("driveExt") || "pdf";
+      }
+      if (!title) {
+        title = "Tài liệu từ Drive";
+      }
+    } else {
+      return NextResponse.json({ success: false, error: "Vui lòng chọn file hoặc nhập link Google Drive" }, { status: 400 });
+    }
+
     let content = "";
-    
-    const ext = file.name.split(".").pop().toLowerCase();
     
     if (ext === "pdf") {
       // Dùng Gemini Vision để OCR trực tiếp – đọc được cả PDF scan hình ảnh

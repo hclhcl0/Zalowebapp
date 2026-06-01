@@ -10,6 +10,9 @@ export default function AiKnowledgePage() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadType, setUploadType] = useState("file"); // "file" or "link"
+  const [driveUrl, setDriveUrl] = useState("");
+  const [driveExt, setDriveExt] = useState("pdf");
   
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(CDC_DEPARTMENTS[0]);
@@ -43,15 +46,26 @@ export default function AiKnowledgePage() {
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    const file = fileInputRef.current?.files[0];
-    if (!file) {
-      alert("Vui lòng chọn file PDF, DOCX, PPTX, TXT, XLSX hoặc CSV!");
-      return;
+    const formData = new FormData();
+
+    if (uploadType === "file") {
+      const file = fileInputRef.current?.files[0];
+      if (!file) {
+        alert("Vui lòng chọn file PDF, DOCX, PPTX, TXT, XLSX hoặc CSV!");
+        return;
+      }
+      formData.append("file", file);
+      formData.append("title", title || file.name);
+    } else {
+      if (!driveUrl.includes("drive.google.com")) {
+        alert("Vui lòng nhập link Google Drive hợp lệ!");
+        return;
+      }
+      formData.append("driveUrl", driveUrl);
+      formData.append("driveExt", driveExt);
+      formData.append("title", title || "Tài liệu từ Drive");
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("title", title || file.name);
     formData.append("category", category);
 
     setUploading(true);
@@ -64,6 +78,7 @@ export default function AiKnowledgePage() {
       if (json.success) {
         alert("Thêm tài liệu thành công!");
         setTitle("");
+        setDriveUrl("");
         if (session?.user?.role !== "staff") {
           setCategory(CDC_DEPARTMENTS[0]);
         }
@@ -218,17 +233,65 @@ export default function AiKnowledgePage() {
               )}
             </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Chọn File (Hỗ trợ .PDF, .DOCX, .PPTX, .TXT, .XLSX, .CSV)</label>
-              <input
-                type="file"
-                className="form-input"
-                accept=".pdf,.docx,.pptx,.txt,.md,.xlsx,.xls,.csv"
-                ref={fileInputRef}
-                required
-                style={{ padding: "8px", background: "var(--bg)" }}
-              />
+            <div style={{ display: "flex", gap: "8px", marginBottom: "16px", background: "var(--bg)", padding: "4px", borderRadius: "8px" }}>
+              <button
+                type="button"
+                onClick={() => setUploadType("file")}
+                style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "none", background: uploadType === "file" ? "white" : "transparent", boxShadow: uploadType === "file" ? "0 1px 3px rgba(0,0,0,0.1)" : "none", fontWeight: uploadType === "file" ? 600 : 400, color: uploadType === "file" ? "var(--primary)" : "var(--text-muted)", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                Tải file lên
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadType("link")}
+                style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "none", background: uploadType === "link" ? "white" : "transparent", boxShadow: uploadType === "link" ? "0 1px 3px rgba(0,0,0,0.1)" : "none", fontWeight: uploadType === "link" ? 600 : 400, color: uploadType === "link" ? "var(--primary)" : "var(--text-muted)", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                Link Google Drive
+              </button>
             </div>
+
+            {uploadType === "file" ? (
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Chọn File (Hỗ trợ .PDF, .DOCX, .PPTX, .TXT, .XLSX, .CSV)</label>
+                <input
+                  type="file"
+                  className="form-input"
+                  accept=".pdf,.docx,.pptx,.txt,.md,.xlsx,.xls,.csv"
+                  ref={fileInputRef}
+                  required
+                  style={{ padding: "8px", background: "var(--bg)" }}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Link Google Drive (Phải bật Bất kỳ ai có liên kết)</label>
+                  <input
+                    type="url"
+                    className="form-input"
+                    placeholder="https://drive.google.com/file/d/..."
+                    value={driveUrl}
+                    onChange={(e) => setDriveUrl(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Định dạng file (để AI đọc đúng chuẩn)</label>
+                  <select
+                    className="form-input"
+                    value={driveExt}
+                    onChange={(e) => setDriveExt(e.target.value)}
+                  >
+                    <option value="pdf">PDF (Ảnh/Văn bản)</option>
+                    <option value="docx">Word (.docx)</option>
+                    <option value="pptx">PowerPoint (.pptx)</option>
+                    <option value="xlsx">Excel (.xlsx)</option>
+                    <option value="csv">CSV</option>
+                    <option value="txt">Text (.txt)</option>
+                  </select>
+                </div>
+              </>
+            )}
 
             <button type="submit" className="btn btn-primary" disabled={uploading} style={{ width: "100%", justifyContent: "center", marginTop: "8px" }}>
               {uploading ? (
