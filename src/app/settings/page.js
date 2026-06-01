@@ -523,6 +523,25 @@ function SettingsPageContent() {
     }
   }, [searchParams, router]);
 
+  // Đọc kết quả Drive OAuth callback từ query params
+  useEffect(() => {
+    const driveSuccess = searchParams.get("drive_oauth_success");
+    const driveError = searchParams.get("drive_oauth_error");
+
+    if (driveSuccess) {
+      setDriveOAuthMsg({ type: "success", text: "✅ Đã kết nối thư mục Google Drive qua OAuth2 thành công!" });
+      setActiveTab("drive_docs");
+      loadSettings();
+      router.replace("/settings?tab=drive_docs");
+    }
+
+    if (driveError) {
+      setDriveOAuthMsg({ type: "error", text: `❌ Lỗi: ${decodeURIComponent(driveError)}` });
+      setActiveTab("drive_docs");
+      router.replace("/settings?tab=drive_docs");
+    }
+  }, [searchParams, loadSettings, router]);
+
   // Đọc tab hoạt động từ query params (ví dụ: ?tab=gmail_pool)
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -1335,6 +1354,13 @@ function SettingsPageContent() {
                   <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginBottom: "16px", lineHeight: 1.6 }}>
                     Nhấn nút bên dưới để ủy quyền cho hệ thống đọc thư mục Drive của bạn. Hệ thống dùng lại <strong>Google OAuth Client ID/Secret</strong> đã nhập ở phần cài đặt Gmail. Chỉ cần kết nối 1 lần — token sẽ được lưu tự động.
                   </p>
+                  
+                  {values.drive_refresh_token && (
+                    <div style={{ padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", fontWeight: 600, fontSize: "0.875rem", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d" }}>
+                      ✅ Hệ thống đã được cấp quyền truy cập Google Drive thành công!
+                    </div>
+                  )}
+
                   {driveOAuthMsg && (
                     <div style={{ padding: "10px 14px", borderRadius: "8px", marginBottom: "16px", fontWeight: 600, fontSize: "0.875rem",
                       background: driveOAuthMsg.type === "success" ? "#f0fdf4" : "#fef2f2",
@@ -1345,7 +1371,7 @@ function SettingsPageContent() {
                   )}
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className={values.drive_refresh_token ? "btn btn-outline" : "btn btn-primary"}
                     disabled={driveOAuthLoading}
                     style={{ display: "flex", alignItems: "center", gap: "8px" }}
                     onClick={async () => {
@@ -1367,7 +1393,7 @@ function SettingsPageContent() {
                     }}
                   >
                     {driveOAuthLoading && <span className="spinner" style={{ width: 14, height: 14 }} />}
-                    📂 Kết nối Google Drive
+                    {values.drive_refresh_token ? "🔄 Kết nối lại / Đổi tài khoản Drive" : "📂 Kết nối Google Drive"}
                   </button>
                   <div style={{ marginTop: "16px", padding: "12px 16px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "0.8rem", color: "#1e40af", lineHeight: 1.7 }}>
                     <strong>💡 Lưu ý:</strong> Thư mục Drive KHÔNG cần chia sẻ công khai. OAuth2 cho phép đọc file riêng tư trong Drive của bạn. Nhân viên nhận link xem — họ cần đăng nhập Google nội bộ để tải.
