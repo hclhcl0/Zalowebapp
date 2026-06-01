@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Users, UserCheck, Stethoscope, Clock, Megaphone, Mail, UserCog, Settings, Activity } from "lucide-react";
+import { Users, UserCheck, Stethoscope, Clock, Megaphone, Mail, UserCog, Settings, Activity, BrainCircuit } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +35,9 @@ export default async function Dashboard() {
       fullName: null
     }
   });
+
+  // Tổng số lượng tài liệu trong Kho tri thức AI
+  const totalAiDocs = await prisma.aiKnowledge.count();
 
   // 2. Truy vấn 5 tương tác/hoạt động gần đây từ MessageLog
   const logs = await prisma.messageLog.findMany({
@@ -157,6 +160,18 @@ export default async function Dashboard() {
             <div className="stat-change" style={{ color: "var(--warning)" }}>Chưa khai báo thông tin</div>
           </div>
           <div className="stat-icon yellow"><Clock size={24} color="#d97706" /></div>
+        </div>
+
+        {/* Card 5: AI Knowledge */}
+        <div className="stat-card">
+          <div className="stat-info">
+            <div className="stat-label">Kho tri thức AI</div>
+            <div className="stat-value">{totalAiDocs.toLocaleString("vi-VN")}</div>
+            <div className="stat-change" style={{ color: "var(--primary)" }}>Tài liệu chuyên môn</div>
+          </div>
+          <div className="stat-icon blue" style={{ background: "#e0e7ff" }}>
+            <BrainCircuit size={24} color="#4338ca" />
+          </div>
         </div>
       </div>
 
