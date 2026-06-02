@@ -478,10 +478,9 @@ async function askGemini(userId, question, contextOverride) {
     }
   }
 
+  // Model duy nhất: Gemini 2.0 Flash Lite (nhanh, nhẹ, miễn phí cao)
   const geminiModels = [
-    "gemini-1.5-flash",       // Ổn định, miễn phí
-    "gemini-2.0-flash",       // Nhanh hơn
-    "gemini-1.5-flash-8b"     // Nhẹ nhất, dự phòng
+    "gemini-2.0-flash-lite"
   ];
 
   let lastError = null;
