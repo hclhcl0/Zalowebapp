@@ -39,6 +39,7 @@ model Follower {
   
   // Phân loại người quan tâm
   userType    String   @default("citizen") // "citizen" | "staff"
+  accessLevel String   @default("basic")   // "basic" | "manager" | "hr" | "admin"
   department  String?  // Phòng ban của cán bộ cơ quan
   notes       String?  // Ghi chú nhanh
 

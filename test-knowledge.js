@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.aiKnowledge.findMany().then(res => { console.log(res.map(d => ({id: d.id, title: d.title, contentLength: d.content.length}))); process.exit(0); });

@@ -302,7 +302,7 @@ async function prepareAIContext(userId, question) {
   let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
   let customPrompt = "";
   let footerMsg = "(Địa chỉ: {address} - Hotline: {hotline})"; // Default
-  let userProfile = { displayName: "Bạn", role: "CÔNG DÂN" };
+  let userProfile = { displayName: "Bạn", role: "CÔNG DÂN", accessLevel: "basic", department: null };
   
   try {
     const settings = await prisma.systemConfig.findMany({ where: { key: { in: ["hotline_main", "address", "ai_custom_prompt", "ai_footer_msg"] } } });
@@ -313,24 +313,26 @@ async function prepareAIContext(userId, question) {
     const cp = settings.find(s => s.key === "ai_custom_prompt");
     if (cp?.value) customPrompt = cp.value;
     const fm = settings.find(s => s.key === "ai_footer_msg");
-    if (fm) footerMsg = fm.value; // Có thể rỗng nếu user cố tình để trống
-    else footerMsg = `(Địa chỉ: ${address} - Hotline: ${hotline})`; // Nếu chưa set thì dùng default
+    if (fm) footerMsg = fm.value;
+    else footerMsg = `(Địa chỉ: ${address} - Hotline: ${hotline})`;
     
-    // Replace placeholders just in case they use them
     footerMsg = footerMsg.replace("{address}", address).replace("{hotline}", hotline);
     
-    // Fetch Follower info to determine if they are staff or citizen
+    // Lấy thông tin người dùng + cấp độ truy cập
     const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
     if (follower) {
       userProfile.displayName = follower.fullName || follower.displayName || "Bạn";
+      userProfile.accessLevel = follower.accessLevel || "basic";
+      userProfile.department = follower.department || null;
       if (follower.userType === "staff") userProfile.role = "NHÂN VIÊN CỦA CDC (CÁN BỘ NỘI BỘ)";
     }
     
-    // Nếu là nhân viên, thử lấy tên thật từ bảng StaffZaloLink để xưng hô cho chuẩn xác
+    // Nếu là nhân viên, thử lấy tên thật từ bảng StaffZaloLink
     if (userProfile.role.includes("NHÂN VIÊN")) {
       const staffLink = await prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } });
-      if (staffLink && staffLink.staffNameRaw) {
+      if (staffLink?.staffNameRaw) {
         userProfile.displayName = staffLink.staffNameRaw;
+        if (!userProfile.department && staffLink.department) userProfile.department = staffLink.department;
       }
     }
     
@@ -342,20 +344,44 @@ async function prepareAIContext(userId, question) {
     if (!customCatConfig || !customCatConfig.value || customCatConfig.value.trim().length === 0) {
       customCatConfig = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories" } });
     }
-    if (customCatConfig && customCatConfig.value && customCatConfig.value.trim().length > 0) {
+    if (customCatConfig?.value?.trim().length > 0) {
       categoryList = customCatConfig.value.split('\n').map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean).join(", ");
     }
   } catch (err) {}
+
+  // ============================================================
+  // XÂY DỰNG QUY TẮC BẢO MẬT DỰA THEO CẤP TRUY CẬP
+  // ============================================================
+  let privacyRule = "";
+  if (userProfile.accessLevel === "hr" || userProfile.accessLevel === "admin") {
+    // Phòng TCKT / Ban Giám đốc: Xem tất cả mọi người
+    privacyRule = `🔓 QUYỀN TRUY CẬP ĐẶC BIỆT (CẤP HR/ADMIN):
+Người dùng này thuộc Phòng Tài chính - Kế toán hoặc Ban Giám đốc, được cấp quyền tra cứu thông tin (lương, xếp loại, hệ số, điểm...) của TẤT CẢ nhân viên trong cơ quan.
+Bạn ĐƯỢC PHÉP trả lời đầy đủ các câu hỏi về thông tin cá nhân, lương thưởng của bất kỳ nhân viên nào khi được hỏi.`;
+  } else if (userProfile.accessLevel === "manager") {
+    // Trưởng phòng: Chỉ xem nhân viên cùng đơn vị
+    const dept = userProfile.department || "đơn vị của họ";
+    privacyRule = `🔓 QUYỀN TRUY CẤP TRƯỞNG ĐƠN VỊ (${dept}):
+Người dùng này là Trưởng đơn vị "${dept}", được phép tra cứu thông tin (lương, xếp loại, điểm...) của các nhân viên THUỘC đơn vị "${dept}".
+Nếu câu hỏi về nhân viên KHÔNG thuộc đơn vị "${dept}", hãy từ chối lịch sự: "Xin lỗi, tôi chỉ có thể cung cấp thông tin nhân viên trong đơn vị ${dept} của bạn."
+Để xác định nhân viên có thuộc đơn vị hay không, hãy dựa vào thông tin phòng ban trong tài liệu chuyên môn.`;
+  } else {
+    // Nhân viên thường / Người dân: Chỉ xem bản thân
+    privacyRule = `🚨 QUY TẮC BẢO MẬT TỐI CAO (BẮT BUỘC TUÂN THỦ):
+Nếu người dùng hỏi thông tin cá nhân (lương, thưởng, hệ số, xếp loại, điểm số...) của MỘT NGƯỜI KHÁC (tên không giống với "${userProfile.displayName}"), bạn PHẢI TỪ CHỐI NGAY LẬP TỨC.
+Câu trả lời duy nhất được phép là: "Xin lỗi, vì lý do bảo mật dữ liệu nội bộ, tôi chỉ có thể cung cấp thông tin cá nhân cho chính chủ."
+Bạn KHÔNG ĐƯỢC PHÉP tiết lộ dữ liệu cá nhân của người khác dưới bất kỳ hình thức nào. Nếu là CÔNG DÂN, chỉ cung cấp thông tin y tế công cộng.`;
+  }
 
   const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng). Vai trò của bạn là hỗ trợ, giải đáp thắc mắc cho người dân và cán bộ của CDC Đà Nẵng.
 
 THÔNG TIN NGƯỜI ĐANG TRÒ CHUYỆN:
 - Tên đang trò chuyện: ${userProfile.displayName}
 - Phân loại: ${userProfile.role}
+- Đơn vị: ${userProfile.department || "Chưa xác định"}
+- Cấp truy cập: ${userProfile.accessLevel}
 
-🚨 QUY TẮC BẢO MẬT TỐI CAO (BẮT BUỘC TUÂN THỦ):
-Nếu người dùng hỏi thông tin cá nhân (lương, thưởng, hệ số, xếp loại, điểm số...) của MỘT NGƯỜI KHÁC (tên không giống với "${userProfile.displayName}"), bạn PHẢI TỪ CHỐI NGAY LẬP TỨC. Câu trả lời duy nhất được phép là: "Xin lỗi, vì lý do bảo mật dữ liệu nội bộ, tôi chỉ có thể cung cấp thông tin cá nhân cho chính chủ."
-Bạn KHÔNG ĐƯỢC PHÉP tiết lộ dữ liệu cá nhân của người khác dưới bất kỳ hình thức nào. Nếu là CÔNG DÂN, chỉ cung cấp thông tin y tế công cộng.
+${privacyRule}
 
 QUY TẮC BẮT BUỘC:
 1. CHỈ trả lời dựa trên TÀI LIỆU CHUYÊN MÔN được cung cấp bên dưới. Không tự suy đoán.

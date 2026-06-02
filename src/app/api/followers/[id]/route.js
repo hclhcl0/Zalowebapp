@@ -70,7 +70,7 @@ export async function PUT(request, { params }) {
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
     const body = await request.json();
-    const { phone, displayName, userType, department, notes, fullName, dob, cccd } = body;
+    const { phone, displayName, userType, department, notes, fullName, dob, cccd, accessLevel } = body;
 
     const follower = await prisma.follower.update({
       where: { id },
@@ -78,6 +78,7 @@ export async function PUT(request, { params }) {
         ...(phone !== undefined && { phone }),
         ...(displayName !== undefined && { displayName }),
         ...(userType !== undefined && { userType }),
+        ...(accessLevel !== undefined && { accessLevel }),
         ...(department !== undefined && { department: department === "" ? null : department }),
         ...(notes !== undefined && { notes: notes === "" ? null : notes }),
         ...(fullName !== undefined && { fullName: fullName === "" ? null : fullName }),

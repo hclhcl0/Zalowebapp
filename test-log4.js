@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.messageLog.findMany({orderBy: {receivedAt: 'desc'}, take: 5}).then(res => { console.log(res); process.exit(0); });

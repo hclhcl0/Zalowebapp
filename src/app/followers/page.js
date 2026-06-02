@@ -246,6 +246,7 @@ export default function FollowersPage() {
   // Edit metadata states
   const [newPhone, setNewPhone] = useState("");
   const [newUserType, setNewUserType] = useState("citizen");
+  const [newAccessLevel, setNewAccessLevel] = useState("basic");
   const [newDept, setNewDept] = useState("");
   const [newNotes, setNewNotes] = useState("");
   const [newFullName, setNewFullName] = useState("");
@@ -519,6 +520,7 @@ export default function FollowersPage() {
         setSelectedFollower(jsonDetails.data);
         setNewPhone(jsonDetails.data.phone || "");
         setNewUserType(jsonDetails.data.userType || "citizen");
+        setNewAccessLevel(jsonDetails.data.accessLevel || "basic");
         setNewDept(jsonDetails.data.department || "");
         setNewNotes(jsonDetails.data.notes || "");
         setNewFullName(jsonDetails.data.fullName || "");
@@ -579,7 +581,7 @@ export default function FollowersPage() {
     }
   };
 
-  // Update follower metadata (Phone, userType, department, notes)
+  // Update follower metadata
   const handleUpdateFollowerMeta = async () => {
     if (!selectedFollower) return;
     setUpdatingMeta(true);
@@ -590,6 +592,7 @@ export default function FollowersPage() {
         body: JSON.stringify({
           phone: newPhone,
           userType: newUserType,
+          accessLevel: newAccessLevel,
           department: newDept,
           notes: newNotes,
           fullName: newFullName,
@@ -600,16 +603,16 @@ export default function FollowersPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Thao tác thất bại");
       
-      // Update state
       setSelectedFollower(prev => ({
         ...prev,
         phone: json.data.phone,
         userType: json.data.userType,
+        accessLevel: json.data.accessLevel,
         department: json.data.department,
         notes: json.data.notes,
       }));
       alert("🎉 Cập nhật thông tin phân loại thành công!");
-      fetchFollowers(); // reload list
+      fetchFollowers();
     } catch (err) {
       alert("Lỗi: " + err.message);
     } finally {
@@ -985,12 +988,30 @@ export default function FollowersPage() {
                 <div>
                   <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏷️ Phân loại</label>
                   <select className="form-input" value={newUserType}
-                    onChange={e => { setNewUserType(e.target.value); if (e.target.value !== "staff") setNewDept(""); }}
+                    onChange={e => { setNewUserType(e.target.value); if (e.target.value !== "staff") { setNewDept(""); setNewAccessLevel("basic"); } }}
                     style={{ padding: "6px 10px", fontSize: "0.85rem", background: "white", cursor: "pointer" }}>
                     <option value="citizen">🟢 Khách hàng / Người dân</option>
                     <option value="staff">💼 Cán bộ cơ quan</option>
                   </select>
                 </div>
+
+                {newUserType === "staff" && (
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🔐 Cấp truy cập AI</label>
+                    <select className="form-input" value={newAccessLevel} onChange={e => setNewAccessLevel(e.target.value)}
+                      style={{ padding: "6px 10px", fontSize: "0.85rem", background: "white", cursor: "pointer" }}>
+                      <option value="basic">🔒 Nhân viên thường — Chỉ xem bản thân</option>
+                      <option value="manager">🔓 Trưởng đơn vị — Xem nhân viên cùng phòng</option>
+                      <option value="hr">🔑 Phòng TCKT — Xem tất cả nhân viên</option>
+                      <option value="admin">👑 Ban Giám đốc — Quyền cao nhất</option>
+                    </select>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                      {newAccessLevel === "manager" && "⚠️ Cần chọn đúng Khoa/Phòng bên dưới để phân quyền hoạt động chính xác"}
+                      {newAccessLevel === "hr" && "✅ Phòng TCKT được phép tra cứu thông tin tất cả nhân viên"}
+                      {newAccessLevel === "admin" && "✅ Ban Giám đốc được phép tra cứu thông tin tất cả nhân viên"}
+                    </div>
+                  </div>
+                )}
 
                 {newUserType === "staff" && (
                   <div>
