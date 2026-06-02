@@ -153,7 +153,7 @@ export async function GET() {
       const ids = recentLinks.map((l) => l.zaloUserId);
       const followers = await prisma.follower.findMany({
         where: { zaloUserId: { in: ids } },
-        select: { zaloUserId: true, displayName: true, avatarUrl: true },
+        select: { zaloUserId: true, displayName: true, avatarUrl: true, accessLevel: true },
       });
       followers.forEach((f) => { followerMap[f.zaloUserId] = f; });
     }
@@ -162,6 +162,7 @@ export async function GET() {
       ...l,
       displayName: followerMap[l.zaloUserId]?.displayName || "",
       avatarUrl: followerMap[l.zaloUserId]?.avatarUrl || "",
+      accessLevel: followerMap[l.zaloUserId]?.accessLevel || "basic",
     }));
 
     return NextResponse.json({

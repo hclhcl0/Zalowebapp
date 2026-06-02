@@ -622,14 +622,19 @@ export default function FollowersPage() {
 
   // (Chức năng gửi tin nhắn 1-1 không khả dụng với OA Cơ quan Nhà nước)
 
+  const [regDeptFilter, setRegDeptFilter] = useState("");
+
   const filteredRegLinks = regStats?.links 
     ? regStats.links.filter(l => {
-        if (!regSearchQuery.trim()) return true;
-        const lowerQ = regSearchQuery.toLowerCase();
-        return (l.staffNameRaw && l.staffNameRaw.toLowerCase().includes(lowerQ)) ||
-               (l.displayName && l.displayName.toLowerCase().includes(lowerQ)) ||
-               (l.phone && l.phone.includes(lowerQ)) ||
-               (l.department && l.department.toLowerCase().includes(lowerQ));
+        const lowerQ = regSearchQuery.toLowerCase().trim();
+        const matchQ = !lowerQ ||
+          (l.staffNameRaw && l.staffNameRaw.toLowerCase().includes(lowerQ)) ||
+          (l.displayName && l.displayName.toLowerCase().includes(lowerQ)) ||
+          (l.phone && l.phone.includes(lowerQ)) ||
+          (l.department && l.department.toLowerCase().includes(lowerQ)) ||
+          (l.zaloUserId && l.zaloUserId.includes(lowerQ));
+        const matchDept = !regDeptFilter || l.department === regDeptFilter;
+        return matchQ && matchDept;
       })
     : [];
 
@@ -1158,20 +1163,12 @@ export default function FollowersPage() {
 
           {/* Bảng đã đăng ký */}
           <div className="card" style={{ padding: 0 }}>
-            <div className="registration-header-row" style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)" }}>
+          <div className="registration-header-row" style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)" }}>
               <div>
                 <div className="card-title">✅ Danh Sách Đã Đăng Ký ({regStats?.totalRegistered ?? 0})</div>
                 <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Nhân viên đã xác nhận tên thật qua link đăng ký</div>
               </div>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="🔍 Tìm cán bộ..."
-                  value={regSearchQuery}
-                  onChange={e => setRegSearchQuery(e.target.value)}
-                  style={{ width: "200px", height: "32px", fontSize: "0.8rem", padding: "0 10px" }}
-                />
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                 <input
                   type="file"
                   accept=".xlsx, .xls"
@@ -1195,6 +1192,39 @@ export default function FollowersPage() {
                     📥 Xuất Excel
                   </button>
                 )}
+              </div>
+            </div>
+
+            {/* Search & Filter Bar */}
+            <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border)", display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", background: "var(--bg)" }}>
+              <div style={{ position: "relative", flex: "1 1 220px", minWidth: "180px" }}>
+                <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "0.85rem", pointerEvents: "none" }}>🔍</span>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Tìm theo tên, SĐT, tên Zalo, ID..."
+                  value={regSearchQuery}
+                  onChange={e => setRegSearchQuery(e.target.value)}
+                  style={{ paddingLeft: "30px", height: "34px", fontSize: "0.82rem" }}
+                />
+              </div>
+              <select
+                className="form-input"
+                value={regDeptFilter}
+                onChange={e => setRegDeptFilter(e.target.value)}
+                style={{ flex: "0 0 auto", height: "34px", fontSize: "0.82rem", minWidth: "180px", cursor: "pointer" }}
+              >
+                <option value="">🏢 Tất cả đơn vị</option>
+                {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              {(regSearchQuery || regDeptFilter) && (
+                <button onClick={() => { setRegSearchQuery(""); setRegDeptFilter(""); }}
+                  style={{ height: "34px", padding: "0 12px", fontSize: "0.8rem", background: "none", border: "1px solid var(--border)", borderRadius: "var(--radius)", cursor: "pointer", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                  ✕ Xóa lọc
+                </button>
+              )}
+              <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+                {filteredRegLinks.length}/{regStats?.totalRegistered ?? 0} cán bộ
               </div>
             </div>
 
@@ -1223,9 +1253,11 @@ export default function FollowersPage() {
                       <tr>
                         <th style={{ width: "50px" }}></th>
                         <th>Tên thật (Đã đăng ký)</th>
+                        <th>SĐT</th>
                         <th>Tên Zalo</th>
                         <th>Phòng / Khoa</th>
-                        <th style={{ width: "110px" }}>Ngày ĐK</th>
+                        <th style={{ width: "100px" }}>Cấp quyền</th>
+                        <th style={{ width: "100px" }}>Ngày ĐK</th>
                         <th style={{ width: "110px" }}>Thao tác</th>
                       </tr>
                     </thead>
@@ -1239,10 +1271,26 @@ export default function FollowersPage() {
                           </td>
                           <td>
                             <div style={{ fontWeight: 700, color: "var(--text)" }}>{link.staffNameRaw}</div>
-                            {link.phone && <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>📞 {link.phone}</div>}
+                            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}><code>{link.zaloUserId}</code></div>
+                          </td>
+                          <td style={{ fontSize: "0.85rem" }}>
+                            {link.phone
+                              ? <span style={{ color: "var(--text)" }}>📞 {link.phone}</span>
+                              : <em style={{ color: "var(--text-light)", fontSize: "0.78rem" }}>Chưa có</em>}
                           </td>
                           <td style={{ fontSize: "0.875rem", color: "var(--text)" }}>{link.displayName || "—"}</td>
                           <td style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>{link.department || <em style={{ color: "var(--text-light)" }}>Chưa chọn</em>}</td>
+                          <td>
+                            {link.accessLevel === "hr" ? (
+                              <span style={{ fontSize: "0.7rem", fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "#fef3c7", color: "#92400e" }}>🔑 TCKT</span>
+                            ) : link.accessLevel === "manager" ? (
+                              <span style={{ fontSize: "0.7rem", fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "#ede9fe", color: "#5b21b6" }}>🔓 T.Đơn vị</span>
+                            ) : link.accessLevel === "admin" ? (
+                              <span style={{ fontSize: "0.7rem", fontWeight: 600, padding: "2px 7px", borderRadius: 20, background: "#fee2e2", color: "#991b1b" }}>👑 BGĐ</span>
+                            ) : (
+                              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>🔒 Cơ bản</span>
+                            )}
+                          </td>
                           <td style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{new Date(link.registeredAt).toLocaleDateString("vi-VN")}</td>
                           <td>
                             <div style={{ display: "flex", gap: "6px" }}>
