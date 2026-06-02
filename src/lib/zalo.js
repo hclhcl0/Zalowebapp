@@ -85,10 +85,72 @@ async function callZaloAPI(url, options = {}) {
   return data;
 }
 
+// Hỗ trợ chia nhỏ văn bản dài thành các đoạn nhỏ để tránh vượt quá giới hạn 3000 ký tự của Zalo
+function splitTextIntoChunks(text, maxLen = 2000) {
+  const lines = text.split("\n");
+  const chunks = [];
+  let currentChunk = "";
+  
+  for (const line of lines) {
+    if (currentChunk.length + line.length + 1 > maxLen) {
+      if (currentChunk) {
+        chunks.push(currentChunk);
+        currentChunk = "";
+      }
+      if (line.length > maxLen) {
+        let remainingLine = line;
+        while (remainingLine.length > maxLen) {
+          chunks.push(remainingLine.substring(0, maxLen));
+          remainingLine = remainingLine.substring(maxLen);
+        }
+        currentChunk = remainingLine;
+      } else {
+        currentChunk = line;
+      }
+    } else {
+      if (currentChunk) {
+        currentChunk += "\n" + line;
+      } else {
+        currentChunk = line;
+      }
+    }
+  }
+  
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+  
+  return chunks;
+}
+
 // ============================================================
 // GỬI TIN NHẮN VĂN BẢN
 // ============================================================
 export async function sendTextMessage(toUserId, text) {
+  if (!text) return { error: -1, message: "Empty text" };
+
+  // Nếu tin nhắn dài hơn 2000 ký tự, chia nhỏ gửi từng phần tránh lỗi -201 của Zalo
+  if (text.length > 2000) {
+    const chunks = splitTextIntoChunks(text, 2000);
+    let lastRes = { error: 0, message: "Success" };
+    
+    for (const chunk of chunks) {
+      if (chunk.trim()) {
+        lastRes = await callZaloAPI("https://openapi.zalo.me/v2.0/oa/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipient: { user_id: toUserId },
+            message: { text: chunk },
+          }),
+        });
+        // Chờ 500ms giữa các chunk để tránh bị nghẽn API
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+    return lastRes;
+  }
+
   return callZaloAPI("https://openapi.zalo.me/v2.0/oa/message", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
