@@ -231,11 +231,8 @@ function retrieveRelevantKnowledge(question, chunks) {
     let score = 0;
     for (const kw of keywords) {
       // Basic keyword counting
-      const regex = new RegExp(kw, 'g');
-      const matches = chunk.normalized.match(regex);
-      if (matches) {
-        score += matches.length;
-      }
+      const count = chunk.normalized.split(kw).length - 1;
+      score += count;
     }
     return { ...chunk, score };
   });
