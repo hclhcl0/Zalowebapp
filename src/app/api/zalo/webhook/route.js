@@ -157,15 +157,12 @@ async function handleTextMessage(userId, text) {
 
     if (!welcomeMsg) {
       welcomeMsg =
-        `Xin chào ${displayName}! Tôi là Trợ lý AI của CDC Đà Nẵng.\n\n` +
-        `Để được hỗ trợ tốt nhất, vui lòng chọn đăng ký thông tin theo nhóm đối tượng phù hợp dưới đây:\n\n` +
-        `💼 NẾU LÀ CÁN BỘ / NHÂN VIÊN CDC ĐÀ NẴNG:\n` +
-        `Vui lòng bấm liên kết dưới đây để khai báo tên, phòng ban và liên kết tài khoản nội bộ:\n` +
+        `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\n` +
+        `Vui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:\n\n` +
+        `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n` +
         `🔗 https://sender.ksbtdanang.vn/register?uid=${userId}\n\n` +
-        `🏥 NẾU LÀ NGƯỜI DÂN / KHÁCH HÀNG:\n` +
-        `Vui lòng bấm liên kết dưới đây để đăng ký thông tin nhận tư vấn y tế, lịch tiêm chủng và nhận kết quả xét nghiệm tự động:\n` +
-        `🔗 https://sender.ksbtdanang.vn/patient-register?uid=${userId}\n\n` +
-        `Bạn cũng có thể hỏi trực tiếp tôi về phòng bệnh, vắc-xin và các dịch vụ y tế!`;
+        `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n` +
+        `🔗 https://sender.ksbtdanang.vn/patient-register?uid=${userId}`;
     }
 
     await sendTextMessage(userId, welcomeMsg);
@@ -393,15 +390,12 @@ async function handleFollow(userId, data) {
 
   if (!welcomeMsg) {
     welcomeMsg =
-      `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm Zalo OA CDC Đà Nẵng.\n\n` +
-      `Để được hỗ trợ tốt nhất, vui lòng chọn đăng ký thông tin theo nhóm đối tượng phù hợp dưới đây:\n\n` +
-      `💼 NẾU LÀ CÁN BỘ / NHÂN VIÊN CDC ĐÀ NẴNG:\n` +
-      `Vui lòng bấm liên kết dưới đây để khai báo tên, phòng ban và liên kết tài khoản nội bộ:\n` +
+      `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\n` +
+      `Vui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:\n\n` +
+      `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n` +
       `🔗 https://sender.ksbtdanang.vn/register?uid=${userId}\n\n` +
-      `🏥 NẾU LÀ NGƯỜI DÂN / KHÁCH HÀNG:\n` +
-      `Vui lòng bấm liên kết dưới đây để đăng ký thông tin nhận tư vấn y tế, lịch tiêm chủng và nhận kết quả xét nghiệm tự động:\n` +
-      `🔗 https://sender.ksbtdanang.vn/patient-register?uid=${userId}\n\n` +
-      `Trợ lý AI sẵn sàng hỗ trợ giải đáp mọi thắc mắc của bạn!`;
+      `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n` +
+      `🔗 https://sender.ksbtdanang.vn/patient-register?uid=${userId}`;
   }
 
   await sendTextMessage(userId, welcomeMsg);
