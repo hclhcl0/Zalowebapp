@@ -178,7 +178,63 @@ async function handleTextMessage(userId, text) {
     }
   }
 
-  // Tất cả tin nhắn còn lại → Xử lý bằng AI
+  // ============================================================
+  // LUỒNG 1: PHÂN LOẠI TIN NHẮN — Yêu cầu file/biểu mẫu → Drive trực tiếp
+  // ============================================================
+  const isStaff = (await prisma.follower.findUnique({ where: { zaloUserId: userId }, select: { userType: true } }))?.userType === "staff";
+  
+  const driveKeywords = ["báo cáo", "bao cao", "biểu mẫu", "bieu mau", "mẫu báo cáo", "tải file", "tai file", "tải về", "tai ve", "form", "mẫu", "mau ", "file ", "tải mẫu", "tai mau", "bc tuần", "bc tuan"];
+  const isDriveRequest = isStaff && driveKeywords.some(kw => lowerText.includes(kw));
+  
+  if (isDriveRequest) {
+    try {
+      const { loadDriveDocuments } = await import("@/lib/gemini");
+      const driveFiles = await loadDriveDocuments();
+      if (driveFiles.length > 0) {
+        // Tìm file khớp nhất với từ khóa người dùng nhắn
+        const normalizedQ = lowerText.replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g,"a").replace(/[èéẹẻẽêềếệểễ]/g,"e").replace(/[ìíịỉĩ]/g,"i").replace(/[òóọỏõôồốộổỗơờớợởỡ]/g,"o").replace(/[ùúụủũưừứựửữ]/g,"u").replace(/[ỳýỵỷỹ]/g,"y").replace(/đ/g,"d");
+        
+        const scored = driveFiles.map(f => {
+          const normalizedName = f.name.toLowerCase().replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g,"a").replace(/[èéẹẻẽêềếệểễ]/g,"e").replace(/[ìíịỉĩ]/g,"i").replace(/[òóọỏõôồốộổỗơờớợởỡ]/g,"o").replace(/[ùúụủũưừứựửữ]/g,"u").replace(/[ỳýỵỷỹ]/g,"y").replace(/đ/g,"d");
+          const qWords = normalizedQ.split(/\s+/).filter(w => w.length > 1);
+          const score = qWords.filter(w => normalizedName.includes(w)).length;
+          return { ...f, score };
+        }).filter(f => f.score > 0).sort((a, b) => b.score - a.score);
+
+        if (scored.length > 0) {
+          const top = scored[0];
+          const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
+          const name = follower?.fullName || follower?.displayName || "bạn";
+          const reply = `Chào ${name}, đây là tài liệu "${top.name}" mà bạn yêu cầu:\n\nTên tài liệu: ${top.name}\nLink truy cập: ${top.link}`;
+          await sendTextMessage(userId, reply);
+          
+          // Ghi log
+          try {
+            await prisma.messageLog.create({ data: { zaloUserId: userId, direction: "outbound", type: "text", content: reply, rawPayload: JSON.stringify({ source: "drive_direct" }), receivedAt: new Date() } });
+          } catch(e) {}
+          return; // Xử lý xong, không cần gọi AI
+        }
+
+        // Nếu không tìm thấy file khớp → hiện toàn bộ danh sách
+        if (scored.length === 0 && lowerText.includes("biểu mẫu") || lowerText.includes("danh sách")) {
+          let list = "📂 Danh sách tài liệu/biểu mẫu hiện có:\n\n";
+          driveFiles.forEach((f, i) => { list += `${i + 1}. ${f.name}\n   Link: ${f.link}\n`; });
+          await sendTextMessage(userId, list);
+          try {
+            await prisma.messageLog.create({ data: { zaloUserId: userId, direction: "outbound", type: "text", content: list, rawPayload: JSON.stringify({ source: "drive_list" }), receivedAt: new Date() } });
+          } catch(e) {}
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("[Drive Fast Search] Lỗi:", e.message);
+      // Nếu Drive lỗi → fallthrough xuống AI xử lý bình thường
+    }
+  }
+
+  // ============================================================
+  // LUỒNG 2: Tất cả tin nhắn còn lại → Xử lý bằng AI
+  // ============================================================
   try {
     // Kiểm tra giới hạn câu hỏi AI trong ngày
     const limitConfig = await prisma.systemConfig.findUnique({ where: { key: "ai_daily_limit" } });

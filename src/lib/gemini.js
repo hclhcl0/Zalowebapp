@@ -21,7 +21,7 @@ let driveDocCache = null;
 let driveDocCacheTime = 0;
 const DRIVE_CACHE_TTL = 10 * 60 * 1000;
 
-async function loadDriveDocuments() {
+export async function loadDriveDocuments() {
   const now = Date.now();
   if (driveDocCache !== null && (now - driveDocCacheTime < DRIVE_CACHE_TTL)) {
     return driveDocCache;
@@ -95,8 +95,25 @@ let providerCacheTime = 0;
 const PROVIDER_CACHE_TTL = 60 * 1000; // 1 phút
 
 // ============================================================
-// ROUND-ROBIN API KEY POOLS
+// ROUND-ROBIN API KEY POOLS + SMART BLACKLIST
 // ============================================================
+// Blacklist: { [apiKey]: expiresAt (timestamp) }
+// Khi key bị lỗi 429/503, nó vào blacklist 5 phút, sau đó tự phục hồi
+const keyBlacklist = new Map();
+const BLACKLIST_TTL = 5 * 60 * 1000; // 5 phút
+
+function isKeyBlacklisted(apiKey) {
+  const exp = keyBlacklist.get(apiKey);
+  if (!exp) return false;
+  if (Date.now() > exp) { keyBlacklist.delete(apiKey); return false; }
+  return true;
+}
+
+function blacklistKey(apiKey) {
+  keyBlacklist.set(apiKey, Date.now() + BLACKLIST_TTL);
+  console.warn(`[KeyPool] Key bị blacklist 5 phút: ...${apiKey.slice(-6)}`);
+}
+
 let geminiKeyPool = [];
 let geminiKeyPoolTime = 0;
 let geminiCurrentIndex = 0;
@@ -429,31 +446,47 @@ export async function askAI(userId, question) {
   }
 }
 
-async function askGemini(userId, question) {
+async function askGemini(userId, question, contextOverride) {
   const pool = await loadKeyPool("gemini");
   const fallbackKey = process.env.GEMINI_API_KEY;
-  if (pool.length === 0 && !fallbackKey) throw new Error("Chưa có cấu hình Gemini API Key.");
+  if (pool.length === 0 && !fallbackKey) {
+    // Không có Gemini key → thử Groq ngay
+    console.warn("[AI Router] Không có Gemini key, chuyển sang Groq...");
+    return await askGroq(userId, question, contextOverride);
+  }
 
-  const { systemInstruction, history, hotline, footerMsg } = await prepareAIContext(userId, question);
-  
+  const ctx = contextOverride || await prepareAIContext(userId, question);
+  const { systemInstruction, history, hotline, footerMsg } = ctx;
   const contents = [...history, { role: "user", parts: [{ text: question }] }];
-  
+
+  // Xây danh sách key, bỏ qua key đang bị blacklist
   const startIdx = pool.length > 0 ? (geminiCurrentIndex % pool.length) : 0;
-  const orderedKeys = pool.length > 0
+  const allKeys = pool.length > 0
     ? [...pool.slice(startIdx).map(k => k.apiKey), ...pool.slice(0, startIdx).map(k => k.apiKey), fallbackKey].filter(Boolean)
-    : [fallbackKey];
-
-  const geminiModels = [
-    "gemini-3.1-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-2.5-flash"
-  ];
-
+    : [fallbackKey].filter(Boolean);
+  
+  const activeKeys = allKeys.filter(k => !isKeyBlacklisted(k));
   if (pool.length > 0) geminiCurrentIndex = (geminiCurrentIndex + 1) % pool.length;
 
+  // Nếu tất cả key Gemini đang bị blacklist → chuyển sang Groq ngay
+  if (activeKeys.length === 0) {
+    console.warn("[AI Router] Toàn bộ Gemini key đang bị rate-limit, chuyển sang Groq...");
+    try {
+      return await askGroq(userId, question, ctx);
+    } catch {
+      return `Hệ thống AI đang xử lý lượng lớn yêu cầu. Vui lòng thử lại sau vài phút hoặc gọi hotline ${hotline}.`;
+    }
+  }
+
+  const geminiModels = [
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-2.5-flash-preview-05-20"
+  ];
+
   let lastError = null;
-  for (let i = 0; i < orderedKeys.length; i++) {
-    const apiKey = orderedKeys[i];
+  for (let i = 0; i < activeKeys.length; i++) {
+    const apiKey = activeKeys[i];
     const currentModel = geminiModels[geminiModelIndex % geminiModels.length];
     geminiModelIndex++;
 
@@ -471,26 +504,35 @@ async function askGemini(userId, question) {
     } catch (err) {
       lastError = err;
       const errMsg = err.message?.toLowerCase() || "";
-      if (
-        errMsg.includes("429") || errMsg.includes("resource_exhausted") || errMsg.includes("quota") || 
-        errMsg.includes("404") || errMsg.includes("not found") ||
-        errMsg.includes("503") || errMsg.includes("unavailable") || errMsg.includes("high demand") || errMsg.includes("overloaded")
-      ) {
-          continue;
+      const isRateLimit = errMsg.includes("429") || errMsg.includes("resource_exhausted") || errMsg.includes("quota");
+      const isUnavailable = errMsg.includes("503") || errMsg.includes("unavailable") || errMsg.includes("high demand") || errMsg.includes("overloaded");
+      const isNotFound = errMsg.includes("404") || errMsg.includes("not found");
+
+      if (isRateLimit || isUnavailable) {
+        blacklistKey(apiKey); // Đưa key này vào blacklist 5 phút
+        continue;
       }
-      throw err;
+      if (isNotFound) continue; // Model không tồn tại → đổi model
+      throw err; // Lỗi khác → ném ra ngoài
     }
   }
-  return "Hệ thống AI (Gemini) đang bận, vui lòng thử lại sau vài phút hoặc liên hệ CDC qua hotline " + hotline + ".";
+
+  // Toàn bộ Gemini key đã thử hết → fallback Groq
+  console.warn("[AI Router] Toàn bộ Gemini key thất bại, thử Groq...");
+  try {
+    return await askGroq(userId, question, ctx);
+  } catch {
+    return `Hệ thống AI đang xử lý lượng lớn yêu cầu. Vui lòng thử lại sau vài phút hoặc gọi hotline ${hotline}.`;
+  }
 }
 
-async function askGroq(userId, question) {
+async function askGroq(userId, question, contextOverride) {
   const pool = await loadKeyPool("groq");
   if (pool.length === 0) throw new Error("Chưa có cấu hình Groq API Key.");
 
-  const { systemInstruction, history, hotline, footerMsg } = await prepareAIContext(userId, question);
-  
-  // Groq messages format: [{role: "system", content: "..."}, {role: "user", content: "..."}, {role: "assistant", content: "..."}]
+  const ctx = contextOverride || await prepareAIContext(userId, question);
+  const { systemInstruction, history, hotline, footerMsg } = ctx;
+
   const groqMessages = [{ role: "system", content: systemInstruction }];
   for (const h of history) {
     groqMessages.push({
@@ -501,12 +543,17 @@ async function askGroq(userId, question) {
   groqMessages.push({ role: "user", content: question });
 
   const startIdx = pool.length > 0 ? (groqCurrentIndex % pool.length) : 0;
-  const orderedKeys = [...pool.slice(startIdx).map(k => k.apiKey), ...pool.slice(0, startIdx).map(k => k.apiKey)].filter(Boolean);
+  const allKeys = [...pool.slice(startIdx).map(k => k.apiKey), ...pool.slice(0, startIdx).map(k => k.apiKey)].filter(Boolean);
+  const activeKeys = allKeys.filter(k => !isKeyBlacklisted(k));
   if (pool.length > 0) groqCurrentIndex = (groqCurrentIndex + 1) % pool.length;
 
+  if (activeKeys.length === 0) {
+    return `Hệ thống AI đang xử lý lượng lớn yêu cầu. Vui lòng thử lại sau vài phút hoặc gọi hotline ${hotline}.`;
+  }
+
   let lastError = null;
-  for (let i = 0; i < orderedKeys.length; i++) {
-    const apiKey = orderedKeys[i];
+  for (let i = 0; i < activeKeys.length; i++) {
+    const apiKey = activeKeys[i];
     try {
       const groq = new Groq({ apiKey });
       const chatCompletion = await groq.chat.completions.create({
@@ -522,9 +569,12 @@ async function askGroq(userId, question) {
       return cleanedAnswer;
     } catch (err) {
       lastError = err;
-      if (err.status === 429 || err.status === 503 || err.status === 500) continue;
+      if (err.status === 429 || err.status === 503 || err.status === 500) {
+        blacklistKey(apiKey);
+        continue;
+      }
       throw err;
     }
   }
-  return "Hệ thống AI (Groq) đang bận, vui lòng thử lại sau vài phút hoặc liên hệ CDC qua hotline " + hotline + ".";
+  return `Hệ thống AI đang xử lý lượng lớn yêu cầu. Vui lòng thử lại sau vài phút hoặc gọi hotline ${hotline}.`;
 }
