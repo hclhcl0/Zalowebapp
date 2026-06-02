@@ -177,11 +177,13 @@ model AiKnowledge {
 // ============================================================
 
 model GeminiApiKey {
-  id        Int      @id @default(autoincrement())
-  label     String   // Tên gợi nhớ (VD: "Key CDC chính", "Key dự phòng 1")
-  apiKey    String   // Giá trị API Key
-  isActive  Boolean  @default(true)  // Có đang kích hoạt không
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  label       String   // Tên gợi nhớ (VD: "Key CDC chính", "Key dự phòng 1")
+  apiKey      String   // Giá trị API Key
+  isActive    Boolean  @default(true)  // Có đang kích hoạt không
+  usageTokens Int      @default(0)     // Tổng token đã dùng
+  usageCount  Int      @default(0)     // Số lượt gọi API
+  createdAt   DateTime @default(now())
 }
 
 // ============================================================
@@ -189,9 +191,11 @@ model GeminiApiKey {
 // ============================================================
 
 model GroqApiKey {
-  id        Int      @id @default(autoincrement())
-  label     String   // Tên gợi nhớ
-  apiKey    String   // Giá trị API Key
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  label       String   // Tên gợi nhớ
+  apiKey      String   // Giá trị API Key
+  isActive    Boolean  @default(true)
+  usageTokens Int      @default(0)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
 }

@@ -522,6 +522,19 @@ async function askGemini(userId, question, contextOverride) {
         config: { systemInstruction, maxOutputTokens: 2048, temperature: 0.3 }
       });
 
+      // Update tokens
+      const usedTokens = response.usageMetadata?.totalTokenCount || 0;
+      if (usedTokens > 0) {
+        const pool = await loadKeyPool("gemini");
+        const keyObj = pool.find(k => k.apiKey === apiKey);
+        if (keyObj) {
+          prisma.geminiApiKey.update({
+            where: { id: keyObj.id },
+            data: { usageTokens: { increment: usedTokens }, usageCount: { increment: 1 } }
+          }).catch(e => console.error("[Token Update Error]", e));
+        }
+      }
+
       let cleanedAnswer = stripMarkdown(response.text || "Xin lỗi, hệ thống bị lỗi.");
       if (footerMsg) cleanedAnswer += "\n\n" + footerMsg;
       return cleanedAnswer;
@@ -586,6 +599,19 @@ async function askGroq(userId, question, contextOverride) {
         temperature: 0.3,
         max_tokens: 2048,
       });
+
+      // Update tokens
+      const usedTokens = chatCompletion.usage?.total_tokens || 0;
+      if (usedTokens > 0) {
+        const pool = await loadKeyPool("groq");
+        const keyObj = pool.find(k => k.apiKey === apiKey);
+        if (keyObj) {
+          prisma.groqApiKey.update({
+            where: { id: keyObj.id },
+            data: { usageTokens: { increment: usedTokens }, usageCount: { increment: 1 } }
+          }).catch(e => console.error("[Token Update Error Groq]", e));
+        }
+      }
 
       const rawAnswer = chatCompletion.choices[0]?.message?.content || "Xin lỗi, không có phản hồi từ AI.";
       let cleanedAnswer = stripMarkdown(rawAnswer);

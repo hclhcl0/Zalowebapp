@@ -637,6 +637,13 @@ function SettingsPageContent() {
 
   const activeGroup = SETTING_GROUPS.find((g) => g.id === activeTab);
 
+  const formatTokens = (val) => {
+    if (!val) return "0";
+    if (val >= 1000000) return (val / 1000000).toFixed(1) + "M";
+    if (val >= 1000) return (val / 1000).toFixed(1) + "K";
+    return val.toString();
+  };
+
   return (
     <div>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -1204,6 +1211,9 @@ function SettingsPageContent() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text)" }}>{key.label}</div>
                             <div style={{ fontFamily: "monospace", fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>{key.maskedKey}</div>
+                            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                              🔄 {key.usageCount || 0} lượt • 🪙 {formatTokens(key.usageTokens)} tokens
+                            </div>
                           </div>
                           <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
                             <span style={{
@@ -1312,6 +1322,9 @@ function SettingsPageContent() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text)" }}>{key.label}</div>
                             <div style={{ fontFamily: "monospace", fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>{key.maskedKey}</div>
+                            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                              🔄 {key.usageCount || 0} lượt • 🪙 {formatTokens(key.usageTokens)} tokens
+                            </div>
                           </div>
                           <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
                             <span style={{ padding: "3px 8px", borderRadius: "20px", fontSize: "0.72rem", fontWeight: 700, background: key.isActive ? "#dcfce7" : "#f1f5f9", color: key.isActive ? "#16a34a" : "#64748b" }}>{key.isActive ? "● Đang dùng" : "○ Tắt"}</span>

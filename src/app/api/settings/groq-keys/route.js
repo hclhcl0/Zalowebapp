@@ -37,6 +37,8 @@ export async function GET() {
       label: k.label,
       maskedKey: maskKey(k.apiKey),
       isActive: k.isActive,
+      usageTokens: k.usageTokens,
+      usageCount: k.usageCount,
       createdAt: k.createdAt,
     }));
 
