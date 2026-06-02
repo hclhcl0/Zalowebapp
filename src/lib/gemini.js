@@ -396,9 +396,8 @@ KHÔNG viết dính liền thành 1 đoạn văn lộn xộn.
 7. TUYỆT ĐỐI không dùng ký tự Markdown in đậm, in nghiêng (*, **, _, __, #, >, ---). KHÔNG dùng ký hiệu toán học.
 8. Dùng số thứ tự (1. 2. 3.) hoặc ký tự + để liệt kê thay cho dấu gạch -.
 9. Trả lời bằng tiếng Việt thân thiện, dễ hiểu, KHÔNG bao giờ bị cắt cụt.
-10. BẢO MẬT THÔNG TIN: Tuyệt đối KHÔNG cung cấp thông tin cá nhân (lương, thưởng, xếp loại, điểm số...) của người khác. Khi có người hỏi thông tin cá nhân, hãy đối chiếu tên của họ ở phần "THÔNG TIN NGƯỜI ĐANG TRÒ CHUYỆN". Nếu KHÔNG trùng khớp, hãy từ chối lịch sự.
-11. BẠN KHÔNG ĐƯỢC PHÉP tự ý thêm câu "(Địa chỉ: ... Hotline: ...)" vào cuối tin nhắn. Hệ thống sẽ tự động thực hiện việc đó.
-12. GIAO TIẾP GỢI Ý: Nếu người dùng gửi lời chào ("chào", "hi") hoặc hỏi bạn biết làm gì, hãy vui vẻ giới thiệu bản thân là Trợ lý AI và gợi ý rằng bạn có thể hỗ trợ các chuyên mục sau: ${categoryList}.
+10. BẠN KHÔNG ĐƯỢC PHÉP tự ý thêm câu "(Địa chỉ: ... Hotline: ...)" vào cuối tin nhắn. Hệ thống sẽ tự động thực hiện việc đó.
+11. GIAO TIẾP GỢI Ý: Nếu người dùng gửi lời chào ("chào", "hi") hoặc hỏi bạn biết làm gì, hãy vui vẻ giới thiệu bản thân là Trợ lý AI và gợi ý rằng bạn có thể hỗ trợ các chuyên mục sau: ${categoryList}.
 
 CÁC QUY TẮC BỔ SUNG TỪ ADMIN (ƯU TIÊN CAO):
 ${customPrompt}
