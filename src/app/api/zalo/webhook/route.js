@@ -134,10 +134,32 @@ async function handleTextMessage(userId, text) {
   if (lowerText === "reset" || lowerText === "bắt đầu lại" || lowerText === "bắt đầu") {
     const { clearUserHistory } = await import("@/lib/gemini");
     clearUserHistory(userId);
-    await sendTextMessage(
-      userId,
-      "Xin chào! Tôi là Trợ lý AI của CDC Đà Nẵng. Bạn có thể hỏi tôi về phòng chống dịch bệnh, vắc-xin, an toàn thực phẩm và các dịch vụ y tế của CDC.\n\nHotline hỗ trợ: 0236.3822.116"
-    );
+
+    let displayName = "bạn";
+    try {
+      const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
+      if (follower?.displayName) {
+        displayName = follower.displayName;
+      }
+    } catch (e) {}
+
+    let welcomeMsg = "";
+    try {
+      const welcomeConfig = await prisma.systemConfig.findUnique({
+        where: { key: "oa_welcome_msg" },
+      });
+      if (welcomeConfig?.value && welcomeConfig.value.trim().length > 0) {
+        welcomeMsg = welcomeConfig.value
+          .replace(/{displayName}/g, displayName)
+          .replace(/{name}/g, displayName);
+      }
+    } catch (dbErr) {}
+
+    if (!welcomeMsg) {
+      welcomeMsg = `Xin chào ${displayName}! Tôi là Trợ lý AI của CDC Đà Nẵng. Bạn có thể hỏi tôi về phòng chống dịch bệnh, vắc-xin, an toàn thực phẩm và các dịch vụ y tế của CDC.\n\nHotline hỗ trợ: 0236.3822.116`;
+    }
+
+    await sendTextMessage(userId, welcomeMsg);
     return;
   }
 
@@ -345,16 +367,32 @@ async function handleFollow(userId, data) {
     create: { zaloUserId: userId, displayName, avatarUrl },
   });
 
-  // Gửi tin chào mừng
-  const welcomeMsg =
-    `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm Zalo OA CDC Đà Nẵng.\n\n` +
-    `Tôi là Trợ lý AI sẵn sàng giải đáp thắc mắc của bạn về:\n` +
-    `+ Phòng chống dịch bệnh (sốt xuất huyết, cúm, COVID-19...)\n` +
-    `+ Dịch vụ tiêm chủng và lịch vaccine\n` +
-    `+ An toàn thực phẩm\n` +
-    `+ HIV/AIDS và các bệnh truyền nhiễm\n\n` +
-    `Hotline CDC Đà Nẵng: 0236.3822.116\n` +
-    `Hỏi tôi bất cứ điều gì về sức khỏe và dịch vụ CDC!`;
+  // Gửi tin chào mừng (Tự động lấy cấu hình từ DB nếu có)
+  let welcomeMsg = "";
+  try {
+    const welcomeConfig = await prisma.systemConfig.findUnique({
+      where: { key: "oa_welcome_msg" },
+    });
+    if (welcomeConfig?.value && welcomeConfig.value.trim().length > 0) {
+      welcomeMsg = welcomeConfig.value
+        .replace(/{displayName}/g, displayName)
+        .replace(/{name}/g, displayName);
+    }
+  } catch (dbErr) {
+    console.error("[ZALO WEBHOOK] Lỗi lấy oa_welcome_msg:", dbErr.message);
+  }
+
+  if (!welcomeMsg) {
+    welcomeMsg =
+      `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm Zalo OA CDC Đà Nẵng.\n\n` +
+      `Tôi là Trợ lý AI sẵn sàng giải đáp thắc mắc của bạn về:\n` +
+      `+ Phòng chống dịch bệnh (sốt xuất huyết, cúm, COVID-19...)\n` +
+      `+ Dịch vụ tiêm chủng và lịch vaccine\n` +
+      `+ An toàn thực phẩm\n` +
+      `+ HIV/AIDS và các bệnh truyền nhiễm\n\n` +
+      `Hotline CDC Đà Nẵng: 0236.3822.116\n` +
+      `Hỏi tôi bất cứ điều gì về sức khỏe và dịch vụ CDC!`;
+  }
 
   await sendTextMessage(userId, welcomeMsg);
 }
