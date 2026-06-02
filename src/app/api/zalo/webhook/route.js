@@ -156,7 +156,16 @@ async function handleTextMessage(userId, text) {
     } catch (dbErr) {}
 
     if (!welcomeMsg) {
-      welcomeMsg = `Xin chào ${displayName}! Tôi là Trợ lý AI của CDC Đà Nẵng. Bạn có thể hỏi tôi về phòng chống dịch bệnh, vắc-xin, an toàn thực phẩm và các dịch vụ y tế của CDC.\n\nHotline hỗ trợ: 0236.3822.116`;
+      welcomeMsg =
+        `Xin chào ${displayName}! Tôi là Trợ lý AI của CDC Đà Nẵng.\n\n` +
+        `Để được hỗ trợ tốt nhất, vui lòng chọn đăng ký thông tin theo nhóm đối tượng phù hợp dưới đây:\n\n` +
+        `💼 NẾU LÀ CÁN BỘ / NHÂN VIÊN CDC ĐÀ NẴNG:\n` +
+        `Vui lòng bấm liên kết dưới đây để khai báo tên, phòng ban và liên kết tài khoản nội bộ:\n` +
+        `🔗 https://sender.ksbtdanang.vn/register?uid=${userId}\n\n` +
+        `🏥 NẾU LÀ NGƯỜI DÂN / KHÁCH HÀNG:\n` +
+        `Vui lòng bấm liên kết dưới đây để đăng ký thông tin nhận tư vấn y tế, lịch tiêm chủng và nhận kết quả xét nghiệm tự động:\n` +
+        `🔗 https://sender.ksbtdanang.vn/patient-register?uid=${userId}\n\n` +
+        `Bạn cũng có thể hỏi trực tiếp tôi về phòng bệnh, vắc-xin và các dịch vụ y tế!`;
     }
 
     await sendTextMessage(userId, welcomeMsg);
@@ -385,13 +394,14 @@ async function handleFollow(userId, data) {
   if (!welcomeMsg) {
     welcomeMsg =
       `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm Zalo OA CDC Đà Nẵng.\n\n` +
-      `Tôi là Trợ lý AI sẵn sàng giải đáp thắc mắc của bạn về:\n` +
-      `+ Phòng chống dịch bệnh (sốt xuất huyết, cúm, COVID-19...)\n` +
-      `+ Dịch vụ tiêm chủng và lịch vaccine\n` +
-      `+ An toàn thực phẩm\n` +
-      `+ HIV/AIDS và các bệnh truyền nhiễm\n\n` +
-      `Hotline CDC Đà Nẵng: 0236.3822.116\n` +
-      `Hỏi tôi bất cứ điều gì về sức khỏe và dịch vụ CDC!`;
+      `Để được hỗ trợ tốt nhất, vui lòng chọn đăng ký thông tin theo nhóm đối tượng phù hợp dưới đây:\n\n` +
+      `💼 NẾU LÀ CÁN BỘ / NHÂN VIÊN CDC ĐÀ NẴNG:\n` +
+      `Vui lòng bấm liên kết dưới đây để khai báo tên, phòng ban và liên kết tài khoản nội bộ:\n` +
+      `🔗 https://sender.ksbtdanang.vn/register?uid=${userId}\n\n` +
+      `🏥 NẾU LÀ NGƯỜI DÂN / KHÁCH HÀNG:\n` +
+      `Vui lòng bấm liên kết dưới đây để đăng ký thông tin nhận tư vấn y tế, lịch tiêm chủng và nhận kết quả xét nghiệm tự động:\n` +
+      `🔗 https://sender.ksbtdanang.vn/patient-register?uid=${userId}\n\n` +
+      `Trợ lý AI sẵn sàng hỗ trợ giải đáp mọi thắc mắc của bạn!`;
   }
 
   await sendTextMessage(userId, welcomeMsg);
