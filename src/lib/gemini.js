@@ -478,9 +478,9 @@ async function askGemini(userId, question, contextOverride) {
     }
   }
 
-  // Model duy nhất: Gemini 2.0 Flash Lite (nhanh, nhẹ, miễn phí cao)
+  // Model duy nhất: Gemini 3.1 Flash Lite (15 RPM, 500 RPD/key)
   const geminiModels = [
-    "gemini-2.0-flash-lite"
+    "gemini-3.1-flash-lite"
   ];
 
   let lastError = null;
