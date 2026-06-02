@@ -18,26 +18,38 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
 
+    // Lấy tất cả zaloUserId của nhân viên đã liên kết để đối chiếu chéo (chánh lỗi lệch data) và dùng cho search
+    const allStaffLinks = await prisma.staffZaloLink.findMany({
+      select: { zaloUserId: true, department: true, phone: true, staffNameRaw: true, staffName: true }
+    });
+    const staffZaloUserIds = allStaffLinks.map((link) => link.zaloUserId);
+
     const whereClause = {
       AND: [],
     };
 
     if (query) {
+      const lowerQuery = query.toLowerCase();
+      const matchedStaffUserIds = allStaffLinks
+        .filter(link => 
+          (link.staffNameRaw && link.staffNameRaw.toLowerCase().includes(lowerQuery)) ||
+          (link.phone && link.phone.includes(lowerQuery)) ||
+          (link.department && link.department.toLowerCase().includes(lowerQuery))
+        )
+        .map(link => link.zaloUserId);
+
       whereClause.AND.push({
         OR: [
           { displayName: { contains: query, mode: "insensitive" } },
+          { fullName: { contains: query, mode: "insensitive" } },
           { phone: { contains: query, mode: "insensitive" } },
           { zaloUserId: { contains: query, mode: "insensitive" } },
           { department: { contains: query, mode: "insensitive" } },
+          { cccd: { contains: query, mode: "insensitive" } },
+          ...(matchedStaffUserIds.length > 0 ? [{ zaloUserId: { in: matchedStaffUserIds } }] : [])
         ],
       });
     }
-
-    // Lấy tất cả zaloUserId của nhân viên đã liên kết để đối chiếu chéo (chánh lỗi lệch data)
-    const allStaffLinks = await prisma.staffZaloLink.findMany({
-      select: { zaloUserId: true, department: true, phone: true, staffNameRaw: true, staffName: true }
-    });
-    const staffZaloUserIds = allStaffLinks.map((link) => link.zaloUserId);
 
     if (userType === "staff") {
       // Cán bộ cơ quan: Có userType là 'staff' HOẶC có trong bảng liên kết nhân viên
