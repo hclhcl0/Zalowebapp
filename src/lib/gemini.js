@@ -100,7 +100,7 @@ const PROVIDER_CACHE_TTL = 60 * 1000; // 1 phút
 // Blacklist: { [apiKey]: expiresAt (timestamp) }
 // Khi key bị lỗi 429/503, nó vào blacklist 5 phút, sau đó tự phục hồi
 const keyBlacklist = new Map();
-const BLACKLIST_TTL = 5 * 60 * 1000; // 5 phút
+const BLACKLIST_TTL = 2 * 60 * 1000; // 2 phút — đủ ngắn để tự phục hồi nhanh
 
 function isKeyBlacklisted(apiKey) {
   const exp = keyBlacklist.get(apiKey);
@@ -479,9 +479,9 @@ async function askGemini(userId, question, contextOverride) {
   }
 
   const geminiModels = [
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-2.5-flash-preview-05-20"
+    "gemini-1.5-flash",       // Ổn định, miễn phí
+    "gemini-2.0-flash",       // Nhanh hơn
+    "gemini-1.5-flash-8b"     // Nhẹ nhất, dự phòng
   ];
 
   let lastError = null;
@@ -506,13 +506,13 @@ async function askGemini(userId, question, contextOverride) {
       const errMsg = err.message?.toLowerCase() || "";
       const isRateLimit = errMsg.includes("429") || errMsg.includes("resource_exhausted") || errMsg.includes("quota");
       const isUnavailable = errMsg.includes("503") || errMsg.includes("unavailable") || errMsg.includes("high demand") || errMsg.includes("overloaded");
-      const isNotFound = errMsg.includes("404") || errMsg.includes("not found");
+      const isNotFound = errMsg.includes("404") || errMsg.includes("not found") || errMsg.includes("model");
 
-      if (isRateLimit || isUnavailable) {
-        blacklistKey(apiKey); // Đưa key này vào blacklist 5 phút
+      if (isRateLimit) {
+        blacklistKey(apiKey); // Chỉ blacklist khi thật sự rate-limit (429)
         continue;
       }
-      if (isNotFound) continue; // Model không tồn tại → đổi model
+      if (isUnavailable || isNotFound) continue; // Lỗi tạm thời → thử key/model khác, KHÔNG blacklist
       throw err; // Lỗi khác → ném ra ngoài
     }
   }
