@@ -141,6 +141,21 @@ async function handleTextMessage(userId, text) {
     return;
   }
 
+  // Lệnh đặc biệt: Yêu cầu gửi link liên kết Cán bộ / Nhân viên
+  const staffKeywords = ["tôi là nhân viên", "toi la nhan vien", "nhân viên cdc", "nhan vien cdc", "đăng ký nhân viên", "dang ky nhan vien"];
+  if (staffKeywords.some(kw => lowerText.includes(kw))) {
+    const registerLink = `https://sender.ksbtdanang.vn/register?zaloId=${userId}`;
+    const replyMsg = `Chào bạn, để Trợ lý AI nhận diện bạn là Cán bộ/Nhân viên của Trung tâm Kiểm soát Bệnh tật TP. Đà Nẵng và cấp quyền tra cứu thông tin nội bộ, vui lòng truy cập đường link dưới đây để liên kết tài khoản:\n\n🔗 ${registerLink}\n\n(Lưu ý: Link này chỉ dành riêng cho tài khoản Zalo của bạn, vui lòng không chia sẻ cho người khác)`;
+    await sendTextMessage(userId, replyMsg);
+    // Ghi log Outbound
+    try {
+      await prisma.messageLog.create({
+        data: { zaloUserId: userId, direction: "outbound", type: "text", content: replyMsg, rawPayload: JSON.stringify({ source: "staff_register" }), receivedAt: new Date() }
+      });
+    } catch(e) {}
+    return;
+  }
+
   // Lệnh đặc biệt: Xem danh mục chủ đề (Option 1)
   if (["menu", "hd", "hướng dẫn", "chủ đề", "help"].includes(lowerText)) {
     try {
