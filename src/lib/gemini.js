@@ -183,6 +183,7 @@ export async function loadKnowledgeBase() {
         title: doc.title,
         category: doc.category,
         content: doc.content,
+        allowedDepartment: doc.allowedDepartment || null,
         normalized: removeVietnameseTones(doc.title + " " + doc.category + " " + doc.content).toLowerCase()
       });
     }
@@ -280,60 +281,78 @@ export function clearUserHistory(userId) {
 // HÀM CHUNG LẤY THÔNG TIN
 // ============================================================
 async function prepareAIContext(userId, question) {
-  const [knowledgeChunks, driveDocuments] = await Promise.all([
+  // Lấy toàn bộ thông tin ban đầu song song để tối ưu hóa thời gian xử lý
+  const [knowledgeChunks, driveDocuments, settings, follower] = await Promise.all([
     loadKnowledgeBase(),
     loadDriveDocuments(),
+    prisma.systemConfig.findMany({ where: { key: { in: ["hotline_main", "address", "ai_custom_prompt", "ai_footer_msg"] } } }),
+    prisma.follower.findUnique({ where: { zaloUserId: userId } })
   ]);
-  
-  const knowledgeText = retrieveRelevantKnowledge(question, knowledgeChunks);
-  const uniqueCategories = [...new Set(knowledgeChunks.map(c => c.category).filter(Boolean))];
-  let categoryList = uniqueCategories.length > 0 ? uniqueCategories.join(", ") : "Đang cập nhật dữ liệu";
-  
-  const driveSection = driveDocuments.length > 0
-    ? `KHO T\u00c0I LI\u1ec6U M\u1eaau (Google Drive):\n` +
-      driveDocuments.map((d, i) => `${i + 1}. ${d.name} - Link xem: ${d.link}`).join("\n") +
-      `\n\n(Khi nh\u00e2n vi\u00ean y\u00eau c\u1ea7u m\u1eabu t\u00e0i li\u1ec7u, h\u00e3y cung c\u1ea5p t\u00ean file v\u00e0 link x\u00e0 t\u01b0\u01a1ng \u1ee9ng b\u00ean tr\u00ean. Ch\u1ec9 NHÂN VIÊN m\u1edbi \u0111\u01b0\u1ee3c truy c\u1eadp kho t\u00e0i li\u1ec7u n\u00e0y.)`
-    : "";
 
   let hotline = "1900988975";
   let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
   let customPrompt = "";
   let footerMsg = "(Địa chỉ: {address} - Hotline: {hotline})"; // Default
   let userProfile = { displayName: "Bạn", role: "CÔNG DÂN", accessLevel: "basic", department: null };
+
+  const h = settings.find(s => s.key === "hotline_main");
+  if (h?.value) hotline = h.value;
+  const a = settings.find(s => s.key === "address");
+  if (a?.value) address = a.value;
+  const cp = settings.find(s => s.key === "ai_custom_prompt");
+  if (cp?.value) customPrompt = cp.value;
+  const fm = settings.find(s => s.key === "ai_footer_msg");
+  if (fm) footerMsg = fm.value;
+  else footerMsg = `(Địa chỉ: ${address} - Hotline: ${hotline})`;
   
-  try {
-    const settings = await prisma.systemConfig.findMany({ where: { key: { in: ["hotline_main", "address", "ai_custom_prompt", "ai_footer_msg"] } } });
-    const h = settings.find(s => s.key === "hotline_main");
-    if (h?.value) hotline = h.value;
-    const a = settings.find(s => s.key === "address");
-    if (a?.value) address = a.value;
-    const cp = settings.find(s => s.key === "ai_custom_prompt");
-    if (cp?.value) customPrompt = cp.value;
-    const fm = settings.find(s => s.key === "ai_footer_msg");
-    if (fm) footerMsg = fm.value;
-    else footerMsg = `(Địa chỉ: ${address} - Hotline: ${hotline})`;
-    
-    footerMsg = footerMsg.replace("{address}", address).replace("{hotline}", hotline);
-    
-    // Lấy thông tin người dùng + cấp độ truy cập
-    const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
-    if (follower) {
-      userProfile.displayName = follower.fullName || follower.displayName || "Bạn";
-      userProfile.accessLevel = follower.accessLevel || "basic";
-      userProfile.department = follower.department || null;
-      if (follower.userType === "staff") userProfile.role = "NHÂN VIÊN CỦA CDC (CÁN BỘ NỘI BỘ)";
-    }
-    
-    // Nếu là nhân viên, thử lấy tên thật từ bảng StaffZaloLink
-    if (userProfile.role.includes("NHÂN VIÊN")) {
+  footerMsg = footerMsg.replace("{address}", address).replace("{hotline}", hotline);
+  
+  // Lấy thông tin người dùng + cấp độ truy cập
+  if (follower) {
+    userProfile.displayName = follower.fullName || follower.displayName || "Bạn";
+    userProfile.accessLevel = follower.accessLevel || "basic";
+    userProfile.department = follower.department || null;
+    if (follower.userType === "staff") userProfile.role = "NHÂN VIÊN CỦA CDC (CÁN BỘ NỘI BỘ)";
+  }
+  
+  // Nếu là nhân viên, thử lấy tên thật từ bảng StaffZaloLink
+  if (userProfile.role.includes("NHÂN VIÊN")) {
+    try {
       const staffLink = await prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } });
       if (staffLink?.staffNameRaw) {
         userProfile.displayName = staffLink.staffNameRaw;
         if (!userProfile.department && staffLink.department) userProfile.department = staffLink.department;
       }
+    } catch (e) {}
+  }
+
+  // ============================================================
+  // LỌC KHO TRI THỨC THEO PHÒNG BAN ĐƯỢC PHÉP XEM
+  // ============================================================
+  const userDept = userProfile.department ? userProfile.department.trim().toLowerCase() : null;
+  const isStaffUser = userProfile.role.includes("NHÂN VIÊN");
+  const isAdminUser = userProfile.accessLevel === "admin" || userProfile.accessLevel === "hr";
+
+  const filteredChunks = knowledgeChunks.filter(chunk => {
+    const docDept = chunk.allowedDepartment ? chunk.allowedDepartment.trim().toLowerCase() : "";
+    
+    // Nếu tài liệu mở cho tất cả phòng ban/mọi đối tượng
+    if (!docDept || docDept === "all" || docDept === "tất cả" || docDept === "tất cả cơ quan") {
+      return true;
     }
     
-    // Ghi đè categoryList dựa theo quyền hạn
+    // Nếu tài liệu bị giới hạn phòng ban cụ thể
+    if (!isStaffUser) return false; // Người dân không được xem
+    if (isAdminUser) return true; // Admin/HR xem được hết
+    
+    return userDept === docDept; // Nhân viên thường phải khớp phòng ban
+  });
+
+  const knowledgeText = retrieveRelevantKnowledge(question, filteredChunks);
+  
+  // Ghi đè categoryList dựa theo quyền hạn
+  let categoryList = "";
+  try {
     let customCatConfig = null;
     if (userProfile.role.includes("NHÂN VIÊN")) {
       customCatConfig = await prisma.systemConfig.findUnique({ where: { key: "ai_menu_categories_staff" } });
@@ -345,6 +364,17 @@ async function prepareAIContext(userId, question) {
       categoryList = customCatConfig.value.split('\n').map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean).join(", ");
     }
   } catch (err) {}
+
+  if (!categoryList) {
+    const uniqueCategories = [...new Set(filteredChunks.map(c => c.category).filter(Boolean))];
+    categoryList = uniqueCategories.length > 0 ? uniqueCategories.join(", ") : "Đang cập nhật dữ liệu";
+  }
+
+  const driveSection = driveDocuments.length > 0
+    ? `KHO T\u00c0I LI\u1ec6U M\u1eaau (Google Drive):\n` +
+      driveDocuments.map((d, i) => `${i + 1}. ${d.name} - Link xem: ${d.link}`).join("\n") +
+      `\n\n(Khi nh\u00e2n vi\u00ean y\u00eau c\u1ea7u m\u1eabu t\u00e0i li\u1ec7u, h\u00e3y cung c\u1ea5p t\u00ean file v\u00e0 link x\u00e0 t\u01b0\u01a1ng \u1ee9ng b\u00ean tr\u00ean. Ch\u1ec9 NHÂN VIÊN m\u1edbi \u0111\u01b0\u1ee3c truy c\u1eadp kho t\u00e0i li\u1ec7u n\u00e0y.)`
+    : "";
 
   // ============================================================
   // XÂY DỰNG QUY TẮC BẢO MẬT DỰA THEO CẤP TRUY CẬP

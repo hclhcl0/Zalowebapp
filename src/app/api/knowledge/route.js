@@ -48,6 +48,7 @@ export async function GET(request) {
           category: true,
           sourceUrl: true,
           sourceExt: true,
+          allowedDepartment: true,
           createdAt: true,
           updatedAt: true,
           // Bỏ qua field content để trả về danh sách nhẹ hơn
@@ -85,12 +86,18 @@ export async function POST(request) {
 
     const formData = await request.formData();
     let category = formData.get("category");
+    let allowedDepartment = formData.get("allowedDepartment");
 
     if (session.user.role === "staff") {
       if (!session.user.department) {
         return NextResponse.json({ success: false, error: "Bạn chưa được phân phòng ban" }, { status: 403 });
       }
       category = session.user.department; // Cưỡng ép dùng department của staff
+      allowedDepartment = session.user.department; // Staff chỉ được nạp cho phòng ban của mình
+    } else {
+      if (allowedDepartment === "ALL" || allowedDepartment === "all" || allowedDepartment === "") {
+        allowedDepartment = null;
+      }
     }
 
     if (!category) {
@@ -243,6 +250,7 @@ Yêu cầu cụ thể:
         content: content.trim(),
         sourceUrl: driveUrl || null,
         sourceExt: driveUrl ? ext : null,
+        allowedDepartment: allowedDepartment || null,
       },
     });
 

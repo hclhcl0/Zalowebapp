@@ -162,14 +162,15 @@ model StaffZaloLink {
 // ============================================================
 
 model AiKnowledge {
-  id        Int      @id @default(autoincrement())
-  title     String   // Tên tài liệu
-  category  String   // Nhãn chuyên môn (Ví dụ: Tiêm chủng, Dịch tễ)
-  content   String   // Nội dung văn bản
-  sourceUrl String?  // Link Google Drive (nếu nạp qua link)
-  sourceExt String?  // Đuôi file gốc (nếu nạp qua link)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  title             String   // Tên tài liệu
+  category          String   // Nhãn chuyên môn (Ví dụ: Tiêm chủng, Dịch tễ)
+  content           String   // Nội dung văn bản
+  sourceUrl         String?  // Link Google Drive (nếu nạp qua link)
+  sourceExt         String?  // Đuôi file gốc (nếu nạp qua link)
+  allowedDepartment String?  // Phòng ban được xem tài liệu này (null hoặc "ALL" cho tất cả cơ quan)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 // ============================================================

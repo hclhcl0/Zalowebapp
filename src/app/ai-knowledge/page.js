@@ -18,6 +18,7 @@ export default function AiKnowledgePage() {
   
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(CDC_DEPARTMENTS[0]);
+  const [allowedDepartment, setAllowedDepartment] = useState("ALL");
   const fileInputRef = useRef(null);
 
   // Phân trang & Tìm kiếm
@@ -53,6 +54,7 @@ export default function AiKnowledgePage() {
   useEffect(() => {
     if (session?.user?.role === "staff" && session?.user?.department) {
       setCategory(session.user.department);
+      setAllowedDepartment(session.user.department);
     }
   }, [session]);
 
@@ -85,6 +87,7 @@ export default function AiKnowledgePage() {
     }
 
     formData.append("category", category);
+    formData.append("allowedDepartment", allowedDepartment);
 
     setUploading(true);
     try {
@@ -99,6 +102,7 @@ export default function AiKnowledgePage() {
         setDriveUrl("");
         if (session?.user?.role !== "staff") {
           setCategory(CDC_DEPARTMENTS[0]);
+          setAllowedDepartment("ALL");
         }
         if (fileInputRef.current) fileInputRef.current.value = "";
         fetchDocuments(1, searchKeyword); // Tải lại danh sách
@@ -231,11 +235,22 @@ export default function AiKnowledgePage() {
                     <FileText className="w-6 h-6" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
                       <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 4px 0", color: "var(--text)" }}>{doc.title}</h3>
-                      <span className="badge" style={{ background: "#fef3c7", color: "#b45309", border: "1px solid #fde68a" }}>
-                        {doc.category}
-                      </span>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                        <span className="badge" style={{ background: "#fef3c7", color: "#b45309", border: "1px solid #fde68a" }}>
+                          {doc.category}
+                        </span>
+                        {doc.allowedDepartment ? (
+                          <span className="badge" style={{ background: "#fee2e2", color: "#991b1b", border: "1px solid #fecaca" }}>
+                            🔒 Chỉ {doc.allowedDepartment}
+                          </span>
+                        ) : (
+                          <span className="badge" style={{ background: "#dbeafe", color: "#1e40af", border: "1px solid #bfdbfe" }}>
+                            🌐 Tất cả cơ quan
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0 0 8px 0", display: "flex", alignItems: "center", gap: "8px" }}>
                       <span>Đã nạp: {new Date(doc.createdAt).toLocaleString("vi-VN")}</span>
@@ -336,6 +351,28 @@ export default function AiKnowledgePage() {
               {session?.user?.role === "staff" && (
                 <p style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px" }}>
                   * Tự động gán theo phòng ban của bạn.
+                </p>
+              )}
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Quyền xem tài liệu</label>
+              <select
+                className="form-input"
+                value={allowedDepartment}
+                onChange={(e) => setAllowedDepartment(e.target.value)}
+                disabled={session?.user?.role === "staff"}
+                required
+                style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
+              >
+                <option value="ALL">🌐 Tất cả cơ quan & người dân</option>
+                {CDC_DEPARTMENTS.map(d => (
+                  <option key={d} value={d}>🔒 Chỉ {d}</option>
+                ))}
+              </select>
+              {session?.user?.role === "staff" && (
+                <p style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px" }}>
+                  * Tài liệu của nhân viên mặc định chỉ dành riêng cho phòng ban của bạn.
                 </p>
               )}
             </div>
