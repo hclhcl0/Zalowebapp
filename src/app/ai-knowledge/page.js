@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, FileText, Upload, BrainCircuit, Download, RefreshCw, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Trash2, FileText, Upload, BrainCircuit, Download, RefreshCw, Search, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { CDC_DEPARTMENTS } from "@/lib/departments";
 
@@ -20,6 +20,15 @@ export default function AiKnowledgePage() {
   const [category, setCategory] = useState(CDC_DEPARTMENTS[0]);
   const [allowedDepartment, setAllowedDepartment] = useState("ALL");
   const fileInputRef = useRef(null);
+
+  // State cho Sửa tài liệu
+  const [editingDoc, setEditingDoc] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editAllowedDepartment, setEditAllowedDepartment] = useState("ALL");
+  const [editContent, setEditContent] = useState("");
+  const [loadingContent, setLoadingContent] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Phân trang & Tìm kiếm
   const [page, setPage] = useState(1);
@@ -176,6 +185,62 @@ export default function AiKnowledgePage() {
     }
   };
 
+  const handleEditClick = async (doc) => {
+    setEditingDoc(doc);
+    setEditTitle(doc.title);
+    setEditCategory(doc.category);
+    setEditAllowedDepartment(doc.allowedDepartment || "ALL");
+    setEditContent("");
+    setLoadingContent(true);
+    try {
+      const res = await fetch(`/api/knowledge/${doc.id}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        setEditContent(json.data.content || "");
+      } else {
+        alert("Không thể tải nội dung chi tiết: " + (json.error || "Lỗi không xác định"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi kết nối khi tải nội dung chi tiết");
+    } finally {
+      setLoadingContent(false);
+    }
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!editTitle.trim()) {
+      alert("Vui lòng nhập tên tài liệu!");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/knowledge/${editingDoc.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle,
+          category: editCategory,
+          allowedDepartment: editAllowedDepartment,
+          content: editContent,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert("Cập nhật tài liệu thành công!");
+        setEditingDoc(null);
+        fetchDocuments(page, searchKeyword);
+      } else {
+        alert("Lỗi: " + json.error);
+      }
+    } catch (err) {
+      alert("Lỗi kết nối");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -279,12 +344,29 @@ export default function AiKnowledgePage() {
                         )}
                       </button>
                     )}
+                    {(session?.user?.role !== "staff" || doc.category === session?.user?.department) && (
+                      <button 
+                        onClick={() => handleEditClick(doc)} 
+                        className="btn btn-ghost btn-sm" 
+                        style={{ color: "#8b5cf6", padding: "8px" }} 
+                        title="Sửa thông tin tài liệu"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
                     <button onClick={() => handleDownload(doc)} className="btn btn-ghost btn-sm" style={{ color: "var(--primary)", padding: "8px" }} title="Tải về dạng .txt">
                       <Download className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(doc.id, doc.title)} className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", padding: "8px" }} title="Xóa tài liệu này">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {(session?.user?.role !== "staff" || doc.category === session?.user?.department) && (
+                      <button 
+                        onClick={() => handleDelete(doc.id, doc.title)} 
+                        className="btn btn-ghost btn-sm" 
+                        style={{ color: "var(--danger)", padding: "8px" }} 
+                        title="Xóa tài liệu này"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -451,6 +533,147 @@ export default function AiKnowledgePage() {
           </div>
         </div>
       </div>
+
+      {/* Modal Sửa Tài Liệu */}
+      {editingDoc && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(15, 23, 42, 0.6)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+          backdropFilter: "blur(4px)",
+          padding: "16px"
+        }}>
+          <div className="card" style={{
+            width: "100%",
+            maxWidth: "700px",
+            maxHeight: "90vh",
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            background: "white",
+            padding: "24px",
+            borderRadius: "var(--radius-lg)",
+            border: "1px solid var(--border)",
+            overflow: "hidden"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "bold", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                <Pencil className="w-5 h-5 text-primary" />
+                Sửa thông tin tài liệu
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setEditingDoc(null)} 
+                style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)", lineHeight: 1 }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {loadingContent ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 0", color: "var(--text-muted)", gap: "12px" }}>
+                <div className="spinner" style={{ width: 28, height: 28, borderColor: "var(--border)", borderTopColor: "var(--primary)" }} />
+                <span>Đang tải nội dung tài liệu...</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", paddingRight: "4px" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Tên tài liệu</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Chuyên môn (Tag)</label>
+                    <select
+                      className="form-input"
+                      value={editCategory}
+                      onChange={(e) => setEditCategory(e.target.value)}
+                      disabled={session?.user?.role === "staff"}
+                      required
+                      style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
+                    >
+                      {CDC_DEPARTMENTS.map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Quyền xem tài liệu</label>
+                    <select
+                      className="form-input"
+                      value={editAllowedDepartment}
+                      onChange={(e) => setEditAllowedDepartment(e.target.value)}
+                      disabled={session?.user?.role === "staff"}
+                      required
+                      style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
+                    >
+                      <option value="ALL">🌐 Tất cả cơ quan & người dân</option>
+                      {CDC_DEPARTMENTS.map(d => (
+                        <option key={d} value={d}>🔒 Chỉ {d}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0, display: "flex", flexDirection: "column", flex: 1 }}>
+                  <label className="form-label">Nội dung chi tiết tài liệu (Để AI học)</label>
+                  <textarea
+                    className="form-input"
+                    style={{
+                      width: "100%",
+                      height: "260px",
+                      fontFamily: "monospace",
+                      fontSize: "0.85rem",
+                      lineHeight: 1.5,
+                      resize: "vertical",
+                      padding: "12px"
+                    }}
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    required
+                    placeholder="Nhập hoặc dán nội dung văn bản..."
+                  />
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid var(--border)", paddingTop: "16px", marginTop: "8px" }}>
+                  <button 
+                    type="button" 
+                    className="btn btn-outline" 
+                    onClick={() => setEditingDoc(null)}
+                    disabled={savingEdit}
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    disabled={savingEdit}
+                    style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                  >
+                    {savingEdit ? (
+                      <><span className="spinner" style={{ width: 14, height: 14, borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} /> Đang lưu...</>
+                    ) : (
+                      "Lưu thay đổi"
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

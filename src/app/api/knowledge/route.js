@@ -254,6 +254,11 @@ Yêu cầu cụ thể:
       },
     });
 
+    try {
+      const { clearKnowledgeCache } = await import("@/lib/gemini");
+      clearKnowledgeCache();
+    } catch (e) {}
+
     return NextResponse.json({ success: true, data: doc });
   } catch (error) {
     console.error("[POST /api/knowledge] Error:", error);
