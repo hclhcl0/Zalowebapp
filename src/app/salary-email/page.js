@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Upload, Send, Plus, X, CheckCircle, XCircle,
@@ -3215,12 +3215,68 @@ function ZaloStaffTab({ followers }) {
   ]);
 
   const [uploadingIndex, setUploadingIndex] = useState(null);
-  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
-  const [newsArticles, setNewsArticles] = useState([]);
-  const [targetElementIndex, setTargetElementIndex] = useState(null);
-  const [loadingArticles, setLoadingArticles] = useState(false);
-  
-  const [sending, setSending] = useState(false);
+
+  // CMS Article Picker
+  const [isCmsModalOpen, setIsCmsModalOpen] = useState(false);
+  const [cmsArticles, setCmsArticles] = useState([]);
+  const [cmsLoading, setCmsLoading] = useState(false);
+  const [cmsSearch, setCmsSearch] = useState("");
+  const [cmsPage, setCmsPage] = useState(1);
+  const [cmsTotalPages, setCmsTotalPages] = useState(1);
+  const [cmsUrl, setCmsUrl] = useState("");
+  const [cmsError, setCmsError] = useState("");
+
+  const fetchCmsArticles = async (search = "", page = 1) => {
+    setCmsLoading(true);
+    setCmsError("");
+    try {
+      const params = new URLSearchParams({ search, page: String(page) });
+      const res = await fetch(`/api/payload-articles?${params}`);
+      const json = await res.json();
+      if (!res.ok) {
+        setCmsError(json.error || "Lỗi tải bài viết");
+        setCmsArticles([]);
+      } else {
+        setCmsArticles(json.docs || []);
+        setCmsTotalPages(json.totalPages || 1);
+        setCmsUrl(json.cmsUrl || "");
+      }
+    } catch {
+      setCmsError("Không thể kết nối đến Website CMS");
+      setCmsArticles([]);
+    } finally {
+      setCmsLoading(false);
+    }
+  };
+
+  const openCmsModal = () => {
+    setIsCmsModalOpen(true);
+    setCmsSearch("");
+    setCmsPage(1);
+    fetchCmsArticles("", 1);
+  };
+
+  const addArticleFromCms = (article) => {
+    if (listElements.length >= 5) {
+      alert("Zalo chỉ cho phép tối đa 5 thẻ trong tin nhắn danh sách.");
+      return;
+    }
+    const imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
+    const resolvedImg = imgPath.startsWith("/") ? `${cmsUrl}${imgPath}` : imgPath;
+    const articleUrl = cmsUrl ? `${cmsUrl}/bai-viet/${article.slug}` : "";
+    const newEl = {
+      title: article.title.substring(0, 120),
+      subtitle: (article.description || article.title).substring(0, 120),
+      imageUrl: resolvedImg,
+      actionType: "oa.open.url",
+      actionValue: articleUrl,
+      actionSmsContent: "",
+    };
+    setListElements((prev) => [...prev, newEl]);
+    setIsCmsModalOpen(false);
+  };
+
+
   const [result, setResult] = useState(null);
   
   const [selectedIds, setSelectedIds] = useState([]);
@@ -3258,38 +3314,6 @@ function ZaloStaffTab({ followers }) {
     const newElements = [...listElements];
     newElements.splice(index, 1);
     setListElements(newElements);
-  };
-
-  const openNewsModal = async (index) => {
-    setTargetElementIndex(index);
-    setIsNewsModalOpen(true);
-    setLoadingArticles(true);
-    try {
-      const res = await fetch("/api/news");
-      const json = await res.json();
-      if (json.data) {
-        setNewsArticles(json.data);
-      }
-    } catch (err) {
-      console.error("Lỗi khi tải danh sách tin bài:", err);
-      alert("Không thể tải danh sách tin bài.");
-    } finally {
-      setLoadingArticles(false);
-    }
-  };
-
-  const selectArticle = (article) => {
-    const newElements = [...listElements];
-    newElements[targetElementIndex] = {
-      ...newElements[targetElementIndex],
-      title: article.title.substring(0, 120),
-      subtitle: article.summary ? article.summary.substring(0, 120) : article.content.substring(0, 120),
-      imageUrl: article.coverUrl || "",
-      actionType: "oa.open.url",
-      actionValue: `/news/view/${article.id}`
-    };
-    setListElements(newElements);
-    setIsNewsModalOpen(false);
   };
 
   const handleImageUpload = async (index, e) => {
@@ -3599,12 +3623,12 @@ function ZaloStaffTab({ followers }) {
                     <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span>Thẻ thứ {index + 1}</span>
                       <div style={{ display: "flex", gap: "10px" }}>
-                        <button 
-                          type="button" 
-                          onClick={() => openNewsModal(index)} 
+                        <button
+                          type="button"
+                          onClick={openCmsModal}
                           style={{ background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}
                         >
-                          📰 Chọn tin bài soạn sẵn
+                          📰 Thêm từ Website CMS
                         </button>
                         {listElements.length > 1 && (
                           <button type="button" onClick={() => removeElement(index)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem" }}>
@@ -3772,188 +3796,118 @@ function ZaloStaffTab({ followers }) {
         </div>
       </form>
 
-      {/* Modal chọn tin bài soạn sẵn */}
-      {isNewsModalOpen && (
+      {/* ===== Modal chọn bài từ Website CMS ===== */}
+      {isCmsModalOpen && (
         <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(15, 23, 42, 0.6)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-          backdropFilter: "blur(4px)"
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.65)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000, backdropFilter: "blur(4px)"
         }}>
           <div style={{
-            background: "white",
-            borderRadius: "12px",
-            width: "90%",
-            maxWidth: "600px",
-            maxHeight: "80vh",
-            display: "flex",
-            flexDirection: "column",
-            boxShadow: "var(--shadow-xl)",
-            overflow: "hidden"
+            background: "white", borderRadius: "14px",
+            width: "90%", maxWidth: "620px", maxHeight: "82vh",
+            display: "flex", flexDirection: "column",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden"
           }}>
-            <div style={{
-              padding: "16px 20px",
-              borderBottom: "1px solid var(--border)",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center"
-            }}>
-              <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "var(--text)" }}>
-                📰 Chọn từ tin bài soạn sẵn
-              </h3>
-              <button 
-                type="button" 
-                onClick={() => setIsNewsModalOpen(false)}
-                style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}
-              >
-                ✕
-              </button>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "var(--text)" }}>📰 Chọn bài từ Website CMS</h3>
+              <button type="button" onClick={() => setIsCmsModalOpen(false)}
+                style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
             </div>
 
-            <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>
-              {loadingArticles ? (
+            <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border)" }}>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Tìm kiếm bài viết..."
+                  value={cmsSearch}
+                  onChange={(e) => setCmsSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { setCmsPage(1); fetchCmsArticles(cmsSearch, 1); } }}
+                  style={{ flex: 1, padding: "8px 12px" }}
+                />
+                <button type="button" className="btn btn-outline btn-sm"
+                  onClick={() => { setCmsPage(1); fetchCmsArticles(cmsSearch, 1); }}
+                  style={{ padding: "8px 14px" }}>🔍</button>
+              </div>
+            </div>
+
+            <div style={{ padding: "16px 20px", overflowY: "auto", flex: 1 }}>
+              {cmsLoading ? (
                 <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>
                   <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                  Đang tải danh sách tin bài...
+                  Đang tải...
                 </div>
-              ) : newsArticles.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>
-                  📭 Chưa có tin bài nào soạn sẵn.
+              ) : cmsError ? (
+                <div style={{ textAlign: "center", padding: "30px 0", color: "var(--danger)" }}>
+                  <div style={{ fontSize: "2rem", marginBottom: "8px" }}>⚠️</div>
+                  <div style={{ fontWeight: 600, marginBottom: "6px" }}>{cmsError}</div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Kiểm tra lại URL Website CMS trong mục Cài đặt → Kết nối Website CMS</div>
                 </div>
+              ) : cmsArticles.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>📭 Không tìm thấy bài nào.</div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {newsArticles.map((article) => (
-                    <div 
-                      key={article.id} 
-                      onClick={() => selectArticle(article)}
-                      style={{
-                        padding: "12px 16px",
-                        borderRadius: "8px",
-                        border: "1px solid var(--border)",
-                        cursor: "pointer",
-                        transition: "all 0.15s",
-                        background: "#fff",
-                        display: "flex",
-                        gap: "12px",
-                        alignItems: "start"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "var(--primary)";
-                        e.currentTarget.style.background = "#f0f9ff";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "var(--border)";
-                        e.currentTarget.style.background = "#fff";
-                      }}
-                    >
-                      {article.coverUrl && (
-                        <img 
-                          src={article.coverUrl} 
-                          alt="" 
-                          style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "4px", flexShrink: 0 }}
-                        />
-                      )}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)", marginBottom: "4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {article.title}
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {cmsArticles.map((article) => {
+                    const imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
+                    const thumbUrl = imgPath.startsWith("/") ? `${cmsUrl}${imgPath}` : imgPath;
+                    return (
+                      <div
+                        key={article.id}
+                        onClick={() => addArticleFromCms(article)}
+                        style={{
+                          padding: "12px 14px", borderRadius: "8px",
+                          border: "1px solid var(--border)", cursor: "pointer",
+                          transition: "all 0.15s", background: "#fff",
+                          display: "flex", gap: "12px", alignItems: "flex-start"
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.background = "#f0f9ff"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "#fff"; }}
+                      >
+                        {thumbUrl ? (
+                          <img src={thumbUrl} alt="" style={{ width: 54, height: 54, objectFit: "cover", borderRadius: "6px", flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: 54, height: 54, borderRadius: "6px", background: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", flexShrink: 0 }}>📰</div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text)", marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {article.title}
+                          </div>
+                          {article.description && (
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: "4px" }}>
+                              {article.description.substring(0, 100)}{article.description.length > 100 ? "..." : ""}
+                            </div>
+                          )}
+                          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                            📅 {new Date(article.createdAt).toLocaleDateString("vi-VN")}
+                          </div>
                         </div>
-                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                          📅 {new Date(article.createdAt).toLocaleDateString("vi-VN")}
-                        </div>
+                        <span style={{ fontSize: "0.7rem", color: "var(--primary)", fontWeight: 700, flexShrink: 0, alignSelf: "center" }}>+ Thêm</span>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
+            </div>
+
+            <div style={{ padding: "12px 20px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <button type="button" className="btn btn-outline btn-sm"
+                  disabled={cmsPage <= 1 || cmsLoading}
+                  onClick={() => { const p = cmsPage - 1; setCmsPage(p); fetchCmsArticles(cmsSearch, p); }}
+                  style={{ padding: "4px 10px" }}>←</button>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Trang {cmsPage}/{cmsTotalPages}</span>
+                <button type="button" className="btn btn-outline btn-sm"
+                  disabled={cmsPage >= cmsTotalPages || cmsLoading}
+                  onClick={() => { const p = cmsPage + 1; setCmsPage(p); fetchCmsArticles(cmsSearch, p); }}
+                  style={{ padding: "4px 10px" }}>→</button>
+              </div>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => setIsCmsModalOpen(false)}>Đóng</button>
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ==========================================
-// COMPONENT: ZALO STAFF HISTORY CARD
-// ==========================================
-function ZaloStaffHistoryCard() {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchHistory = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/salary-email/send-zalo");
-      const json = await res.json();
-      if (json.data) setHistory(json.data);
-    } catch (err) {
-      console.error("Lỗi tải lịch sử gửi Zalo nội bộ:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchHistory();
-    
-    // Đăng ký lắng nghe sự kiện khi có đợt gửi tin mới thành công
-    window.addEventListener("zalo_staff_sent", fetchHistory);
-    return () => window.removeEventListener("zalo_staff_sent", fetchHistory);
-  }, []);
-
-  return (
-    <div className="card" style={{ padding: "20px" }}>
-      <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-        <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span>📋 Lịch sử gửi tin Zalo</span>
-        </div>
-        <button className="btn btn-ghost btn-sm" onClick={fetchHistory} style={{ fontSize: "0.75rem", padding: "2px 6px" }}>🔄</button>
-      </div>
-
-      <div style={{ maxHeight: "400px", overflowY: "auto" }}>
-        {loading ? (
-          <div style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
-            <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
-            Đang tải lịch sử...
-          </div>
-        ) : history.length === 0 ? (
-          <div style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
-            📭 Chưa gửi tin Zalo nào.
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {history.map((log) => {
-              let payload = {};
-              try { payload = JSON.parse(log.rawPayload || "{}"); } catch (_) {}
-              return (
-                <div key={log.id} style={{ padding: "10px", border: "1px solid var(--border)", borderRadius: "var(--radius)", fontSize: "0.8rem", background: "var(--bg)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <span className="badge badge-info" style={{ fontSize: "0.65rem", padding: "1px 6px" }}>
-                      {payload.scope === "all_staff" ? "Tất cả NV" : "Chọn lọc NV"}
-                    </span>
-                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
-                      {new Date(log.receivedAt).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
-                  <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {log.content.split("\n")[0]}
-                  </div>
-                  {payload.successCount !== undefined && (
-                    <div style={{ fontSize: "0.75rem", color: "var(--success)", fontWeight: 600 }}>
-                      ✅ Thành công: {payload.successCount}/{payload.total}
-                      {payload.failCount > 0 ? ` (${payload.failCount} lỗi)` : ""}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

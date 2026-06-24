@@ -41,14 +41,6 @@ const menuGroups = [
     ],
   },
   {
-    title: "Tin tức & Cảnh báo",
-    items: [
-      { icon: "Newspaper", label: "Tin vắn dịch bệnh", href: "/news/daily" },
-      { icon: "CalendarDays", label: "Lịch tiêm chủng", href: "/news/vaccination-schedule" },
-      { icon: "AlertTriangle", label: "Thông báo khẩn", href: "/news/alerts" },
-    ],
-  },
-  {
     title: "Hệ thống",
     items: [
       { icon: "Settings", label: "Cài đặt & Zalo API", href: "/settings" },
@@ -61,51 +53,6 @@ const menuGroups = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-
-  const [categories, setCategories] = useState([
-    { id: "daily_news", name: "Tin vắn dịch bệnh", icon: "Newspaper" },
-    { id: "vac_schedule", name: "Lịch tiêm chủng", icon: "CalendarDays" },
-    { id: "alert", name: "Thông báo khẩn", icon: "AlertTriangle" }
-  ]);
-
-  useEffect(() => {
-    async function loadCategories() {
-      try {
-        const res = await fetch("/api/settings");
-        const json = await res.json();
-        if (json.data && json.data.news_categories) {
-          const parsed = JSON.parse(json.data.news_categories.value);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCategories(parsed);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to load news categories:", e);
-      }
-    }
-    loadCategories();
-  }, []);
-
-  const getCategoryHref = (id) => {
-    if (id === "daily_news") return "/news/daily";
-    if (id === "vac_schedule") return "/news/vaccination-schedule";
-    if (id === "alert") return "/news/alerts";
-    return `/news/${id}`;
-  };
-
-  const dynamicMenuGroups = menuGroups.map(group => {
-    if (group.title === "Tin tức & Cảnh báo") {
-      return {
-        ...group,
-        items: categories.map(cat => ({
-          icon: cat.icon,
-          label: cat.name,
-          href: getCategoryHref(cat.id)
-        }))
-      };
-    }
-    return group;
-  });
 
   const [activeTabParam, setActiveTabParam] = useState("");
   
@@ -245,7 +192,7 @@ export default function Sidebar() {
 
       {/* Menu */}
       <nav className="sidebar-menu">
-        {dynamicMenuGroups
+        {menuGroups
           .filter(group => {
             // Chỉ hiển thị nhóm "Hệ thống" cho tài khoản Quản trị viên (admin)
             if (group.title === "Hệ thống" && session?.user?.role !== "admin") {

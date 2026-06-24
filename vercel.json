@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/refresh-token",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/sync-health",
+      "schedule": "0 10 * * *"
     }
   ]
 }

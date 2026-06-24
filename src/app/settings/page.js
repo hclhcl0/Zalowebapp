@@ -81,11 +81,15 @@ const SETTING_GROUPS = [
     ],
   },
   {
-    id: "news_categories",
-    icon: "📰",
-    title: "Danh mục Tin tức & Cảnh báo",
-    desc: "Quản lý các chuyên mục tin tức tuyên truyền trên hệ thống CDC Đà Nẵng.",
-    fields: [],
+    id: "payload_cms",
+    icon: "📡",
+    title: "Kết nối Website CMS",
+    desc: "Cấu hình kết nối đến website CMS (Payload) để lấy danh sách bài viết khi soạn tin Broadcast và nhận webhook tự động gửi Zalo khi xuất bản bài.",
+    fields: [
+      { key: "payload_cms_url",              label: "URL Website CMS",                         type: "text",     placeholder: "VD: https://cdc.danang.gov.vn" },
+      { key: "payload_article_url_pattern",  label: "Mẫu URL bài viết (dùng {slug})",          type: "text",     placeholder: "VD: https://cdc.danang.gov.vn/bai-viet/{slug}" },
+      { key: "payload_webhook_secret",       label: "Webhook Secret (khớp với bên CMS)",       type: "password", secret: true, placeholder: "VD: my-secret-key-2026" },
+    ],
   },
   {
     id: "ai_config",
@@ -127,10 +131,6 @@ function SettingsPageContent() {
   const [oauthData, setOauthData] = useState(null); // { authUrl, redirectUri, codeChallenge, state }
   const [oauthLoading, setOauthLoading] = useState(false);
   const [oauthMsg, setOauthMsg] = useState(null); // thông báo sau callback
-
-  const [newCatId, setNewCatId] = useState("");
-  const [newCatName, setNewCatName] = useState("");
-  const [newCatIcon, setNewCatIcon] = useState("📢");
 
   // Gmail Pool states
   const [accounts, setAccounts] = useState([]);
@@ -382,59 +382,6 @@ function SettingsPageContent() {
     } finally {
       setGmailOAuthLoading(false);
     }
-  };
-
-  const categoriesList = (() => {
-    try {
-      return values.news_categories ? JSON.parse(values.news_categories) : [
-        { id: "daily_news", name: "Tin vắn dịch bệnh", icon: "📰", isDefault: true },
-        { id: "vac_schedule", name: "Lịch tiêm chủng", icon: "📅", isDefault: true },
-        { id: "alert", name: "Thông báo khẩn", icon: "🚨", isDefault: true }
-      ];
-    } catch (_) {
-      return [
-        { id: "daily_news", name: "Tin vắn dịch bệnh", icon: "📰", isDefault: true },
-        { id: "vac_schedule", name: "Lịch tiêm chủng", icon: "📅", isDefault: true },
-        { id: "alert", name: "Thông báo khẩn", icon: "🚨", isDefault: true }
-      ];
-    }
-  })();
-
-  const handleAddCategory = () => {
-    if (!newCatId.trim() || !newCatName.trim()) {
-      alert("Vui lòng điền đầy đủ Mã và Tên danh mục!");
-      return;
-    }
-    const cleanId = newCatId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
-    if (!cleanId) {
-      alert("Mã danh mục không hợp lệ! Chỉ sử dụng chữ thường, số, dấu gạch dưới.");
-      return;
-    }
-    if (categoriesList.some(c => c.id === cleanId)) {
-      alert("Mã danh mục này đã tồn tại!");
-      return;
-    }
-    const updated = [
-      ...categoriesList,
-      { id: cleanId, name: newCatName.trim(), icon: newCatIcon.trim() || "📢" }
-    ];
-    setValues(prev => ({ ...prev, news_categories: JSON.stringify(updated) }));
-    setNewCatId("");
-    setNewCatName("");
-    setNewCatIcon("📢");
-  };
-
-  const handleDeleteCategory = (catId) => {
-    const target = categoriesList.find(c => c.id === catId);
-    if (target?.isDefault) {
-      alert("Không thể xóa danh mục mặc định của hệ thống!");
-      return;
-    }
-    if (!confirm(`Bạn có chắc muốn xóa danh mục "${target?.name}"? Các bài viết thuộc danh mục này sẽ không bị xóa nhưng sẽ không hiển thị trên danh mục tương ứng.`)) {
-      return;
-    }
-    const updated = categoriesList.filter(c => c.id !== catId);
-    setValues(prev => ({ ...prev, news_categories: JSON.stringify(updated) }));
   };
 
   // Tải cài đặt từ database
@@ -1075,81 +1022,6 @@ function SettingsPageContent() {
                       </div>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* UI cho tab Quản lý Danh mục Tin tức */}
-              {activeGroup.id === "news_categories" && (
-                <div style={{ marginTop: "20px", borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
-                  <div style={{ fontWeight: 600, marginBottom: "12px", fontSize: "0.9rem" }}>📋 Danh sách danh mục hiện tại:</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
-                    {categoriesList.map((cat) => (
-                      <div key={cat.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid var(--border)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                          <span style={{ fontSize: "1.4rem" }}>{cat.icon}</span>
-                          <div>
-                            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{cat.name}</span>
-                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginLeft: "10px", fontFamily: "monospace" }}>({cat.id})</span>
-                          </div>
-                        </div>
-                        {cat.isDefault ? (
-                          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", background: "#e2e8f0", padding: "2px 8px", borderRadius: "20px", fontWeight: 600 }}>Mặc định</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteCategory(cat.id)}
-                            style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", fontWeight: 600 }}
-                          >
-                            🗑️ Xóa
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{ background: "#f1f5f9", padding: "16px", borderRadius: "10px", border: "1px solid var(--border)" }}>
-                    <div style={{ fontWeight: 700, fontSize: "0.875rem", marginBottom: "12px", color: "var(--text)" }}>➕ Thêm danh mục tin tức mới</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px", gap: "12px", marginBottom: "12px" }}>
-                      <div>
-                        <label className="form-label" style={{ fontSize: "0.75rem" }}>Tên danh mục</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder="VD: Hoạt động CDC"
-                          value={newCatName}
-                          onChange={(e) => setNewCatName(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="form-label" style={{ fontSize: "0.75rem" }}>Mã danh mục (viết liền ko dấu)</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder="VD: cdc_activities"
-                          value={newCatId}
-                          onChange={(e) => setNewCatId(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="form-label" style={{ fontSize: "0.75rem" }}>Biểu tượng</label>
-                        <input
-                          type="text"
-                          className="form-input"
-                          placeholder="📢"
-                          style={{ textAlign: "center" }}
-                          value={newCatIcon}
-                          onChange={(e) => setNewCatIcon(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-sm"
-                      onClick={handleAddCategory}
-                    >
-                      ➕ Thêm danh mục
-                    </button>
-                  </div>
                 </div>
               )}
 
