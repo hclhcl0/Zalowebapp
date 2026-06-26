@@ -19,12 +19,12 @@ export async function GET(request) {
   // Nếu người dùng từ chối cấp quyền
   if (error) {
     return NextResponse.redirect(
-      new URL(`/settings?oauth_error=${encodeURIComponent(error)}`, request.url)
+      new URL(`/settings?oauth_error=${encodeURIComponent(error)}`, process.env.NEXTAUTH_URL ?? "http://localhost:3000")
     );
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL("/settings?oauth_error=no_code", request.url));
+    return NextResponse.redirect(new URL("/settings?oauth_error=no_code", process.env.NEXTAUTH_URL ?? "http://localhost:3000"));
   }
 
   try {
@@ -36,12 +36,13 @@ export async function GET(request) {
       prisma.systemConfig.findUnique({ where: { key: "zalo_app_secret"      } }),
     ]);
 
+    const siteUrl     = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
     // Xác minh state để chống CSRF
     if (state !== stateCfg?.value) {
-      return NextResponse.redirect(new URL("/settings?oauth_error=invalid_state", request.url));
+      return NextResponse.redirect(new URL("/settings?oauth_error=invalid_state", siteUrl));
     }
 
-    const siteUrl     = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const redirectUri = `${siteUrl}/api/zalo/callback`;
 
     // Đổi authorization code lấy Access Token
@@ -64,7 +65,7 @@ export async function GET(request) {
 
     if (!tokenData.access_token) {
       const msg = encodeURIComponent(tokenData.message ?? "Không lấy được token");
-      return NextResponse.redirect(new URL(`/settings?oauth_error=${msg}`, request.url));
+      return NextResponse.redirect(new URL(`/settings?oauth_error=${msg}`, siteUrl));
     }
 
     // Lưu Access Token và Refresh Token mới vào database
@@ -86,10 +87,10 @@ export async function GET(request) {
     ]);
 
     // Redirect về trang Cài đặt với thông báo thành công
-    return NextResponse.redirect(new URL("/settings?oauth_success=1", request.url));
+    return NextResponse.redirect(new URL("/settings?oauth_success=1", siteUrl));
   } catch (err) {
     return NextResponse.redirect(
-      new URL(`/settings?oauth_error=${encodeURIComponent(err.message)}`, request.url)
+      new URL(`/settings?oauth_error=${encodeURIComponent(err.message)}`, process.env.NEXTAUTH_URL ?? "http://localhost:3000")
     );
   }
 }
