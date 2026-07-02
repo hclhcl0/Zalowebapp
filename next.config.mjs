@@ -5,7 +5,21 @@ const nextConfig = {
 
   experimental: {
     proxyClientMaxBodySize: "50mb",
-    // after() API đã sẵn sàng mặc định từ Next.js 15+, không cần cấu hình thêm
+  },
+
+  // CORS cho Zalo Mini App
+  async headers() {
+    return [
+      {
+        source: "/api/miniapp/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "https://h5.zdn.vn" },
+          { key: "Access-Control-Allow-Methods", value: "GET,POST,OPTIONS" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type,Authorization,X-Zalo-MiniApp-Token" },
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+        ],
+      },
+    ];
   },
 };
 
