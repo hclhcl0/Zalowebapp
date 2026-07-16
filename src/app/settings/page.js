@@ -114,6 +114,20 @@ const SETTING_GROUPS = [
       { key: "google_api_key",  label: "Google API Key — dùng khi folder Công khai (Anyone with link)", type: "password", secret: true, placeholder: "••••••••••••••••" },
     ],
   },
+  {
+    id: "mini_app",
+    icon: "🎨",
+    title: "Cấu hình Zalo Mini App",
+    desc: "Tùy chỉnh giao diện và màu sắc cho Zalo Mini App hiển thị với người dân.",
+    fields: [
+      { key: "mini_app_primary_color", label: "Màu chủ đạo (Hex)", type: "text", placeholder: "VD: #1890ff" },
+      { key: "mini_app_primary_light", label: "Màu chủ đạo nhạt (Hex)", type: "text", placeholder: "VD: #40a9ff" },
+      { key: "mini_app_primary_dark", label: "Màu chủ đạo đậm (Hex)", type: "text", placeholder: "VD: #096dd9" },
+      { key: "mini_app_banner_effect", label: "Hiệu ứng chuyển slide", type: "select", options: ["slide", "fade", "coverflow"], placeholder: "Mặc định: slide" },
+      { key: "mini_app_banner_ratio", label: "Tỷ lệ khung hình (Slide Ratio)", type: "select", options: ["16/9", "21/9", "2/1", "1/1"], placeholder: "Mặc định: 16/9" },
+      { key: "mini_app_banner_delay", label: "Tự động lướt (giây)", type: "number", placeholder: "Nhập số giây. VD: 3 (nhập 0 để tắt)" },
+    ],
+  },
 ];
 
 function SettingsPageContent() {
@@ -1347,6 +1361,18 @@ function SettingsPageContent() {
                           onChange={(e) => handleChange(field.key, e.target.value)}
                           rows={3}
                         />
+                      ) : field.type === "select" ? (
+                        <select
+                          id={field.key}
+                          className="form-input"
+                          value={values[field.key] ?? ""}
+                          onChange={(e) => handleChange(field.key, e.target.value)}
+                        >
+                          <option value="">{field.placeholder || "Chọn một tuỳ chọn..."}</option>
+                          {field.options?.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           id={field.key}
@@ -1390,6 +1416,115 @@ function SettingsPageContent() {
                       loading="lazy"
                       title="Google Maps Preview"
                     />
+                  </div>
+                )}
+
+                {/* Giao diện quản lý Banners cho Mini App */}
+                {activeGroup.id === "mini_app" && (
+                  <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                      <div>
+                        <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text)" }}>🖼️ Quản lý Slide Banner</h3>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "4px" }}>Thêm các hình ảnh và gán đường dẫn khi người dùng bấm vào.</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={() => {
+                          let arr = [];
+                          try { arr = JSON.parse(values["mini_app_banners"] || "[]"); } catch(e){}
+                          arr.push({ image: "", link: "" });
+                          handleChange("mini_app_banners", JSON.stringify(arr));
+                        }}
+                      >
+                        ➕ Thêm Banner
+                      </button>
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {(() => {
+                        let arr = [];
+                        try { arr = JSON.parse(values["mini_app_banners"] || "[]"); } catch(e){}
+                        if (arr.length === 0) return <div style={{ padding: "20px", textAlign: "center", border: "1px dashed var(--border)", borderRadius: "var(--radius)", color: "var(--text-muted)" }}>Chưa có banner nào. Bấm Thêm Banner ở trên.</div>;
+                        
+                        return arr.map((banner, index) => (
+                          <div key={index} style={{ display: "flex", gap: "16px", padding: "16px", background: "#f8fafc", border: "1px solid var(--border)", borderRadius: "var(--radius)" }}>
+                            <div style={{ width: "120px", height: "80px", flexShrink: 0, background: "#e2e8f0", borderRadius: "6px", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                              {banner.image ? (
+                                <img src={banner.image} alt="Banner" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              ) : (
+                                <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Chưa có ảnh</span>
+                              )}
+                            </div>
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+                              <div style={{ display: "flex", gap: "8px" }}>
+                                <input
+                                  type="text"
+                                  className="form-input"
+                                  placeholder="Đường dẫn ảnh (URL) hoặc bấm Tải lên"
+                                  value={banner.image}
+                                  onChange={(e) => {
+                                    const newArr = [...arr];
+                                    newArr[index].image = e.target.value;
+                                    handleChange("mini_app_banners", JSON.stringify(newArr));
+                                  }}
+                                  style={{ flex: 1 }}
+                                />
+                                <label className="btn btn-primary btn-sm" style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+                                  Tải lên
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    style={{ display: "none" }} 
+                                    onChange={async (e) => {
+                                      const file = e.target.files[0];
+                                      if (!file) return;
+                                      const formData = new FormData();
+                                      formData.append("file", file);
+                                      try {
+                                        const res = await fetch("/api/upload", { method: "POST", body: formData });
+                                        const data = await res.json();
+                                        if (data.success) {
+                                          const newArr = [...arr];
+                                          newArr[index].image = data.url;
+                                          handleChange("mini_app_banners", JSON.stringify(newArr));
+                                        } else {
+                                          alert("Lỗi tải ảnh: " + data.error);
+                                        }
+                                      } catch (err) {
+                                        alert("Lỗi kết nối.");
+                                      }
+                                    }} 
+                                  />
+                                </label>
+                              </div>
+                              <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Đường dẫn khi click (VD: /news/123 hoặc https://google.com)"
+                                value={banner.link}
+                                onChange={(e) => {
+                                  const newArr = [...arr];
+                                  newArr[index].link = e.target.value;
+                                  handleChange("mini_app_banners", JSON.stringify(newArr));
+                                }}
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-outline btn-sm"
+                              style={{ color: "var(--danger)", border: "none", height: "fit-content" }}
+                              onClick={() => {
+                                const newArr = arr.filter((_, i) => i !== index);
+                                handleChange("mini_app_banners", JSON.stringify(newArr));
+                              }}
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        ));
+                      })()}
+                    </div>
                   </div>
                 )}
               </div>
