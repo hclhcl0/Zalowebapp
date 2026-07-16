@@ -21,7 +21,7 @@ export async function GET(request) {
 
     // Lấy URL CMS từ SystemConfig hoặc env
     const cmsCfg = await prisma.systemConfig.findUnique({ where: { key: "cms_url" } });
-    const cmsUrl = cmsCfg?.value || process.env.CMS_URL || "https://zcdc.vnos.org";
+    const cmsUrl = cmsCfg?.value || process.env.CMS_URL || "https://ecdc.vnos.org";
 
     // Gọi Payload CMS REST API
     const params = new URLSearchParams({
