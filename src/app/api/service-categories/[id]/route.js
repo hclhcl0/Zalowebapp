@@ -11,7 +11,13 @@ export async function PUT(req, { params }) {
     const { id } = await params;
     const cat = await prisma.serviceCategory.update({
       where: { id: parseInt(id) },
-      data: { name: body.name, order: body.order ?? 0, isActive: body.isActive ?? true },
+      data: {
+        name: body.name,
+        description: body.description ?? null,
+        imageUrl: body.imageUrl ?? null,
+        order: body.order ?? 0,
+        isActive: body.isActive ?? true,
+      },
     });
     return NextResponse.json({ success: true, data: cat });
   } catch (err) {

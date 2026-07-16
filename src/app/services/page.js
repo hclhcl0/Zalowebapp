@@ -29,6 +29,8 @@ export default function ServicePricePage() {
   // Category form
   const [showCatForm, setShowCatForm] = useState(false);
   const [catName, setCatName] = useState("");
+  const [catDescription, setCatDescription] = useState("");
+  const [catImageUrl, setCatImageUrl] = useState("");
   const [editCat, setEditCat] = useState(null);
   const [savingCat, setSavingCat] = useState(false);
 
@@ -61,8 +63,8 @@ export default function ServicePricePage() {
   const toggleExpand = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
   // --- Category CRUD ---
-  const openAddCat = () => { setEditCat(null); setCatName(""); setShowCatForm(true); };
-  const openEditCat = (cat) => { setEditCat(cat); setCatName(cat.name); setShowCatForm(true); };
+  const openAddCat = () => { setEditCat(null); setCatName(""); setCatDescription(""); setCatImageUrl(""); setShowCatForm(true); };
+  const openEditCat = (cat) => { setEditCat(cat); setCatName(cat.name); setCatDescription(cat.description || ""); setCatImageUrl(cat.imageUrl || ""); setShowCatForm(true); };
 
   const handleImport = async (e) => {
     const file = e.target.files?.[0];
@@ -91,7 +93,7 @@ export default function ServicePricePage() {
     try {
       const url = editCat ? `/api/service-categories/${editCat.id}` : "/api/service-categories";
       const method = editCat ? "PUT" : "POST";
-      await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: catName }) });
+      await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: catName, description: catDescription, imageUrl: catImageUrl }) });
       setShowCatForm(false);
       fetchData();
     } finally { setSavingCat(false); }
@@ -259,13 +261,26 @@ export default function ServicePricePage() {
       {/* Category Modal */}
       {showCatForm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowCatForm(false)}>
-          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480 }} onClick={e => e.stopPropagation()}>
             <h3 style={{ margin: "0 0 20px", fontSize: "1.1rem", fontWeight: 700 }}>{editCat ? "Sửa danh mục" : "Thêm danh mục"}</h3>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.9rem" }}>Tên danh mục</label>
-              <input className="form-input" value={catName} onChange={e => setCatName(e.target.value)} placeholder="VD: Xét nghiệm, Siêu âm..." onKeyDown={e => e.key === "Enter" && saveCat()} autoFocus />
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.9rem" }}>Tên danh mục <span style={{color:"red"}}>*</span></label>
+                <input className="form-input" value={catName} onChange={e => setCatName(e.target.value)} placeholder="VD: Xét nghiệm, Siêu âm..." autoFocus />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.9rem" }}>Mô tả ngắn</label>
+                <textarea className="form-input" value={catDescription} onChange={e => setCatDescription(e.target.value)} placeholder="Mô tả ngắn về dịch vụ này..." rows={2} style={{ resize: "none" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.9rem" }}>Ảnh đại diện (URL)</label>
+                <input className="form-input" value={catImageUrl} onChange={e => setCatImageUrl(e.target.value)} placeholder="https://..." />
+                {catImageUrl && (
+                  <img src={catImageUrl} alt="preview" style={{ marginTop: 8, width: "100%", height: 120, objectFit: "cover", borderRadius: 8 }} onError={e => e.target.style.display='none'} />
+                )}
+              </div>
             </div>
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowCatForm(false)}>Hủy</button>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveCat} disabled={savingCat}>{savingCat ? "Đang lưu..." : "Lưu"}</button>
             </div>

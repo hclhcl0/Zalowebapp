@@ -27,7 +27,12 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const cat = await prisma.serviceCategory.create({
-      data: { name: body.name, order: body.order ?? 0 },
+      data: {
+        name: body.name,
+        description: body.description || null,
+        imageUrl: body.imageUrl || null,
+        order: body.order ?? 0,
+      },
     });
     return NextResponse.json({ success: true, data: cat });
   } catch (err) {

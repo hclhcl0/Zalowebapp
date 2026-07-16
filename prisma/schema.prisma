@@ -88,12 +88,14 @@ model TestResult {
 }
 
 model ServiceCategory {
-  id        Int            @id @default(autoincrement())
-  name      String         // Tên danh mục (VD: Xét nghiệm, Siêu âm)
-  order     Int            @default(0)
-  isActive  Boolean        @default(true)
-  createdAt DateTime       @default(now())
-  services  ServicePrice[]
+  id          Int            @id @default(autoincrement())
+  name        String         // Tên danh mục
+  description String?        // Mô tả ngắn
+  imageUrl    String?        // Ảnh đại diện
+  order       Int            @default(0)
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  services    ServicePrice[]
 }
 
 model ServicePrice {
