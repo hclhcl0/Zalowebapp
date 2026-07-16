@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, Search, X, Check, FolderPlus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, Search, X, Upload, FolderPlus, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 const formatPrice = (p) =>
@@ -19,6 +19,12 @@ export default function ServicePricePage() {
 
   // Expanded categories
   const [expanded, setExpanded] = useState({});
+
+  // Import Excel
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const importInputRef = useRef(null);
 
   // Category form
   const [showCatForm, setShowCatForm] = useState(false);
@@ -57,6 +63,27 @@ export default function ServicePricePage() {
   // --- Category CRUD ---
   const openAddCat = () => { setEditCat(null); setCatName(""); setShowCatForm(true); };
   const openEditCat = (cat) => { setEditCat(cat); setCatName(cat.name); setShowCatForm(true); };
+
+  const handleImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setImportResult(null);
+    setShowImportModal(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/service-prices/import', { method: 'POST', body: formData });
+      const json = await res.json();
+      setImportResult(json);
+      if (json.success) fetchData();
+    } catch (err) {
+      setImportResult({ error: err.message });
+    } finally {
+      setImporting(false);
+      if (importInputRef.current) importInputRef.current.value = '';
+    }
+  };
 
   const saveCat = async () => {
     if (!catName.trim()) return;
@@ -118,7 +145,17 @@ export default function ServicePricePage() {
             {services.length} dịch vụ • {categories.length} danh mục
           </p>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <input ref={importInputRef} type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleImport} />
+          <button
+            className="btn btn-outline"
+            onClick={() => importInputRef.current?.click()}
+            disabled={importing}
+            style={{ display: "flex", alignItems: "center", gap: 6, borderColor: "#16a34a", color: "#16a34a" }}
+          >
+            <FileSpreadsheet size={16} />
+            {importing ? "Đang import..." : "Import Excel"}
+          </button>
           <button className="btn btn-outline" onClick={openAddCat} style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <FolderPlus size={16} /> Thêm danh mục
           </button>
@@ -280,6 +317,57 @@ export default function ServicePricePage() {
           </div>
         </div>
       )}
+      {/* Import Result Modal */}
+      {showImportModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowImportModal(false)}>
+          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+            {importing ? (
+              <div style={{ textAlign: "center", padding: "20px 0" }}>
+                <div style={{ width: 40, height: 40, border: "4px solid #e5e7eb", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
+                <p style={{ color: "var(--text-muted)" }}>Đang xử lý file Excel...</p>
+              </div>
+            ) : importResult?.success ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <CheckCircle size={24} color="#16a34a" />
+                  <h3 style={{ margin: 0, fontWeight: 700 }}>Import thành công!</h3>
+                </div>
+                <div style={{ background: "#f0fdf4", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+                  <p style={{ margin: "0 0 6px", color: "#166534" }}>✅ Đã thêm <strong>{importResult.totalCreated}</strong> dịch vụ</p>
+                  {importResult.totalSkipped > 0 && <p style={{ margin: 0, color: "#92400e" }}>⚠️ Bỏ qua <strong>{importResult.totalSkipped}</strong> dòng không hợp lệ</p>}
+                </div>
+                {importResult.errors?.length > 0 && (
+                  <div style={{ background: "#fef2f2", borderRadius: 10, padding: 12, marginBottom: 16, maxHeight: 120, overflowY: "auto" }}>
+                    <p style={{ margin: "0 0 6px", fontWeight: 600, fontSize: "0.85rem", color: "#991b1b" }}>Chi tiết lỗi:</p>
+                    {importResult.errors.map((e, i) => <p key={i} style={{ margin: "2px 0", fontSize: "0.8rem", color: "#7f1d1d" }}>{e}</p>)}
+                  </div>
+                )}
+                <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowImportModal(false)}>Đóng</button>
+              </>
+            ) : (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <AlertCircle size={24} color="#dc2626" />
+                  <h3 style={{ margin: 0, fontWeight: 700 }}>Import thất bại</h3>
+                </div>
+                <p style={{ color: "#dc2626", background: "#fef2f2", padding: 12, borderRadius: 8 }}>{importResult?.error || "Lỗi không xác định"}</p>
+                <button className="btn btn-outline" style={{ width: "100%" }} onClick={() => setShowImportModal(false)}>Đóng</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Hướng dẫn định dạng Excel */}
+      <div style={{ marginTop: 24, padding: 16, background: "#fffbeb", borderRadius: 12, border: "1px solid #fde68a" }}>
+        <p style={{ margin: "0 0 6px", fontWeight: 600, fontSize: "0.85rem", color: "#92400e" }}>📋 Định dạng file Excel để import:</p>
+        <ul style={{ margin: 0, paddingLeft: 20, fontSize: "0.82rem", color: "#78350f", lineHeight: 1.8 }}>
+          <li>Mỗi <strong>Sheet</strong> = 1 danh mục dịch vụ (tên sheet = tên danh mục)</li>
+          <li>Các cột: <strong>Tên dịch vụ</strong> | <strong>Đơn giá</strong> | <strong>Đơn vị tính</strong> (tùy chọn) | <strong>Ghi chú</strong> (tùy chọn)</li>
+          <li>Hàng đầu tiên là tiêu đề cột, từ hàng 2 trở đi là dữ liệu</li>
+          <li>Giá nhập số nguyên (VD: 150000), không cần định dạng tiền tệ</li>
+        </ul>
+      </div>
     </div>
   );
 }
