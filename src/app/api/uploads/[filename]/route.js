@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request, { params }) {
   try {
-    const filename = params.filename;
+    const { filename } = await params;
     // Ngăn chặn directory traversal
     if (filename.includes("/") || filename.includes("..")) {
       return new NextResponse("Invalid filename", { status: 400 });
