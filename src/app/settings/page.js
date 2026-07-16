@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Plus, Trash2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import WebcqCategoriesPanel from "./WebcqCategoriesPanel";
+import BannerListEditor from "./BannerListEditor";
 
 // Các nhóm cài đặt
 const SETTING_GROUPS = [
@@ -127,6 +128,8 @@ const SETTING_GROUPS = [
       { key: "mini_app_banner_effect", label: "Hiệu ứng chuyển slide", type: "select", options: ["slide", "fade", "coverflow"], placeholder: "Mặc định: slide" },
       { key: "mini_app_banner_ratio", label: "Tỷ lệ khung hình (Slide Ratio)", type: "select", options: ["16/9", "21/9", "2/1", "1/1"], placeholder: "Mặc định: 16/9" },
       { key: "mini_app_banner_delay", label: "Tự động lướt (giây)", type: "number", placeholder: "Nhập số giây. VD: 3 (nhập 0 để tắt)" },
+      { key: "mini_app_banners", label: "Banners Slide Đầu Trang", type: "banner_list" },
+      { key: "mini_app_mid_banners", label: "Banners Xen Kẽ Chuyên Mục", type: "banner_list" },
     ],
   },
 ];
@@ -1374,6 +1377,11 @@ function SettingsPageContent() {
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
                         </select>
+                      ) : field.type === "banner_list" ? (
+                        <BannerListEditor 
+                          value={values[field.key]} 
+                          onChange={(val) => handleChange(field.key, val)} 
+                        />
                       ) : (
                         <input
                           id={field.key}
