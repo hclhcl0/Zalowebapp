@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && sh -c 'prisma migrate resolve --applied 20260717001128_init_all_tables || true' && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint"
   },
