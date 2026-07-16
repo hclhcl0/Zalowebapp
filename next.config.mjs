@@ -20,6 +20,16 @@ const nextConfig = {
       },
     ];
   },
+
+  // Rewrite /uploads sang API route vì Next.js không phục vụ file động thêm vào public ở production
+  async rewrites() {
+    return [
+      {
+        source: "/uploads/:filename*",
+        destination: "/api/uploads/:filename*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
