@@ -87,14 +87,27 @@ model TestResult {
   follower    Follower? @relation(fields: [followerId], references: [id])
 }
 
+model ServiceCategory {
+  id        Int            @id @default(autoincrement())
+  name      String         // Tên danh mục (VD: Xét nghiệm, Siêu âm)
+  order     Int            @default(0)
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  services  ServicePrice[]
+}
+
 model ServicePrice {
-  id          Int      @id @default(autoincrement())
-  name        String   // Tên dịch vụ
-  category    String   // Nhóm dịch vụ
-  price       Float    // Giá (VND)
-  unit        String?  // Đơn vị tính
-  isActive    Boolean  @default(true)
-  updatedAt   DateTime @updatedAt
+  id         Int             @id @default(autoincrement())
+  name       String          // Tên dịch vụ
+  price      BigInt          // Giá (VNĐ)
+  unit       String          @default("lần") // Đơn vị tính
+  note       String?         // Ghi chú
+  categoryId Int
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+  order      Int             @default(0)
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 }
 
 // ============================================================
@@ -200,3 +213,4 @@ model GroqApiKey {
   usageCount  Int      @default(0)
   createdAt   DateTime @default(now())
 }
+
