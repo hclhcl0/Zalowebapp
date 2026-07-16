@@ -48,9 +48,15 @@ model Follower {
   dob         String?  // Ngày sinh
   cccd        String?  // CMND/CCCD hoặc Mã BN
 
+  // Mini App tracking
+  lastSeenAt    DateTime?  // Lần cuối mở Mini App
+  totalVisits   Int        @default(0)  // Tổng số lần mở
+  miniAppVersion String?   // Phiên bản Mini App
+
   // Quan hệ
   appointments Appointment[]
   testResults  TestResult[]
+  sessions     MiniAppSession[]
 }
 
 // ============================================================
@@ -85,6 +91,19 @@ model TestResult {
   // Quan hệ
   followerId  Int?
   follower    Follower? @relation(fields: [followerId], references: [id])
+}
+
+model MiniAppSession {
+  id         Int      @id @default(autoincrement())
+  followerId Int
+  follower   Follower @relation(fields: [followerId], references: [id], onDelete: Cascade)
+  action     String   // "open" | "view_article" | "booking" | "lookup_result" | "view_service" | "ai_chat"
+  metadata   String?  // JSON string: { articleId, categoryId, etc. }
+  createdAt  DateTime @default(now())
+
+  @@index([followerId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model ServiceCategory {

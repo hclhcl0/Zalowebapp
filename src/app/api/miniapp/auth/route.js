@@ -1,8 +1,8 @@
 /**
  * API: Xác thực người dùng Mini App qua Zalo User Access Token
  * POST /api/miniapp/auth
- * Body: { accessToken: string }
- * → Trả về: { userType, accessLevel, department, followerInfo }
+ * Body: { accessToken: string, version?: string }
+ * → Trả về: { userType, accessLevel, department, followerInfo, followerId }
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -16,7 +16,8 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
-    const { accessToken } = await request.json();
+    const body = await request.json();
+    const { accessToken } = body;
     if (!accessToken) {
       return NextResponse.json({ error: "Thiếu accessToken" }, { status: 400 });
     }
@@ -31,36 +32,38 @@ export async function POST(request) {
       return NextResponse.json({ error: "Token không hợp lệ" }, { status: 401 });
     }
 
-    const zaloUserId = zaloData.id;
+    // Upsert follower (tạo hoặc cập nhật)
+    const follower = await prisma.follower.upsert({
+      where: { zaloUserId: zaloData.id },
+      create: {
+        zaloUserId: zaloData.id,
+        displayName: zaloData.name || null,
+        avatarUrl: zaloData.picture?.data?.url || null,
+        userType: "citizen",
+        accessLevel: "basic",
+        totalVisits: 1,
+        lastSeenAt: new Date(),
+      },
+      update: {
+        displayName: zaloData.name || undefined,
+        avatarUrl: zaloData.picture?.data?.url || undefined,
+        lastSeenAt: new Date(),
+        totalVisits: { increment: 1 },
+      },
+    });
 
-    // Tìm Follower trong DB
-    let follower = await prisma.follower.findUnique({ where: { zaloUserId } });
-
-    // Nếu chưa có → tự động tạo mới (người dân lần đầu dùng)
-    if (!follower) {
-      follower = await prisma.follower.create({
-        data: {
-          zaloUserId,
-          displayName: zaloData.name || "Người dùng Zalo",
-          avatarUrl: zaloData.picture?.data?.url || null,
-          userType: "citizen",
-          accessLevel: "basic",
-        },
-      });
-    } else {
-      // Cập nhật tên/avatar mới nhất
-      follower = await prisma.follower.update({
-        where: { zaloUserId },
-        data: {
-          displayName: zaloData.name || follower.displayName,
-          avatarUrl: zaloData.picture?.data?.url || follower.avatarUrl,
-        },
-      });
-    }
+    // Log session
+    await prisma.miniAppSession.create({
+      data: {
+        followerId: follower.id,
+        action: "open",
+        metadata: JSON.stringify({ version: body.version || null }),
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      zaloUserId,
+      zaloUserId: zaloData.id,
       displayName: follower.displayName,
       avatarUrl: follower.avatarUrl,
       userType: follower.userType,       // "citizen" | "staff"
