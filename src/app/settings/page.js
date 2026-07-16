@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Plus, Trash2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import WebcqCategoriesPanel from "./WebcqCategoriesPanel";
 
 // Các nhóm cài đặt
 const SETTING_GROUPS = [
@@ -1527,6 +1528,8 @@ function SettingsPageContent() {
                     </div>
                   </div>
                 )}
+
+                {activeGroup.id === "mini_app" && <WebcqCategoriesPanel />}
               </div>
             )}
           </div>
