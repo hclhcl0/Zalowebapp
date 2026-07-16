@@ -1,121 +1,166 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, Search, X, Upload, FolderPlus, FileSpreadsheet, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Plus, Pencil, Trash2, ChevronDown, ChevronRight,
+  Search, X, Upload, FolderPlus, FileSpreadsheet,
+  AlertCircle, CheckCircle, Tag, Image as ImageIcon, LayoutGrid
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 
-const formatPrice = (p) =>
-  Number(p).toLocaleString("vi-VN") + " đ";
+const formatPrice = (p) => Number(p).toLocaleString("vi-VN") + " đ";
 
-export default function ServicePricePage() {
-  const { data: session } = useSession();
+// ─────────────────────────────────────────────
+// Tab 1: Quản lý danh mục dịch vụ
+// ─────────────────────────────────────────────
+function CategoriesTab({ categories, fetchData }) {
+  const [showForm, setShowForm] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [form, setForm] = useState({ name: "", description: "", imageUrl: "" });
+  const [saving, setSaving] = useState(false);
 
-  // Data
-  const [categories, setCategories] = useState([]);
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const openAdd = () => { setEditItem(null); setForm({ name: "", description: "", imageUrl: "" }); setShowForm(true); };
+  const openEdit = (cat) => { setEditItem(cat); setForm({ name: cat.name, description: cat.description || "", imageUrl: cat.imageUrl || "" }); setShowForm(true); };
+
+  const save = async () => {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    try {
+      const url = editItem ? `/api/service-categories/${editItem.id}` : "/api/service-categories";
+      const method = editItem ? "PUT" : "POST";
+      await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      setShowForm(false);
+      fetchData();
+    } finally { setSaving(false); }
+  };
+
+  const del = async (cat) => {
+    if (!confirm(`Xóa danh mục "${cat.name}"? Tất cả dịch vụ bên trong cũng sẽ bị xóa.`)) return;
+    await fetch(`/api/service-categories/${cat.id}`, { method: "DELETE" });
+    fetchData();
+  };
+
+  const gradients = [
+    "linear-gradient(135deg,#667eea,#764ba2)",
+    "linear-gradient(135deg,#4facfe,#00f2fe)",
+    "linear-gradient(135deg,#43e97b,#38f9d7)",
+    "linear-gradient(135deg,#fa709a,#fee140)",
+    "linear-gradient(135deg,#f093fb,#f5576c)",
+    "linear-gradient(135deg,#a18cd1,#fbc2eb)",
+    "linear-gradient(135deg,#fccb90,#d57eeb)",
+    "linear-gradient(135deg,#a1c4fd,#c2e9fb)",
+  ];
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.9rem" }}>{categories.length} danh mục dịch vụ</p>
+        <button className="btn btn-primary" onClick={openAdd} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <Plus size={16} /> Thêm danh mục
+        </button>
+      </div>
+
+      {categories.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-muted)" }}>
+          <LayoutGrid size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
+          <p>Chưa có danh mục nào. Nhấn "Thêm danh mục" để bắt đầu.</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+          {categories.map((cat, idx) => (
+            <div key={cat.id} className="card" style={{ overflow: "hidden", padding: 0 }}>
+              {/* Image/gradient */}
+              <div style={{
+                height: 120,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: cat.imageUrl ? "none" : gradients[idx % gradients.length],
+                position: "relative",
+                overflow: "hidden"
+              }}>
+                {cat.imageUrl ? (
+                  <img src={cat.imageUrl} alt={cat.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ fontSize: 36, opacity: 0.9 }}>⚕️</span>
+                )}
+              </div>
+              {/* Info */}
+              <div style={{ padding: "12px 14px" }}>
+                <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: "0.95rem" }}>{cat.name}</p>
+                {cat.description && (
+                  <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--text-muted)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{cat.description}</p>
+                )}
+                <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                  {cat._count?.services ?? 0} dịch vụ
+                </p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn btn-outline" style={{ flex: 1, padding: "5px 8px", fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }} onClick={() => openEdit(cat)}>
+                    <Pencil size={12} /> Sửa
+                  </button>
+                  <button style={{ padding: "5px 8px", color: "var(--danger)", border: "1px solid var(--danger)", background: "transparent", borderRadius: 6, cursor: "pointer" }} onClick={() => del(cat)}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal */}
+      {showForm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowForm(false)}>
+          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: "0 0 20px", fontWeight: 700, fontSize: "1.1rem" }}>{editItem ? "Sửa danh mục" : "Thêm danh mục dịch vụ"}</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Tên danh mục <span style={{ color: "red" }}>*</span></label>
+                <input className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VD: Xét nghiệm, Siêu âm..." autoFocus />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Mô tả ngắn</label>
+                <textarea className="form-input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Mô tả về nhóm dịch vụ này..." rows={2} style={{ resize: "none" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Ảnh đại diện (URL)</label>
+                <input className="form-input" value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="https://..." />
+                {form.imageUrl && (
+                  <img src={form.imageUrl} alt="preview" style={{ marginTop: 8, width: "100%", height: 120, objectFit: "cover", borderRadius: 8 }} onError={e => { e.target.style.display = "none"; }} />
+                )}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowForm(false)}>Hủy</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? "Đang lưu..." : "Lưu"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Tab 2: Bảng giá
+// ─────────────────────────────────────────────
+function PricesTab({ categories, services, fetchData }) {
+  const [expanded, setExpanded] = useState({});
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-
-  // Expanded categories
-  const [expanded, setExpanded] = useState({});
-
-  // Import Excel
+  const [showSvcForm, setShowSvcForm] = useState(false);
+  const [editSvc, setEditSvc] = useState(null);
+  const [svcForm, setSvcForm] = useState({ name: "", price: "", unit: "lần", note: "", categoryId: "", order: 0 });
+  const [savingSvc, setSavingSvc] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const importInputRef = useRef(null);
 
-  // Category form
-  const [showCatForm, setShowCatForm] = useState(false);
-  const [catName, setCatName] = useState("");
-  const [catDescription, setCatDescription] = useState("");
-  const [catImageUrl, setCatImageUrl] = useState("");
-  const [editCat, setEditCat] = useState(null);
-  const [savingCat, setSavingCat] = useState(false);
+  const toggle = (id) => setExpanded(p => ({ ...p, [id]: !p[id] }));
 
-  // Service form
-  const [showSvcForm, setShowSvcForm] = useState(false);
-  const [editSvc, setEditSvc] = useState(null);
-  const [svcForm, setSvcForm] = useState({ name: "", price: "", unit: "lần", note: "", categoryId: "", order: 0 });
-  const [savingSvc, setSavingSvc] = useState(false);
-
-  const fetchData = async (searchStr = search) => {
-    setLoading(true);
-    try {
-      const [catRes, svcRes] = await Promise.all([
-        fetch("/api/service-categories"),
-        fetch(`/api/service-prices?limit=500&search=${encodeURIComponent(searchStr)}`),
-      ]);
-      const catJson = await catRes.json();
-      const svcJson = await svcRes.json();
-      if (catJson.success) setCategories(catJson.data);
-      if (svcJson.success) setServices(svcJson.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, [search]);
-
-  const toggleExpand = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
-
-  // --- Category CRUD ---
-  const openAddCat = () => { setEditCat(null); setCatName(""); setCatDescription(""); setCatImageUrl(""); setShowCatForm(true); };
-  const openEditCat = (cat) => { setEditCat(cat); setCatName(cat.name); setCatDescription(cat.description || ""); setCatImageUrl(cat.imageUrl || ""); setShowCatForm(true); };
-
-  const handleImport = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImporting(true);
-    setImportResult(null);
-    setShowImportModal(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/service-prices/import', { method: 'POST', body: formData });
-      const json = await res.json();
-      setImportResult(json);
-      if (json.success) fetchData();
-    } catch (err) {
-      setImportResult({ error: err.message });
-    } finally {
-      setImporting(false);
-      if (importInputRef.current) importInputRef.current.value = '';
-    }
-  };
-
-  const saveCat = async () => {
-    if (!catName.trim()) return;
-    setSavingCat(true);
-    try {
-      const url = editCat ? `/api/service-categories/${editCat.id}` : "/api/service-categories";
-      const method = editCat ? "PUT" : "POST";
-      await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: catName, description: catDescription, imageUrl: catImageUrl }) });
-      setShowCatForm(false);
-      fetchData();
-    } finally { setSavingCat(false); }
-  };
-
-  const deleteCat = async (cat) => {
-    if (!confirm(`Xóa danh mục "${cat.name}"? Tất cả dịch vụ trong danh mục này cũng sẽ bị xóa.`)) return;
-    await fetch(`/api/service-categories/${cat.id}`, { method: "DELETE" });
-    fetchData();
-  };
-
-  // --- Service CRUD ---
-  const openAddSvc = (categoryId) => {
-    setEditSvc(null);
-    setSvcForm({ name: "", price: "", unit: "lần", note: "", categoryId: String(categoryId), order: 0 });
-    setShowSvcForm(true);
-  };
-  const openEditSvc = (svc) => {
-    setEditSvc(svc);
-    setSvcForm({ name: svc.name, price: svc.price, unit: svc.unit, note: svc.note || "", categoryId: String(svc.categoryId), order: svc.order });
-    setShowSvcForm(true);
-  };
+  const openAddSvc = (catId) => { setEditSvc(null); setSvcForm({ name: "", price: "", unit: "lần", note: "", categoryId: String(catId), order: 0 }); setShowSvcForm(true); };
+  const openEditSvc = (svc) => { setEditSvc(svc); setSvcForm({ name: svc.name, price: svc.price, unit: svc.unit, note: svc.note || "", categoryId: String(svc.categoryId), order: svc.order }); setShowSvcForm(true); };
 
   const saveSvc = async () => {
     if (!svcForm.name.trim() || !svcForm.price || !svcForm.categoryId) return;
@@ -135,164 +180,117 @@ export default function ServicePricePage() {
     fetchData();
   };
 
-  const svcByCategory = (catId) => services.filter(s => s.categoryId === catId);
+  const handleImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setImportResult(null);
+    setShowImportModal(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/service-prices/import", { method: "POST", body: formData });
+      const json = await res.json();
+      setImportResult(json);
+      if (json.success) fetchData();
+    } catch (err) {
+      setImportResult({ error: err.message });
+    } finally {
+      setImporting(false);
+      if (importInputRef.current) importInputRef.current.value = "";
+    }
+  };
+
+  const svcByCategory = (catId) => services.filter(s => s.categoryId === catId && (!search || s.name.toLowerCase().includes(search.toLowerCase())));
 
   return (
-    <div style={{ padding: "24px", maxWidth: 900, margin: "0 auto" }}>
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700, color: "var(--text)" }}>Bảng giá dịch vụ</h1>
-          <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-            {services.length} dịch vụ • {categories.length} danh mục
-          </p>
+    <div>
+      {/* Toolbar */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+          <Search size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+          <input
+            className="form-input"
+            style={{ paddingLeft: 32, paddingRight: searchInput ? 32 : 10 }}
+            placeholder="Tìm kiếm dịch vụ..."
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") setSearch(searchInput); }}
+          />
+          {searchInput && <button onClick={() => { setSearchInput(""); setSearch(""); }} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer" }}><X size={14} /></button>}
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <input ref={importInputRef} type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleImport} />
-          <button
-            className="btn btn-outline"
-            onClick={() => importInputRef.current?.click()}
-            disabled={importing}
-            style={{ display: "flex", alignItems: "center", gap: 6, borderColor: "#16a34a", color: "#16a34a" }}
-          >
-            <FileSpreadsheet size={16} />
-            {importing ? "Đang import..." : "Import Excel"}
-          </button>
-          <button className="btn btn-outline" onClick={openAddCat} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <FolderPlus size={16} /> Thêm danh mục
-          </button>
-        </div>
+        <input ref={importInputRef} type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleImport} />
+        <button className="btn btn-outline" onClick={() => importInputRef.current?.click()} disabled={importing}
+          style={{ display: "flex", alignItems: "center", gap: 6, borderColor: "#16a34a", color: "#16a34a" }}>
+          <FileSpreadsheet size={15} /> {importing ? "Đang import..." : "Import Excel"}
+        </button>
       </div>
 
-      {/* Search */}
-      <div style={{ position: "relative", marginBottom: 20 }}>
-        <Search size={16} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-        <input
-          className="form-input"
-          style={{ paddingLeft: 36, paddingRight: searchInput ? 36 : 12 }}
-          placeholder="Tìm kiếm dịch vụ..."
-          value={searchInput}
-          onChange={e => setSearchInput(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") setSearch(searchInput); }}
-        />
-        {searchInput && (
-          <button onClick={() => { setSearchInput(""); setSearch(""); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}>
-            <X size={16} />
-          </button>
-        )}
+      {/* Hướng dẫn */}
+      <div style={{ padding: "10px 14px", background: "#fffbeb", borderRadius: 10, border: "1px solid #fde68a", marginBottom: 16, fontSize: "0.82rem", color: "#78350f" }}>
+        📋 <strong>Định dạng Excel:</strong> Mỗi Sheet = 1 danh mục. Các cột: <em>Tên dịch vụ | Đơn giá | Đơn vị tính | Ghi chú</em>
       </div>
 
-      {/* Categories list */}
-      {loading ? (
-        <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Đang tải...</div>
-      ) : categories.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
-          <FolderPlus size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
-          <p>Chưa có danh mục nào. Nhấn "Thêm danh mục" để bắt đầu.</p>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {categories.map(cat => {
-            const svcs = svcByCategory(cat.id);
-            const isOpen = expanded[cat.id] !== false; // default open
-            return (
-              <div key={cat.id} className="card" style={{ overflow: "hidden", padding: 0 }}>
-                {/* Category header */}
-                <div
-                  style={{ display: "flex", alignItems: "center", padding: "14px 16px", cursor: "pointer", borderBottom: isOpen ? "1px solid var(--border)" : "none", background: "var(--bg-secondary)" }}
-                  onClick={() => toggleExpand(cat.id)}
-                >
-                  {isOpen ? <ChevronDown size={18} style={{ color: "var(--primary)", marginRight: 8, flexShrink: 0 }} /> : <ChevronRight size={18} style={{ color: "var(--text-muted)", marginRight: 8, flexShrink: 0 }} />}
-                  <span style={{ fontWeight: 700, fontSize: "1rem", flex: 1 }}>{cat.name}</span>
-                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginRight: 12 }}>{svcs.length} dịch vụ</span>
-                  <div style={{ display: "flex", gap: 6 }} onClick={e => e.stopPropagation()}>
-                    <button className="btn btn-primary" style={{ padding: "5px 10px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 4 }} onClick={() => openAddSvc(cat.id)}>
-                      <Plus size={13} /> Thêm
-                    </button>
-                    <button className="btn btn-outline" style={{ padding: "5px 8px" }} onClick={() => openEditCat(cat)}><Pencil size={13} /></button>
-                    <button className="btn" style={{ padding: "5px 8px", color: "var(--danger)", border: "1px solid var(--danger)", background: "transparent", borderRadius: 6 }} onClick={() => deleteCat(cat)}><Trash2 size={13} /></button>
-                  </div>
+      {/* Categories accordion */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {categories.map(cat => {
+          const svcs = svcByCategory(cat.id);
+          const isOpen = expanded[cat.id] !== false;
+          return (
+            <div key={cat.id} className="card" style={{ overflow: "hidden", padding: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", cursor: "pointer", background: "var(--bg-secondary)", borderBottom: isOpen ? "1px solid var(--border)" : "none" }} onClick={() => toggle(cat.id)}>
+                {isOpen ? <ChevronDown size={16} style={{ color: "var(--primary)", marginRight: 8, flexShrink: 0 }} /> : <ChevronRight size={16} style={{ color: "var(--text-muted)", marginRight: 8, flexShrink: 0 }} />}
+                <span style={{ fontWeight: 700, flex: 1 }}>{cat.name}</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginRight: 12 }}>{svcs.length} dịch vụ</span>
+                <div style={{ display: "flex", gap: 6 }} onClick={e => e.stopPropagation()}>
+                  <button className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 4 }} onClick={() => openAddSvc(cat.id)}>
+                    <Plus size={12} /> Thêm
+                  </button>
                 </div>
-
-                {/* Services table */}
-                {isOpen && (
-                  <div>
-                    {svcs.length === 0 ? (
-                      <div style={{ padding: "20px 16px", color: "var(--text-muted)", fontSize: "0.9rem", textAlign: "center" }}>
-                        Chưa có dịch vụ nào trong danh mục này
-                      </div>
-                    ) : (
-                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                        <thead>
-                          <tr style={{ fontSize: "0.8rem", color: "var(--text-muted)", background: "var(--bg)" }}>
-                            <th style={{ textAlign: "left", padding: "8px 16px", fontWeight: 600 }}>Tên dịch vụ</th>
-                            <th style={{ textAlign: "right", padding: "8px 16px", fontWeight: 600, whiteSpace: "nowrap" }}>Đơn giá</th>
-                            <th style={{ textAlign: "left", padding: "8px 8px", fontWeight: 600 }}>ĐVT</th>
-                            <th style={{ textAlign: "left", padding: "8px 8px", fontWeight: 600 }}>Ghi chú</th>
-                            <th style={{ width: 70 }}></th>
+              </div>
+              {isOpen && (
+                svcs.length === 0
+                  ? <div style={{ padding: "16px", color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center" }}>Chưa có dịch vụ nào</div>
+                  : (
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ background: "var(--bg)", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                          <th style={{ textAlign: "left", padding: "7px 16px", fontWeight: 600 }}>Tên dịch vụ</th>
+                          <th style={{ textAlign: "right", padding: "7px 12px", fontWeight: 600, whiteSpace: "nowrap" }}>Đơn giá</th>
+                          <th style={{ padding: "7px 8px", fontWeight: 600 }}>ĐVT</th>
+                          <th style={{ padding: "7px 8px", fontWeight: 600 }}>Ghi chú</th>
+                          <th style={{ width: 60 }}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {svcs.map(svc => (
+                          <tr key={svc.id} style={{ borderTop: "1px solid var(--border)", fontSize: "0.88rem" }}>
+                            <td style={{ padding: "9px 16px" }}>{svc.name}</td>
+                            <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 600, color: "var(--primary)", whiteSpace: "nowrap" }}>{formatPrice(svc.price)}</td>
+                            <td style={{ padding: "9px 8px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{svc.unit}</td>
+                            <td style={{ padding: "9px 8px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{svc.note}</td>
+                            <td style={{ padding: "9px 8px" }}>
+                              <div style={{ display: "flex", gap: 4 }}>
+                                <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 3 }} onClick={() => openEditSvc(svc)}><Pencil size={13} /></button>
+                                <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger)", padding: 3 }} onClick={() => deleteSvc(svc)}><Trash2 size={13} /></button>
+                              </div>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {svcs.map(svc => (
-                            <tr key={svc.id} style={{ borderTop: "1px solid var(--border)", fontSize: "0.9rem" }}>
-                              <td style={{ padding: "10px 16px" }}>{svc.name}</td>
-                              <td style={{ padding: "10px 16px", textAlign: "right", fontWeight: 600, color: "var(--primary)", whiteSpace: "nowrap" }}>{formatPrice(svc.price)}</td>
-                              <td style={{ padding: "10px 8px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{svc.unit}</td>
-                              <td style={{ padding: "10px 8px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{svc.note || ""}</td>
-                              <td style={{ padding: "10px 8px", whiteSpace: "nowrap" }}>
-                                <div style={{ display: "flex", gap: 4 }}>
-                                  <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 4 }} onClick={() => openEditSvc(svc)}><Pencil size={14} /></button>
-                                  <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger)", padding: 4 }} onClick={() => deleteSvc(svc)}><Trash2 size={14} /></button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Category Modal */}
-      {showCatForm && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowCatForm(false)}>
-          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: "0 0 20px", fontSize: "1.1rem", fontWeight: 700 }}>{editCat ? "Sửa danh mục" : "Thêm danh mục"}</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.9rem" }}>Tên danh mục <span style={{color:"red"}}>*</span></label>
-                <input className="form-input" value={catName} onChange={e => setCatName(e.target.value)} placeholder="VD: Xét nghiệm, Siêu âm..." autoFocus />
-              </div>
-              <div>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.9rem" }}>Mô tả ngắn</label>
-                <textarea className="form-input" value={catDescription} onChange={e => setCatDescription(e.target.value)} placeholder="Mô tả ngắn về dịch vụ này..." rows={2} style={{ resize: "none" }} />
-              </div>
-              <div>
-                <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.9rem" }}>Ảnh đại diện (URL)</label>
-                <input className="form-input" value={catImageUrl} onChange={e => setCatImageUrl(e.target.value)} placeholder="https://..." />
-                {catImageUrl && (
-                  <img src={catImageUrl} alt="preview" style={{ marginTop: 8, width: "100%", height: 120, objectFit: "cover", borderRadius: 8 }} onError={e => e.target.style.display='none'} />
-                )}
-              </div>
+                        ))}
+                      </tbody>
+                    </table>
+                  )
+              )}
             </div>
-            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowCatForm(false)}>Hủy</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={saveCat} disabled={savingCat}>{savingCat ? "Đang lưu..." : "Lưu"}</button>
-            </div>
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
 
       {/* Service Modal */}
       {showSvcForm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowSvcForm(false)}>
           <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480 }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: "0 0 20px", fontSize: "1.1rem", fontWeight: 700 }}>{editSvc ? "Sửa dịch vụ" : "Thêm dịch vụ"}</h3>
+            <h3 style={{ margin: "0 0 20px", fontWeight: 700 }}>{editSvc ? "Sửa dịch vụ" : "Thêm dịch vụ"}</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Danh mục</label>
@@ -308,7 +306,7 @@ export default function ServicePricePage() {
               <div style={{ display: "flex", gap: 12 }}>
                 <div style={{ flex: 2 }}>
                   <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Đơn giá (VNĐ) <span style={{ color: "red" }}>*</span></label>
-                  <input className="form-input" type="number" value={svcForm.price} onChange={e => setSvcForm(f => ({ ...f, price: e.target.value }))} placeholder="VD: 150000" />
+                  <input className="form-input" type="number" value={svcForm.price} onChange={e => setSvcForm(f => ({ ...f, price: e.target.value }))} placeholder="150000" />
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>ĐVT</label>
@@ -332,10 +330,11 @@ export default function ServicePricePage() {
           </div>
         </div>
       )}
-      {/* Import Result Modal */}
+
+      {/* Import Modal */}
       {showImportModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowImportModal(false)}>
-          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 460 }} onClick={e => e.stopPropagation()}>
             {importing ? (
               <div style={{ textAlign: "center", padding: "20px 0" }}>
                 <div style={{ width: 40, height: 40, border: "4px solid #e5e7eb", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
@@ -347,16 +346,10 @@ export default function ServicePricePage() {
                   <CheckCircle size={24} color="#16a34a" />
                   <h3 style={{ margin: 0, fontWeight: 700 }}>Import thành công!</h3>
                 </div>
-                <div style={{ background: "#f0fdf4", borderRadius: 10, padding: 16, marginBottom: 16 }}>
-                  <p style={{ margin: "0 0 6px", color: "#166534" }}>✅ Đã thêm <strong>{importResult.totalCreated}</strong> dịch vụ</p>
+                <div style={{ background: "#f0fdf4", borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                  <p style={{ margin: "0 0 4px", color: "#166534" }}>✅ Đã thêm <strong>{importResult.totalCreated}</strong> dịch vụ</p>
                   {importResult.totalSkipped > 0 && <p style={{ margin: 0, color: "#92400e" }}>⚠️ Bỏ qua <strong>{importResult.totalSkipped}</strong> dòng không hợp lệ</p>}
                 </div>
-                {importResult.errors?.length > 0 && (
-                  <div style={{ background: "#fef2f2", borderRadius: 10, padding: 12, marginBottom: 16, maxHeight: 120, overflowY: "auto" }}>
-                    <p style={{ margin: "0 0 6px", fontWeight: 600, fontSize: "0.85rem", color: "#991b1b" }}>Chi tiết lỗi:</p>
-                    {importResult.errors.map((e, i) => <p key={i} style={{ margin: "2px 0", fontSize: "0.8rem", color: "#7f1d1d" }}>{e}</p>)}
-                  </div>
-                )}
                 <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => setShowImportModal(false)}>Đóng</button>
               </>
             ) : (
@@ -372,17 +365,83 @@ export default function ServicePricePage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Hướng dẫn định dạng Excel */}
-      <div style={{ marginTop: 24, padding: 16, background: "#fffbeb", borderRadius: 12, border: "1px solid #fde68a" }}>
-        <p style={{ margin: "0 0 6px", fontWeight: 600, fontSize: "0.85rem", color: "#92400e" }}>📋 Định dạng file Excel để import:</p>
-        <ul style={{ margin: 0, paddingLeft: 20, fontSize: "0.82rem", color: "#78350f", lineHeight: 1.8 }}>
-          <li>Mỗi <strong>Sheet</strong> = 1 danh mục dịch vụ (tên sheet = tên danh mục)</li>
-          <li>Các cột: <strong>Tên dịch vụ</strong> | <strong>Đơn giá</strong> | <strong>Đơn vị tính</strong> (tùy chọn) | <strong>Ghi chú</strong> (tùy chọn)</li>
-          <li>Hàng đầu tiên là tiêu đề cột, từ hàng 2 trở đi là dữ liệu</li>
-          <li>Giá nhập số nguyên (VD: 150000), không cần định dạng tiền tệ</li>
-        </ul>
+// ─────────────────────────────────────────────
+// Main Page
+// ─────────────────────────────────────────────
+export default function ServiceManagementPage() {
+  const [activeTab, setActiveTab] = useState("categories");
+  const [categories, setCategories] = useState([]);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [catRes, svcRes] = await Promise.all([
+        fetch("/api/service-categories"),
+        fetch("/api/service-prices?limit=500"),
+      ]);
+      const catJson = await catRes.json();
+      const svcJson = await svcRes.json();
+      if (catJson.success) setCategories(catJson.data);
+      if (svcJson.success) setServices(svcJson.data);
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const tabs = [
+    { id: "categories", label: "Danh mục dịch vụ", icon: <LayoutGrid size={15} /> },
+    { id: "prices", label: "Bảng giá", icon: <Tag size={15} /> },
+  ];
+
+  return (
+    <div style={{ padding: "24px", maxWidth: 960, margin: "0 auto" }}>
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: "0 0 4px", fontSize: "1.5rem", fontWeight: 700, color: "var(--text)" }}>Quản lý Dịch vụ</h1>
+        <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.9rem" }}>
+          {categories.length} danh mục • {services.length} dịch vụ
+        </p>
       </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", borderBottom: "2px solid var(--border)", marginBottom: 24, gap: 4 }}>
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              display: "flex", alignItems: "center", gap: 7,
+              padding: "10px 20px",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === tab.id ? "2px solid var(--primary)" : "2px solid transparent",
+              marginBottom: -2,
+              fontWeight: activeTab === tab.id ? 700 : 400,
+              color: activeTab === tab.id ? "var(--primary)" : "var(--text-muted)",
+              cursor: "pointer",
+              fontSize: "0.95rem",
+              transition: "all 0.15s",
+            }}
+          >
+            {tab.icon}{tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)" }}>Đang tải...</div>
+      ) : activeTab === "categories" ? (
+        <CategoriesTab categories={categories} fetchData={fetchData} />
+      ) : (
+        <PricesTab categories={categories} services={services} fetchData={fetchData} />
+      )}
     </div>
   );
 }

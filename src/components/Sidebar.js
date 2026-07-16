@@ -39,7 +39,7 @@ const menuGroups = [
       { icon: "Users", label: "Người quan tâm Zalo", href: "/followers" },
       { icon: "Megaphone", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
       { icon: "Mail", label: "Gửi tin nội bộ", href: "/salary-email" },
-      { icon: "Tag", label: "Bảng giá dịch vụ", href: "/services" },
+      { icon: "Tag", label: "Dịch vụ", href: "/services" },
     ],
   },
   {
