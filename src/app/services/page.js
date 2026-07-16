@@ -18,19 +18,55 @@ function CategoriesTab({ categories, fetchData }) {
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState({ name: "", description: "", imageUrl: "" });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const imgInputRef = useRef(null);
 
-  const openAdd = () => { setEditItem(null); setForm({ name: "", description: "", imageUrl: "" }); setShowForm(true); };
-  const openEdit = (cat) => { setEditItem(cat); setForm({ name: cat.name, description: cat.description || "", imageUrl: cat.imageUrl || "" }); setShowForm(true); };
+  const openAdd = () => { setEditItem(null); setForm({ name: "", description: "", imageUrl: "" }); setError(""); setShowForm(true); };
+  const openEdit = (cat) => { setEditItem(cat); setForm({ name: cat.name, description: cat.description || "", imageUrl: cat.imageUrl || "" }); setError(""); setShowForm(true); };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.url) {
+        // Chuyển đổi path tương đối thành URL tuyệt đối
+        const baseUrl = window.location.origin;
+        const fullUrl = json.url.startsWith("http") ? json.url : `${baseUrl}${json.url}`;
+        setForm(f => ({ ...f, imageUrl: fullUrl }));
+      } else {
+        setError("Upload ảnh thất bại: " + (json.error || "Lỗi không xác định"));
+      }
+    } catch (err) {
+      setError("Lỗi upload: " + err.message);
+    } finally {
+      setUploading(false);
+      if (imgInputRef.current) imgInputRef.current.value = "";
+    }
+  };
 
   const save = async () => {
-    if (!form.name.trim()) return;
+    if (!form.name.trim()) { setError("Vui lòng nhập tên danh mục"); return; }
     setSaving(true);
+    setError("");
     try {
       const url = editItem ? `/api/service-categories/${editItem.id}` : "/api/service-categories";
       const method = editItem ? "PUT" : "POST";
-      await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setError(json.error || `Lỗi ${res.status}`);
+        return;
+      }
       setShowForm(false);
       fetchData();
+    } catch (err) {
+      setError("Lỗi kết nối: " + err.message);
     } finally { setSaving(false); }
   };
 
@@ -69,31 +105,19 @@ function CategoriesTab({ categories, fetchData }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
           {categories.map((cat, idx) => (
             <div key={cat.id} className="card" style={{ overflow: "hidden", padding: 0 }}>
-              {/* Image/gradient */}
-              <div style={{
-                height: 120,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: cat.imageUrl ? "none" : gradients[idx % gradients.length],
-                position: "relative",
-                overflow: "hidden"
-              }}>
+              <div style={{ height: 120, display: "flex", alignItems: "center", justifyContent: "center", background: cat.imageUrl ? "none" : gradients[idx % gradients.length], position: "relative", overflow: "hidden" }}>
                 {cat.imageUrl ? (
                   <img src={cat.imageUrl} alt={cat.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <span style={{ fontSize: 36, opacity: 0.9 }}>⚕️</span>
                 )}
               </div>
-              {/* Info */}
               <div style={{ padding: "12px 14px" }}>
                 <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: "0.95rem" }}>{cat.name}</p>
                 {cat.description && (
                   <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--text-muted)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{cat.description}</p>
                 )}
-                <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                  {cat._count?.services ?? 0} dịch vụ
-                </p>
+                <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "var(--text-muted)" }}>{cat._count?.services ?? 0} dịch vụ</p>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button className="btn btn-outline" style={{ flex: 1, padding: "5px 8px", fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }} onClick={() => openEdit(cat)}>
                     <Pencil size={12} /> Sửa
@@ -111,8 +135,15 @@ function CategoriesTab({ categories, fetchData }) {
       {/* Modal */}
       {showForm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowForm(false)}>
-          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
             <h3 style={{ margin: "0 0 20px", fontWeight: 700, fontSize: "1.1rem" }}>{editItem ? "Sửa danh mục" : "Thêm danh mục dịch vụ"}</h3>
+
+            {error && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", marginBottom: 16, color: "#dc2626", fontSize: "0.88rem", display: "flex", alignItems: "center", gap: 8 }}>
+                <AlertCircle size={16} /> {error}
+              </div>
+            )}
+
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Tên danh mục <span style={{ color: "red" }}>*</span></label>
@@ -122,17 +153,52 @@ function CategoriesTab({ categories, fetchData }) {
                 <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Mô tả ngắn</label>
                 <textarea className="form-input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Mô tả về nhóm dịch vụ này..." rows={2} style={{ resize: "none" }} />
               </div>
+
+              {/* Image upload */}
               <div>
-                <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Ảnh đại diện (URL)</label>
-                <input className="form-input" value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="https://..." />
-                {form.imageUrl && (
-                  <img src={form.imageUrl} alt="preview" style={{ marginTop: 8, width: "100%", height: 120, objectFit: "cover", borderRadius: 8 }} onError={e => { e.target.style.display = "none"; }} />
-                )}
+                <label style={{ display: "block", marginBottom: 8, fontWeight: 600, fontSize: "0.9rem" }}>Ảnh đại diện</label>
+                <input ref={imgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageUpload} />
+
+                {form.imageUrl ? (
+                  <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", marginBottom: 8 }}>
+                    <img src={form.imageUrl} alt="preview" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
+                    <button
+                      onClick={() => setForm(f => ({ ...f, imageUrl: "" }))}
+                      style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)", color: "white", border: "none", borderRadius: "50%", width: 28, height: 28, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : null}
+
+                <button
+                  className="btn btn-outline"
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderStyle: "dashed" }}
+                  onClick={() => imgInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Upload size={15} />
+                  {uploading ? "Đang tải lên..." : form.imageUrl ? "Đổi ảnh khác" : "Tải ảnh lên"}
+                </button>
+
+                {/* Hoặc nhập URL */}
+                <div style={{ marginTop: 8 }}>
+                  <input
+                    className="form-input"
+                    value={form.imageUrl}
+                    onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
+                    placeholder="Hoặc dán URL ảnh: https://..."
+                    style={{ fontSize: "0.82rem" }}
+                  />
+                </div>
               </div>
             </div>
+
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowForm(false)}>Hủy</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? "Đang lưu..." : "Lưu"}</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving || uploading}>
+                {saving ? "Đang lưu..." : "Lưu danh mục"}
+              </button>
             </div>
           </div>
         </div>
@@ -140,6 +206,7 @@ function CategoriesTab({ categories, fetchData }) {
     </div>
   );
 }
+
 
 // ─────────────────────────────────────────────
 // Tab 2: Bảng giá
