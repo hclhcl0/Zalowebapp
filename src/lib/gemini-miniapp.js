@@ -230,7 +230,7 @@ async function _askGemini(chatHistory, question) {
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash-lite",
+        model: "gemini-3.1-flash-lite",
         contents,
         config: { systemInstruction, maxOutputTokens: 1024, temperature: 0.3 }
       });
