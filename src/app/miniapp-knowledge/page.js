@@ -34,6 +34,12 @@ export default function MiniAppKnowledgePage() {
   const [savingGreeting, setSavingGreeting] = useState(false);
   const [greetingMsg, setGreetingMsg]       = useState(null);
 
+  // Câu hỏi gợi ý
+  const DEFAULT_QUICK_Q = '📅 Giờ làm việc của CDC?\n💉 Giá tiêm chủng?\n🔬 Đặt lịch xét nghiệm?\n📍 Địa chỉ CDC Đà Nẵng?';
+  const [quickQ, setQuickQ]             = useState(DEFAULT_QUICK_Q);
+  const [savingQuickQ, setSavingQuickQ] = useState(false);
+  const [quickQMsg, setQuickQMsg]       = useState(null);
+
   const load = () => {
     setLoading(true);
     // Load topics + greeting song song
@@ -46,6 +52,8 @@ export default function MiniAppKnowledgePage() {
         setIsDefault(kd.isDefault);
         const g = sd?.data?.mini_app_ai_greeting?.value;
         if (g?.trim()) setGreeting(g.trim());
+        const qq = sd?.data?.mini_app_ai_quick_questions?.value;
+        if (qq?.trim()) setQuickQ(qq.trim());
       })
       .catch(() => setMsg({ type: "error", text: "Không tải được dữ liệu" }))
       .finally(() => setLoading(false));
@@ -63,6 +71,20 @@ export default function MiniAppKnowledgePage() {
       else setGreetingMsg({ type: "error", text: "Lưu thất bại!" });
     } catch { setGreetingMsg({ type: "error", text: "Lỗi kết nối!" }); }
     finally { setSavingGreeting(false); }
+  };
+
+  const saveQuickQ = async () => {
+    setSavingQuickQ(true); setQuickQMsg(null);
+    try {
+      const res = await fetch("/api/miniapp/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "mini_app_ai_quick_questions", value: quickQ, label: "Cau hoi goi y AI Mini App" }),
+      });
+      if (res.ok) setQuickQMsg({ type: "success", text: "Đã lưu! Mini App áp dụng ngay." });
+      else setQuickQMsg({ type: "error", text: "Lưu thất bại!" });
+    } catch { setQuickQMsg({ type: "error", text: "Lỗi kết nối!" }); }
+    finally { setSavingQuickQ(false); }
   };
 
   useEffect(() => { load(); }, []);
@@ -253,6 +275,69 @@ export default function MiniAppKnowledgePage() {
             border: `1px solid ${greetingMsg.type === "success" ? "#bbf7d0" : "#fecaca"}`
           }}>
             {greetingMsg.type === "success" ? "✅ " : "❌ "}{greetingMsg.text}
+          </div>
+        )}
+      </div>
+
+      {/* ── Câu hỏi gợi ý ── */}
+      <div className="card" style={{ marginBottom: 20, border: "1px solid #fce7f3", background: "#fdf2f8" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#9d174d" }}>
+              ❓ Câu hỏi thường gặp (gợi ý nhanh)
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "#be185d", marginTop: 2 }}>
+              Hiển thị dưới dạng nút bấm nhanh trong chat. Mỗi dòng = 1 câu hỏi.
+            </div>
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={saveQuickQ}
+            disabled={savingQuickQ}
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", padding: "6px 14px" }}
+          >
+            <Save size={13} /> {savingQuickQ ? "Đang lưu..." : "Lưu câu hỏi"}
+          </button>
+        </div>
+
+        {/* Preview pills */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+          {quickQ.split("\n").map((q, i) => q.trim() && (
+            <span key={i} style={{
+              padding: "3px 10px", borderRadius: 14, fontSize: "0.75rem",
+              background: "#fff", border: "1px solid #fbcfe8", color: "#9d174d"
+            }}>{q.trim()}</span>
+          ))}
+        </div>
+
+        <textarea
+          value={quickQ}
+          onChange={e => setQuickQ(e.target.value)}
+          rows={4}
+          style={{
+            width: "100%", fontFamily: "inherit", fontSize: "0.85rem",
+            lineHeight: 1.8, padding: 12, borderRadius: 10, resize: "vertical",
+            border: "1px solid #fbcfe8", background: "#fff", color: "var(--text)",
+            outline: "none", boxSizing: "border-box"
+          }}
+          placeholder={"📅 Giờ làm việc của CDC?\n💉 Giá tiêm chủng?\n🔬 Đặt lịch xét nghiệm?"}
+        />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+          <span style={{ fontSize: "0.72rem", color: "#be185d" }}>
+            💡 Mỗi dòng 1 câu hỏi. Có thể thêm emoji ở đầu. Tối đa 6 câu.
+          </span>
+          <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+            {quickQ.split("\n").filter(q => q.trim()).length} câu hỏi
+          </span>
+        </div>
+        {quickQMsg && (
+          <div style={{
+            marginTop: 8, padding: "7px 12px", borderRadius: 8, fontSize: "0.82rem",
+            background: quickQMsg.type === "success" ? "#f0fdf4" : "#fef2f2",
+            color: quickQMsg.type === "success" ? "#16a34a" : "#dc2626",
+            border: `1px solid ${quickQMsg.type === "success" ? "#bbf7d0" : "#fecaca"}`
+          }}>
+            {quickQMsg.type === "success" ? "✅ " : "❌ "}{quickQMsg.text}
           </div>
         )}
       </div>
