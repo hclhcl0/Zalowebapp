@@ -225,6 +225,40 @@ const statements = [
     END IF;
   END $$`,
 
+  // Sửa lỗi ServicePrice thiếu cột (do schema cũ)
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServicePrice' AND column_name='categoryId') THEN
+      ALTER TABLE "ServicePrice" ADD COLUMN "categoryId" INTEGER;
+    END IF;
+  END $$`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServicePrice' AND column_name='order') THEN
+      ALTER TABLE "ServicePrice" ADD COLUMN "order" INTEGER NOT NULL DEFAULT 0;
+    END IF;
+  END $$`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServicePrice' AND column_name='updatedAt') THEN
+      ALTER TABLE "ServicePrice" ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    END IF;
+  END $$`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServicePrice' AND column_name='isActive') THEN
+      ALTER TABLE "ServicePrice" ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT true;
+    END IF;
+  END $$`,
+
+  // Thêm missing columns cho ServiceCategory
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServiceCategory' AND column_name='order') THEN
+      ALTER TABLE "ServiceCategory" ADD COLUMN "order" INTEGER NOT NULL DEFAULT 0;
+    END IF;
+  END $$`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServiceCategory' AND column_name='isActive') THEN
+      ALTER TABLE "ServiceCategory" ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT true;
+    END IF;
+  END $$`,
+
   // Foreign keys (nếu chưa có)
   `DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Appointment_followerId_fkey') THEN
