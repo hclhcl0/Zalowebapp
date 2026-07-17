@@ -278,6 +278,11 @@ const statements = [
       ALTER TABLE "ServiceCategory" ADD COLUMN "isActive" BOOLEAN NOT NULL DEFAULT true;
     END IF;
   END $$`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServiceCategory' AND column_name='rawTable') THEN
+      ALTER TABLE "ServiceCategory" ADD COLUMN "rawTable" JSONB;
+    END IF;
+  END $$`,
 
   // Foreign keys (nếu chưa có)
   `DO $$ BEGIN
