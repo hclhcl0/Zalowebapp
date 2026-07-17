@@ -174,7 +174,14 @@ function CategoriesTab({ categories, fetchData }) {
 
               <div>
                 <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Mô tả ngắn (Giới thiệu)</label>
-                <textarea className="form-input" value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Nhập giới thiệu ngắn về dịch vụ..." rows={2} style={{ resize: 'vertical' }} />
+                <textarea
+                  className="form-input form-textarea"
+                  value={form.description || ''}
+                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  placeholder="Nhập giới thiệu ngắn về dịch vụ..."
+                  rows={3}
+                  style={{ resize: 'vertical', minHeight: 72, width: '100%', boxSizing: 'border-box', display: 'block' }}
+                />
               </div>
               
               <div style={{ display: "flex", gap: 16 }}>
