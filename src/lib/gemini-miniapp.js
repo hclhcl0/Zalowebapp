@@ -11,6 +11,25 @@ import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { prisma } from "@/lib/prisma";
 
+// ─── Dữ liệu mặc định (fallback khi DB chưa có) ─────────────────────────────
+const DEFAULT_HOTLINES = [
+  { name: "Tổng đài CDC Đà Nẵng", displayPhone: "1900.988.975", description: "Tư vấn dịch vụ y tế", hours: "T2–T6: 7:00–16:30 | T7, CN: sáng" },
+  { name: "Tư vấn tiêm chủng", displayPhone: "1900.988.975 – Phím 1 hoặc 2", description: "Đặt lịch, tư vấn vắc xin", hours: "T2–T6: 7:00–16:30" },
+  { name: "Tư vấn sức khỏe sinh sản", displayPhone: "1900.988.975 – Phím 3", description: "Tư vấn sức khỏe sinh sản", hours: "T2–T6: 7:00–16:30" },
+  { name: "Tư vấn giun sán, viêm gan, côn trùng", displayPhone: "0236.3890.414", description: "Điều trị giun sán, viêm gan B/C, xử lý côn trùng", hours: "T2–T6: 7:00–16:30" },
+  { name: "Tiêm chủng Cơ sở 2 (Bàn Thạch)", displayPhone: "0235.3852.786", description: "129 Trưng Nữ Vương", hours: "T2–T7: 7:00–11:30" },
+];
+
+const DEFAULT_SCHEDULES_TEXT = `💉 Lịch tiêm chủng:
+  Thứ 2 – Thứ 6: Sáng 7:15–11:00 | Chiều 12:45–16:30
+  Thứ 7, Chủ nhật, Lễ, Tết: Sáng 7:15–11:00 (chỉ buổi sáng)
+  Lấy số: Sáng từ 7:00 | Chiều từ 13:00. Mỗi khách chỉ 1 số.
+
+🔬 Lịch xét nghiệm:
+  Thứ 2 – Thứ 6: Sáng 7:30–11:00 | Chiều 13:30–16:30
+  Thứ 7, Chủ nhật: Sáng 7:30–11:00 (chỉ buổi sáng)
+  Lễ, Tết: Nghỉ`;
+
 // ─── Cache ────────────────────────────────────────────────────────────────────
 let _contextCache = null;
 let _contextCacheTime = 0;
@@ -92,22 +111,21 @@ async function _loadMiniAppContext() {
       ? footerMsgRaw.replace("{address}", address).replace("{hotline}", hotline)
       : `(CDC Đà Nẵng – Hotline: ${hotline})`;
 
-    // Xử lý hotlines
+    // Xử lý hotlines — dùng DB nếu có, fallback về default
     let hotlinesText = "";
     try {
-      const hotlines = JSON.parse(hotlineCfg?.value || "[]");
-      if (hotlines.length > 0) {
-        hotlinesText = "TỔNG ĐÀI TƯ VẤN:\n" + hotlines.map(h =>
-          `+ ${h.name}: ${h.displayPhone}${h.description ? ` (${h.description})` : ""}${h.hours ? ` — ${h.hours}` : ""}`
-        ).join("\n");
-      }
-    } catch {}
+      const hotlines = hotlineCfg?.value ? JSON.parse(hotlineCfg.value) : DEFAULT_HOTLINES;
+      const list = hotlines.length > 0 ? hotlines : DEFAULT_HOTLINES;
+      hotlinesText = "TỔNG ĐÀI TƯ VẤN:\n" + list.map(h =>
+        `+ ${h.name}: ${h.displayPhone}${h.description ? ` (${h.description})` : ""}${h.hours ? ` — ${h.hours}` : ""}`
+      ).join("\n");
+    } catch { hotlinesText = "TỔNG ĐÀI TƯ VẤN:\n" + DEFAULT_HOTLINES.map(h => `+ ${h.name}: ${h.displayPhone}`).join("\n"); }
 
-    // Xử lý lịch làm việc
+    // Xử lý lịch làm việc — dùng DB nếu có, fallback về default
     let schedulesText = "";
     try {
-      const schedules = JSON.parse(scheduleCfg?.value || "[]");
-      if (schedules.length > 0) {
+      const schedules = scheduleCfg?.value ? JSON.parse(scheduleCfg.value) : null;
+      if (schedules && schedules.length > 0) {
         schedulesText = "LỊCH LÀM VIỆC:\n" + schedules.map(sch => {
           let s = `${sch.icon} ${sch.title}:\n`;
           for (const ses of sch.sessions) {
@@ -120,8 +138,10 @@ async function _loadMiniAppContext() {
           if (sch.note) s += `  Lưu ý: ${sch.note}\n`;
           return s;
         }).join("\n");
+      } else {
+        schedulesText = `LỊCH LÀM VIỆC:\n${DEFAULT_SCHEDULES_TEXT}`;
       }
-    } catch {}
+    } catch { schedulesText = `LỊCH LÀM VIỆC:\n${DEFAULT_SCHEDULES_TEXT}`; }
 
     // Xử lý kiến thức (chỉ tài liệu công khai)
     const knowledgeText = knowledgeDocs.length > 0
