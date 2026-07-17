@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Plus, Trash2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import WebcqCategoriesPanel from "./WebcqCategoriesPanel";
 import BannerListEditor from "./BannerListEditor";
+import { HotlinesPanel, SchedulesPanel } from "./HotlinesSchedulesPanel";
 
 // Các nhóm cài đặt
 const SETTING_GROUPS = [
@@ -1538,6 +1539,18 @@ function SettingsPageContent() {
                 )}
 
                 {activeGroup.id === "mini_app" && <WebcqCategoriesPanel />}
+
+                {activeGroup.id === "mini_app" && (
+                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: 24, marginTop: 8 }}>
+                    <HotlinesPanel />
+                  </div>
+                )}
+
+                {activeGroup.id === "mini_app" && (
+                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: 24, marginTop: 8 }}>
+                    <SchedulesPanel />
+                  </div>
+                )}
               </div>
             )}
           </div>
