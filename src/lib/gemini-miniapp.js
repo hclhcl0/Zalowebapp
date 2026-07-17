@@ -139,11 +139,23 @@ async function _loadMiniAppContext() {
       }
     } catch { schedulesText = `LỊCH LÀM VIỆC:\n${DEFAULT_SCHEDULES_TEXT}`; }
 
-    // Bộ não AI riêng của Mini App (từ systemConfig)
-    const DEFAULT_KNOWLEDGE_TEXT = `[THÔNG TIN CHUNG]\nĐịa chỉ: ${address}\nHotline: ${hotline}\nWebsite: ksbtdanang.vn`;
-    const knowledgeText = knowledgeCfg?.value
-      ? `TÀI LIỆU MINI APP:\n${knowledgeCfg.value}`
-      : `TÀI LIỆU MINI APP:\n${DEFAULT_KNOWLEDGE_TEXT}`;
+    // Bộ não AI riêng của Mini App — parse JSON topics
+    let knowledgeText = "";
+    try {
+      if (knowledgeCfg?.value) {
+        const topics = JSON.parse(knowledgeCfg.value);
+        const activeTopics = topics.filter(t => t.active !== false);
+        if (activeTopics.length > 0) {
+          knowledgeText = "TÀI LIỆU MINI APP:\n" + activeTopics.map(t =>
+            `[${t.category?.toUpperCase() || "CHUNG"}] ${t.title}:\n${t.content}`
+          ).join("\n\n---\n");
+        }
+      }
+    } catch {}
+    // Fallback nếu DB rỗng hoặc parse lỗi
+    if (!knowledgeText) {
+      knowledgeText = `TÀI LIỆU MINI APP:\n[THÔNG TIN CHUNG]\nĐịa chỉ: ${address}\nHotline: ${hotline}\nWebsite: ksbtdanang.vn`;
+    }
 
     const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng) trên ứng dụng Zalo Mini App.
 Nhiệm vụ của bạn là hỗ trợ người dân Đà Nẵng về các dịch vụ y tế công cộng.
