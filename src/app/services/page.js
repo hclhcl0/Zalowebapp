@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Plus, Pencil, Trash2, ChevronDown, ChevronRight,
   Search, X, Upload, FolderPlus, FileSpreadsheet,
-  AlertCircle, CheckCircle, Tag, Image as ImageIcon, LayoutGrid
+  AlertCircle, CheckCircle, Tag, LayoutGrid, FileText
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -16,16 +16,16 @@ const formatPrice = (p) => Number(p).toLocaleString("vi-VN") + " đ";
 function CategoriesTab({ categories, fetchData }) {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ name: "", description: "", imageUrl: "" });
+  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", pdfUrl: "" });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const imgInputRef = useRef(null);
 
-  const openAdd = () => { setEditItem(null); setForm({ name: "", description: "", imageUrl: "" }); setError(""); setShowForm(true); };
-  const openEdit = (cat) => { setEditItem(cat); setForm({ name: cat.name, description: cat.description || "", imageUrl: cat.imageUrl || "" }); setError(""); setShowForm(true); };
+  const openAdd = () => { setEditItem(null); setForm({ name: "", description: "", imageUrl: "", pdfUrl: "" }); setError(""); setShowForm(true); };
+  const openEdit = (cat) => { setEditItem(cat); setForm({ name: cat.name, description: cat.description || "", imageUrl: cat.imageUrl || "", pdfUrl: cat.pdfUrl || "" }); setError(""); setShowForm(true); };
 
-  const handleImageUpload = async (e) => {
+  const handleUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -33,20 +33,18 @@ function CategoriesTab({ categories, fetchData }) {
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const json = await res.json();
-      if (json.url) {
-        // Chuyển đổi path tương đối thành URL tuyệt đối
-        const baseUrl = window.location.origin;
-        const fullUrl = json.url.startsWith("http") ? json.url : `${baseUrl}${json.url}`;
-        setForm(f => ({ ...f, imageUrl: fullUrl }));
+      const { url: fullUrl, error } = await res.json();
+      if (error) throw new Error(error);
+
+      if (file.type === "application/pdf") {
+        setForm(f => ({ ...f, pdfUrl: fullUrl }));
       } else {
-        setError("Upload ảnh thất bại: " + (json.error || "Lỗi không xác định"));
+        setForm(f => ({ ...f, imageUrl: fullUrl }));
       }
     } catch (err) {
-      setError("Lỗi upload: " + err.message);
+      alert("Lỗi tải lên: " + err.message);
     } finally {
       setUploading(false);
-      if (imgInputRef.current) imgInputRef.current.value = "";
     }
   };
 
@@ -135,7 +133,7 @@ function CategoriesTab({ categories, fetchData }) {
       {/* Modal */}
       {showForm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowForm(false)}>
-          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: "white", borderRadius: 16, padding: 28, width: "90%", maxWidth: 600, maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
             <h3 style={{ margin: "0 0 20px", fontWeight: 700, fontSize: "1.1rem" }}>{editItem ? "Sửa danh mục" : "Thêm danh mục dịch vụ"}</h3>
 
             {error && (
@@ -149,47 +147,49 @@ function CategoriesTab({ categories, fetchData }) {
                 <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Tên danh mục <span style={{ color: "red" }}>*</span></label>
                 <input className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VD: Xét nghiệm, Siêu âm..." autoFocus />
               </div>
-              <div>
-                <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Mô tả ngắn</label>
-                <textarea className="form-input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Mô tả về nhóm dịch vụ này..." rows={2} style={{ resize: "none" }} />
-              </div>
-
-              {/* Image upload */}
-              <div>
-                <label style={{ display: "block", marginBottom: 8, fontWeight: 600, fontSize: "0.9rem" }}>Ảnh đại diện</label>
-                <input ref={imgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleImageUpload} />
-
-                {form.imageUrl ? (
-                  <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", marginBottom: 8 }}>
-                    <img src={form.imageUrl} alt="preview" style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
-                    <button
-                      onClick={() => setForm(f => ({ ...f, imageUrl: "" }))}
-                      style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)", color: "white", border: "none", borderRadius: "50%", width: 28, height: 28, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                    >
-                      <X size={14} />
-                    </button>
+              
+              <div style={{ display: "flex", gap: 16 }}>
+                {/* Image upload */}
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Hình ảnh đại diện</label>
+                  <div style={{ position: "relative", width: "100%", height: 140, border: "2px dashed #ddd", borderRadius: 8, overflow: "hidden", backgroundColor: "#f9fafb" }}>
+                    {form.imageUrl ? (
+                      <>
+                        <img src={form.imageUrl} alt="preview" style={{ width: "100%", height: 140, objectFit: "cover" }} />
+                        <button onClick={() => setForm(f => ({ ...f, imageUrl: "" }))} style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: 24, height: 24, cursor: "pointer" }}><X size={14} /></button>
+                      </>
+                    ) : (
+                      <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", cursor: "pointer", color: "var(--text-muted)" }}>
+                        <Upload size={24} style={{ marginBottom: 8 }} />
+                        <span style={{ fontSize: "0.85rem" }}>{uploading ? "Đang tải..." : "Tải ảnh lên"}</span>
+                        <input type="file" accept="image/*" onChange={handleUpload} style={{ display: "none" }} disabled={uploading} />
+                      </label>
+                    )}
                   </div>
-                ) : null}
+                  <input className="form-input" placeholder="Hoặc dán link ảnh..." value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} style={{ marginTop: 8 }} />
+                </div>
 
-                <button
-                  className="btn btn-outline"
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderStyle: "dashed" }}
-                  onClick={() => imgInputRef.current?.click()}
-                  disabled={uploading}
-                >
-                  <Upload size={15} />
-                  {uploading ? "Đang tải lên..." : form.imageUrl ? "Đổi ảnh khác" : "Tải ảnh lên"}
-                </button>
-
-                {/* Hoặc nhập URL */}
-                <div style={{ marginTop: 8 }}>
-                  <input
-                    className="form-input"
-                    value={form.imageUrl}
-                    onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
-                    placeholder="Hoặc dán URL ảnh: https://..."
-                    style={{ fontSize: "0.82rem" }}
-                  />
+                {/* PDF upload */}
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>File PDF (Bảng giá)</label>
+                  <div style={{ position: "relative", width: "100%", height: 140, border: "2px dashed #ddd", borderRadius: 8, overflow: "hidden", backgroundColor: "#f9fafb", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    {form.pdfUrl ? (
+                      <>
+                        <div style={{ textAlign: "center", padding: "0 10px" }}>
+                          <FileText size={32} style={{ color: "#007a8c", marginBottom: 8 }} />
+                          <p style={{ fontSize: "0.8rem", margin: 0 }}>{form.pdfUrl.split('/').pop().substring(0, 15)}...</p>
+                        </div>
+                        <button onClick={() => setForm(f => ({ ...f, pdfUrl: "" }))} style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.5)", color: "white", border: "none", borderRadius: "50%", width: 24, height: 24, cursor: "pointer" }}><X size={14} /></button>
+                      </>
+                    ) : (
+                      <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", cursor: "pointer", color: "var(--text-muted)" }}>
+                        <Upload size={24} style={{ marginBottom: 8 }} />
+                        <span style={{ fontSize: "0.85rem" }}>{uploading ? "Đang tải..." : "Tải file PDF"}</span>
+                        <input type="file" accept="application/pdf" onChange={handleUpload} style={{ display: "none" }} disabled={uploading} />
+                      </label>
+                    )}
+                  </div>
+                  <input className="form-input" placeholder="Hoặc dán link PDF..." value={form.pdfUrl} onChange={e => setForm(f => ({ ...f, pdfUrl: e.target.value }))} style={{ marginTop: 8 }} />
                 </div>
               </div>
             </div>
@@ -206,7 +206,6 @@ function CategoriesTab({ categories, fetchData }) {
     </div>
   );
 }
-
 
 // ─────────────────────────────────────────────
 // Tab 2: Bảng giá

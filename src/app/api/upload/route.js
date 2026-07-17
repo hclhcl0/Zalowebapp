@@ -13,9 +13,9 @@ export async function POST(request) {
       return NextResponse.json({ error: "Không tìm thấy tệp tin tải lên" }, { status: 400 });
     }
 
-    // Validate file type (images and videos)
-    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
-      return NextResponse.json({ error: "Chỉ cho phép tải lên tệp tin hình ảnh hoặc video" }, { status: 400 });
+    // Validate file type (images, videos, and pdfs)
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/") && file.type !== "application/pdf") {
+      return NextResponse.json({ error: "Chỉ cho phép tải lên tệp tin hình ảnh, video hoặc PDF" }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();

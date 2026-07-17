@@ -21,7 +21,7 @@ export async function GET(req) {
       prisma.serviceCategory.findMany({
         where: {},
         orderBy: { order: 'asc' },
-        select: { id: true, name: true, description: true, imageUrl: true, order: true, rawTable: true },
+        select: { id: true, name: true, description: true, imageUrl: true, pdfUrl: true, order: true, rawTable: true },
       }),
       prisma.servicePrice.findMany({
         where,

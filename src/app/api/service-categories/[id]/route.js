@@ -15,6 +15,7 @@ export async function PUT(req, { params }) {
         name: body.name,
         description: body.description ?? null,
         imageUrl: body.imageUrl ?? null,
+        pdfUrl: body.pdfUrl ?? null,
         order: body.order ?? 0,
         isActive: body.isActive ?? true,
       },

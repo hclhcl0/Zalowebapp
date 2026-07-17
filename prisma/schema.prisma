@@ -86,6 +86,7 @@ model ServiceCategory {
   createdAt   DateTime       @default(now())
   description String?
   imageUrl    String?
+  pdfUrl      String?
   rawTable    Json?
   services    ServicePrice[]
 }
