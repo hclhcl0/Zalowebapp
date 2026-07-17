@@ -235,9 +235,16 @@ function PricesTab({ categories, services, fetchData }) {
     try {
       const url = editSvc ? `/api/service-prices/${editSvc.id}` : "/api/service-prices";
       const method = editSvc ? "PUT" : "POST";
-      await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(svcForm) });
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(svcForm) });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        alert("Lỗi: " + (json.error || `HTTP ${res.status}`));
+        return;
+      }
       setShowSvcForm(false);
       fetchData();
+    } catch (err) {
+      alert("Lỗi kết nối: " + err.message);
     } finally { setSavingSvc(false); }
   };
 
@@ -449,8 +456,8 @@ export default function ServiceManagementPage() {
     setLoading(true);
     try {
       const [catRes, svcRes] = await Promise.all([
-        fetch("/api/service-categories"),
-        fetch("/api/service-prices?limit=500"),
+        fetch("/api/service-categories", { cache: "no-store" }),
+        fetch("/api/service-prices?limit=500", { cache: "no-store" }),
       ]);
       const catJson = await catRes.json();
       const svcJson = await svcRes.json();
