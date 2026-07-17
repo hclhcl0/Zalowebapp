@@ -366,6 +366,50 @@ function PricesTab({ categories, services, fetchData }) {
     }
   };
 
+  const [uploadingImgCatId, setUploadingImgCatId] = useState(null);
+
+  const handlePriceImagesUpload = async (e, catId) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploadingImgCatId(catId);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const { url, error } = await res.json();
+        if (error) throw new Error(error);
+        uploaded.push(url);
+      }
+      // Merge với ảnh hiện có
+      const cat = categories.find(c => c.id === catId);
+      const existing = cat?.priceImages || [];
+      const merged = [...existing, ...uploaded];
+      await fetch(`/api/service-categories/${catId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...cat, priceImages: merged }),
+      });
+      fetchData();
+    } catch (err) {
+      alert("Lỗi tải ảnh: " + err.message);
+    } finally {
+      setUploadingImgCatId(null);
+      e.target.value = "";
+    }
+  };
+
+  const removePriceImage = async (cat, idx) => {
+    const updated = (cat.priceImages || []).filter((_, i) => i !== idx);
+    await fetch(`/api/service-categories/${cat.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...cat, priceImages: updated }),
+    });
+    fetchData();
+  };
+
   const svcByCategory = (catId) => services.filter(s => s.categoryId === catId && (!search || s.name.toLowerCase().includes(search.toLowerCase())));
 
   return (
@@ -438,19 +482,70 @@ function PricesTab({ categories, services, fetchData }) {
                     style={{ display: "none" }}
                     onChange={e => handleSingleImport(e, cat.id)}
                   />
+                  {/* Nút upload ảnh bảng giá */}
+                  <button
+                    className="btn btn-outline"
+                    style={{ padding: "4px 10px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 4, borderColor: "#7c3aed", color: "#7c3aed" }}
+                    onClick={() => document.getElementById(`img-input-${cat.id}`)?.click()}
+                    disabled={uploadingImgCatId === cat.id}
+                    title="Tải ảnh bảng giá lên"
+                  >
+                    ★ {uploadingImgCatId === cat.id ? "Đang tải..." : `Ảnh${cat.priceImages?.length ? ` (${cat.priceImages.length})` : ""}`}
+                  </button>
+                  <input
+                    id={`img-input-${cat.id}`}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: "none" }}
+                    onChange={e => handlePriceImagesUpload(e, cat.id)}
+                  />
                   <button className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 4 }} onClick={() => openAddSvc(cat.id)}>
                     <Plus size={12} /> Thêm
                   </button>
                 </div>
               </div>
               {isOpen && (
-                svcs.length === 0 && !cat.rawTable
-                  ? (
-                    <div style={{ padding: "20px 16px", textAlign: "center" }}>
-                      <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: 10 }}>Chưa có dữ liệu bảng giá</p>
-                      <p style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Nhấn <strong style={{ color: "#16a34a" }}>Excel</strong> để import file, hoặc <strong style={{ color: "var(--primary)" }}>Thêm</strong> để nhập tay</p>
+                <>
+                  {/* ── Thumbnail strip ảnh bảng giá ── */}
+                  {cat.priceImages?.length > 0 && (
+                    <div style={{ padding: "12px 16px", background: "#faf5ff", borderBottom: "1px solid #e9d5ff" }}>
+                      <div style={{ display: "flex", alignItems: "center", marginBottom: 8, gap: 6 }}>
+                        <span style={{ fontSize: "0.78rem", color: "#7c3aed", fontWeight: 600 }}>📸 Ảnh bảng giá ({cat.priceImages.length} ảnh)</span>
+                        <label style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#7c3aed", cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}>
+                          <Upload size={11} /> Thêm
+                          <input type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => handlePriceImagesUpload(e, cat.id)} />
+                        </label>
+                      </div>
+                      <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
+                        {cat.priceImages.map((url, idx) => (
+                          <div key={idx} style={{ position: "relative", flexShrink: 0 }}>
+                            <img
+                              src={url}
+                              alt={`Ảnh ${idx + 1}`}
+                              style={{ width: 90, height: 70, objectFit: "cover", borderRadius: 6, border: "1px solid #e9d5ff", cursor: "pointer" }}
+                              onClick={() => window.open(url, "_blank")}
+                            />
+                            <button
+                              onClick={() => { if (confirm(`Xóa ảnh ${idx + 1}?`)) removePriceImage(cat, idx); }}
+                              style={{ position: "absolute", top: -5, right: -5, width: 18, height: 18, borderRadius: "50%", background: "#dc2626", border: "none", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ) : cat.rawTable && svcs.length === 0 ? (
+                  )}
+
+                  {/* ── Nội dung chính ── */}
+                  {svcs.length === 0 && !cat.rawTable
+                    ? (
+                      <div style={{ padding: "20px 16px", textAlign: "center" }}>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: 10 }}>Chưa có dữ liệu bảng giá dạng bảng</p>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Nhấn <strong style={{ color: "#16a34a" }}>Excel</strong> để import, <strong style={{ color: "#7c3aed" }}>Ảnh</strong> để upload ảnh, hoặc <strong style={{ color: "var(--primary)" }}>Thêm</strong> để nhập tay</p>
+                      </div>
+                    ) : cat.rawTable && svcs.length === 0 ? (
                     // Hiển thị rawTable (Excel nhiều cột)
                     <div style={{ overflowX: "auto" }}>
                       <div style={{ padding: "8px 16px", background: "#f0fdf4", borderBottom: "1px solid #bbf7d0", fontSize: "0.78rem", color: "#15803d", display: "flex", alignItems: "center", gap: 6 }}>
@@ -516,7 +611,8 @@ function PricesTab({ categories, services, fetchData }) {
                         ))}
                       </tbody>
                     </table>
-                  )
+                  )}
+                </>
               )}
             </div>
           );
