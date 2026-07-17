@@ -263,7 +263,8 @@ for (const sql of statements) {
   } catch (err) {
     // Bỏ qua lỗi "already exists"
     if (!err.message.includes('already exists')) {
-      console.error('❌', err.message.substring(0, 120));
+      console.log('❌ ERROR SQL:', sql.substring(0, 50));
+      console.log('❌ DETAIL:', err.message);
       fail++;
     }
   }
