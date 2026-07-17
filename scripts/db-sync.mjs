@@ -232,6 +232,16 @@ const statements = [
     END IF;
   END $$`,
   `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServicePrice' AND column_name='note') THEN
+      ALTER TABLE "ServicePrice" ADD COLUMN "note" TEXT;
+    END IF;
+  END $$`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServicePrice' AND column_name='unit') THEN
+      ALTER TABLE "ServicePrice" ADD COLUMN "unit" TEXT NOT NULL DEFAULT 'lần';
+    END IF;
+  END $$`,
+  `DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServicePrice' AND column_name='order') THEN
       ALTER TABLE "ServicePrice" ADD COLUMN "order" INTEGER NOT NULL DEFAULT 0;
     END IF;
@@ -248,6 +258,16 @@ const statements = [
   END $$`,
 
   // Thêm missing columns cho ServiceCategory
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServiceCategory' AND column_name='description') THEN
+      ALTER TABLE "ServiceCategory" ADD COLUMN "description" TEXT;
+    END IF;
+  END $$`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServiceCategory' AND column_name='imageUrl') THEN
+      ALTER TABLE "ServiceCategory" ADD COLUMN "imageUrl" TEXT;
+    END IF;
+  END $$`,
   `DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServiceCategory' AND column_name='order') THEN
       ALTER TABLE "ServiceCategory" ADD COLUMN "order" INTEGER NOT NULL DEFAULT 0;
