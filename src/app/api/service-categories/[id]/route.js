@@ -19,6 +19,7 @@ export async function PUT(req, { params }) {
         priceImages: body.priceImages ?? null,
         order: body.order ?? 0,
         isActive: body.isActive ?? true,
+        ...(body.rawTable !== undefined && { rawTable: body.rawTable }),
       },
     });
     return NextResponse.json({ success: true, data: cat });
