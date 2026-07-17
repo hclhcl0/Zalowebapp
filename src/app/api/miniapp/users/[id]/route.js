@@ -40,6 +40,8 @@ export async function PUT(req, { params }) {
       ...(body.notes !== undefined && { notes: body.notes }),
       ...(body.userType !== undefined && { userType: body.userType }),
       ...(body.fullName !== undefined && { fullName: body.fullName }),
+      ...(body.department !== undefined && { department: body.department }),
+      ...(body.accessLevel !== undefined && { accessLevel: body.accessLevel }),
     },
   });
   return NextResponse.json({ success: true, data: updated });

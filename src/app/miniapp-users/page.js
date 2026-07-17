@@ -32,6 +32,8 @@ function UserDetail({ userId, onClose }) {
   const [user, setUser] = useState(null);
   const [notes, setNotes] = useState("");
   const [userType, setUserType] = useState("");
+  const [department, setDepartment] = useState("");
+  const [accessLevel, setAccessLevel] = useState("basic");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -43,6 +45,8 @@ function UserDetail({ userId, onClose }) {
           setUser(d.data);
           setNotes(d.data.notes || "");
           setUserType(d.data.userType || "citizen");
+          setDepartment(d.data.department || "");
+          setAccessLevel(d.data.accessLevel || "basic");
         }
       });
   }, [userId]);
@@ -52,7 +56,7 @@ function UserDetail({ userId, onClose }) {
     await fetch(`/api/miniapp/users/${userId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes, userType }),
+      body: JSON.stringify({ notes, userType, department, accessLevel }),
     });
     setSaving(false);
   };
@@ -104,6 +108,30 @@ function UserDetail({ userId, onClose }) {
           <option value="staff">🏥 Cán bộ CDC</option>
         </select>
       </div>
+
+      {userType === "staff" && (
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.88rem" }}>Phòng ban</label>
+            <select className="form-input" value={department} onChange={e => setDepartment(e.target.value)} style={{ fontSize: "0.88rem" }}>
+              <option value="">-- Chọn phòng ban --</option>
+              <option value="khoa_kiem_soat_benh_truyen_nhiem">Khoa KS Bệnh truyền nhiễm</option>
+              <option value="khoa_kham_benh">Khoa Khám bệnh</option>
+              <option value="khoa_xet_nghiem">Khoa Xét nghiệm</option>
+              <option value="ban_giam_doc">Ban Giám đốc</option>
+              <option value="khac">Khác</option>
+            </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: "0.88rem" }}>Cấp độ</label>
+            <select className="form-input" value={accessLevel} onChange={e => setAccessLevel(e.target.value)} style={{ fontSize: "0.88rem" }}>
+              <option value="basic">Nhân viên</option>
+              <option value="manager">Trưởng/Phó khoa</option>
+              <option value="admin">Quản trị viên</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {/* Ghi chú */}
       <div style={{ marginBottom: 16 }}>
@@ -266,6 +294,11 @@ export default function MiniAppUsersPage() {
                     <span style={{ fontSize: "0.75rem", padding: "3px 8px", borderRadius: 12, fontWeight: 500, background: u.userType === "staff" ? "#dbeafe" : "#dcfce7", color: u.userType === "staff" ? "#1d4ed8" : "#15803d" }}>
                       {u.userType === "staff" ? "Cán bộ" : "Dân"}
                     </span>
+                    {u.userType === "staff" && u.department && (
+                      <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 4, fontFamily: "monospace" }}>
+                        {u.department}
+                      </div>
+                    )}
                   </td>
                   <td style={{ padding: "10px 14px" }}>
                     <ChevronRight size={16} style={{ color: "var(--text-muted)" }} />
