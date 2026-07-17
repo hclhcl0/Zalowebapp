@@ -55,6 +55,7 @@ const menuGroups = [
       { icon: "Tag", label: "Dịch vụ & Bảng giá", href: "/services" },
       { icon: "Phone", label: "Tổng đài tư vấn", href: "/miniapp-hotlines" },
       { icon: "CalendarDays", label: "Lịch làm việc", href: "/miniapp-schedules" },
+      { icon: "BrainCircuit", label: "Bộ não AI Mini App", href: "/miniapp-knowledge" },
     ],
   },
   {

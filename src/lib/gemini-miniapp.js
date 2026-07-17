@@ -89,17 +89,13 @@ async function _loadMiniAppContext() {
   if (_contextCache && now - _contextCacheTime < CONTEXT_TTL) return _contextCache;
 
   try {
-    // Lấy song song: knowledge, hotlines, schedules, settings
-    const [knowledgeDocs, hotlineCfg, scheduleCfg, settings] = await Promise.all([
-      prisma.aiKnowledge.findMany({
-        where: { allowedDepartment: { in: [null, "", "all", "tất cả", "tất cả cơ quan"] } },
-        orderBy: { createdAt: "desc" },
-        take: 30,
-      }),
+    // Lấy song song: bộ não riêng, hotlines, schedules, settings
+    const [knowledgeCfg, hotlineCfg, scheduleCfg, settings] = await Promise.all([
+      prisma.systemConfig.findUnique({ where: { key: "mini_app_knowledge" } }),
       prisma.systemConfig.findUnique({ where: { key: "mini_app_hotlines" } }),
       prisma.systemConfig.findUnique({ where: { key: "mini_app_schedules" } }),
       prisma.systemConfig.findMany({
-        where: { key: { in: ["hotline_main", "address", "ai_custom_prompt", "ai_footer_msg", "mini_app_webcq_categories"] } }
+        where: { key: { in: ["hotline_main", "address", "ai_custom_prompt", "ai_footer_msg"] } }
       }),
     ]);
 
@@ -143,12 +139,11 @@ async function _loadMiniAppContext() {
       }
     } catch { schedulesText = `LỊCH LÀM VIỆC:\n${DEFAULT_SCHEDULES_TEXT}`; }
 
-    // Xử lý kiến thức (chỉ tài liệu công khai)
-    const knowledgeText = knowledgeDocs.length > 0
-      ? "TÀI LIỆU CHUYÊN MÔN:\n" + knowledgeDocs.map(d =>
-          `[${d.category?.toUpperCase() || "CHUNG"}] ${d.title}:\n${d.content}`
-        ).join("\n\n---\n")
-      : "";
+    // Bộ não AI riêng của Mini App (từ systemConfig)
+    const DEFAULT_KNOWLEDGE_TEXT = `[THÔNG TIN CHUNG]\nĐịa chỉ: ${address}\nHotline: ${hotline}\nWebsite: ksbtdanang.vn`;
+    const knowledgeText = knowledgeCfg?.value
+      ? `TÀI LIỆU MINI APP:\n${knowledgeCfg.value}`
+      : `TÀI LIỆU MINI APP:\n${DEFAULT_KNOWLEDGE_TEXT}`;
 
     const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng) trên ứng dụng Zalo Mini App.
 Nhiệm vụ của bạn là hỗ trợ người dân Đà Nẵng về các dịch vụ y tế công cộng.
