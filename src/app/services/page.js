@@ -222,6 +222,8 @@ function PricesTab({ categories, services, fetchData }) {
   const [importResult, setImportResult] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const importInputRef = useRef(null);
+  const [importingCatId, setImportingCatId] = useState(null);
+  const singleImportRef = useRef(null);
 
   const toggle = (id) => setExpanded(p => ({ ...p, [id]: !p[id] }));
 
@@ -274,6 +276,31 @@ function PricesTab({ categories, services, fetchData }) {
     }
   };
 
+  const handleSingleImport = async (e, catId) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingCatId(catId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("categoryId", String(catId));
+      const res = await fetch("/api/service-prices/import-single", { method: "POST", body: formData });
+      const json = await res.json();
+      if (json.success) {
+        setImportResult(json);
+        setShowImportModal(true);
+        fetchData();
+      } else {
+        alert("Lỗi import: " + (json.error || "Không rõ"));
+      }
+    } catch (err) {
+      alert("Lỗi: " + err.message);
+    } finally {
+      setImportingCatId(null);
+      if (singleImportRef.current) singleImportRef.current.value = "";
+    }
+  };
+
   const svcByCategory = (catId) => services.filter(s => s.categoryId === catId && (!search || s.name.toLowerCase().includes(search.toLowerCase())));
 
   return (
@@ -314,17 +341,89 @@ function PricesTab({ categories, services, fetchData }) {
               <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", cursor: "pointer", background: "var(--bg-secondary)", borderBottom: isOpen ? "1px solid var(--border)" : "none" }} onClick={() => toggle(cat.id)}>
                 {isOpen ? <ChevronDown size={16} style={{ color: "var(--primary)", marginRight: 8, flexShrink: 0 }} /> : <ChevronRight size={16} style={{ color: "var(--text-muted)", marginRight: 8, flexShrink: 0 }} />}
                 <span style={{ fontWeight: 700, flex: 1 }}>{cat.name}</span>
-                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginRight: 12 }}>{svcs.length} dịch vụ</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginRight: 12 }}>
+                  {svcs.length > 0 ? `${svcs.length} dịch vụ` : cat.rawTable ? `📊 ${cat.rawTable.rows?.length || 0} dòng (Excel)` : 'Chưa có dữ liệu'}
+                </span>
                 <div style={{ display: "flex", gap: 6 }} onClick={e => e.stopPropagation()}>
+                  {/* Nút Import Excel cho từng danh mục */}
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    style={{ display: "none" }}
+                    ref={importingCatId === cat.id ? singleImportRef : undefined}
+                    onChange={e => handleSingleImport(e, cat.id)}
+                    key={`import-${cat.id}`}
+                  />
+                  <button
+                    className="btn btn-outline"
+                    style={{ padding: "4px 10px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 4, borderColor: "#16a34a", color: "#16a34a" }}
+                    onClick={() => {
+                      const inp = document.getElementById(`excel-input-${cat.id}`);
+                      if (inp) inp.click();
+                    }}
+                    disabled={importingCatId === cat.id}
+                    title="Import bảng giá từ Excel"
+                  >
+                    <FileSpreadsheet size={12} /> {importingCatId === cat.id ? "Đang import..." : "Excel"}
+                  </button>
+                  <input
+                    id={`excel-input-${cat.id}`}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    style={{ display: "none" }}
+                    onChange={e => handleSingleImport(e, cat.id)}
+                  />
                   <button className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 4 }} onClick={() => openAddSvc(cat.id)}>
                     <Plus size={12} /> Thêm
                   </button>
                 </div>
               </div>
               {isOpen && (
-                svcs.length === 0
-                  ? <div style={{ padding: "16px", color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center" }}>Chưa có dịch vụ nào</div>
-                  : (
+                svcs.length === 0 && !cat.rawTable
+                  ? (
+                    <div style={{ padding: "20px 16px", textAlign: "center" }}>
+                      <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: 10 }}>Chưa có dữ liệu bảng giá</p>
+                      <p style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>Nhấn <strong style={{ color: "#16a34a" }}>Excel</strong> để import file, hoặc <strong style={{ color: "var(--primary)" }}>Thêm</strong> để nhập tay</p>
+                    </div>
+                  ) : cat.rawTable && svcs.length === 0 ? (
+                    // Hiển thị rawTable (Excel nhiều cột)
+                    <div style={{ overflowX: "auto" }}>
+                      <div style={{ padding: "8px 16px", background: "#f0fdf4", borderBottom: "1px solid #bbf7d0", fontSize: "0.78rem", color: "#15803d", display: "flex", alignItems: "center", gap: 6 }}>
+                        <FileSpreadsheet size={13} /> Bảng giá từ Excel — {cat.rawTable.headers?.length || 0} cột × {cat.rawTable.rows?.length || 0} dòng
+                        <button
+                          onClick={() => { if (confirm('Xóa dữ liệu Excel của danh mục này?')) { fetch(`/api/service-categories/${cat.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...cat, rawTable: null }) }).then(() => fetchData()); } }}
+                          style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 3 }}
+                        >
+                          <Trash2 size={11} /> Xóa bảng Excel
+                        </button>
+                      </div>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                        <thead>
+                          <tr style={{ background: "var(--bg)", color: "var(--text-muted)" }}>
+                            {cat.rawTable.headers?.map((h, i) => (
+                              <th key={i} style={{ textAlign: "left", padding: "7px 10px", fontWeight: 600, whiteSpace: "nowrap", borderBottom: "1px solid var(--border)" }}>{h || `Cột ${i+1}`}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cat.rawTable.rows?.slice(0, 15).map((row, ri) => (
+                            <tr key={ri} style={{ borderTop: "1px solid var(--border)" }}>
+                              {row.map((cell, ci) => (
+                                <td key={ci} style={{ padding: "7px 10px", color: ci === 0 ? 'var(--text)' : 'var(--text-muted)', fontWeight: ci === 0 ? 500 : 400 }}>{cell || '—'}</td>
+                              ))}
+                            </tr>
+                          ))}
+                          {cat.rawTable.rows?.length > 15 && (
+                            <tr>
+                              <td colSpan={cat.rawTable.headers?.length} style={{ padding: "8px 10px", color: "var(--text-muted)", fontSize: "0.78rem", textAlign: "center", fontStyle: "italic" }}>
+                                ... và {cat.rawTable.rows.length - 15} dòng nữa (xem đầy đủ trên Mini App)
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <thead>
                         <tr style={{ background: "var(--bg)", fontSize: "0.78rem", color: "var(--text-muted)" }}>
