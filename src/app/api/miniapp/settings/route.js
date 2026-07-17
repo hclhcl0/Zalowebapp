@@ -5,21 +5,31 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // Only return configuration keys starting with "mini_app_" to prevent leaking API keys
     const configs = await prisma.systemConfig.findMany({
-      where: {
-        key: {
-          startsWith: "mini_app_",
-        }
-      }
+      where: { key: { startsWith: "mini_app_" } }
     });
-    
     const result = configs.reduce((acc, c) => {
       acc[c.key] = { value: c.value, label: c.label };
       return acc;
     }, {});
-    
     return NextResponse.json({ data: result });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const { key, value, label } = await request.json();
+    if (!key?.startsWith("mini_app_")) {
+      return NextResponse.json({ error: "Chỉ cho phép cập nhật key mini_app_*" }, { status: 400 });
+    }
+    await prisma.systemConfig.upsert({
+      where: { key },
+      create: { key, value, label: label || key },
+      update: { value },
+    });
+    return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

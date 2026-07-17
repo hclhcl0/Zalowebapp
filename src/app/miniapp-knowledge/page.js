@@ -19,25 +19,50 @@ const PRESET_CATEGORIES = [
 ];
 
 export default function MiniAppKnowledgePage() {
-  const [topics, setTopics]     = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [saving, setSaving]     = useState(false);
+  const [topics, setTopics]       = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
   const [isDefault, setIsDefault] = useState(false);
-  const [msg, setMsg]           = useState(null);
-  const [expanded, setExpanded] = useState({});
-  const [search, setSearch]     = useState("");
+  const [msg, setMsg]             = useState(null);
+  const [expanded, setExpanded]   = useState({});
+  const [search, setSearch]       = useState("");
   const [filterCat, setFilterCat] = useState("Tất cả");
+
+  // Câu chào
+  const DEFAULT_GREETING = 'Xin chào! Tôi là Trợ lý AI của CDC Đà Nẵng.\n\nTôi có thể giúp bạn:\n+ Tra cứu dịch vụ & bảng giá xét nghiệm, tiêm chủng\n+ Hướng dẫn đặt lịch khám, tra kết quả\n+ Thông tin phòng bệnh, dịch tễ\n+ Giải đáp thắc mắc y tế công cộng\n\nBạn cần hỗ trợ gì hôm nay?';
+  const [greeting, setGreeting]   = useState(DEFAULT_GREETING);
+  const [savingGreeting, setSavingGreeting] = useState(false);
+  const [greetingMsg, setGreetingMsg]       = useState(null);
 
   const load = () => {
     setLoading(true);
-    fetch("/api/miniapp/knowledge")
-      .then(r => r.json())
-      .then(d => {
-        setTopics(d.topics || []);
-        setIsDefault(d.isDefault);
+    // Load topics + greeting song song
+    Promise.all([
+      fetch("/api/miniapp/knowledge").then(r => r.json()),
+      fetch("/api/miniapp/settings").then(r => r.json()),
+    ])
+      .then(([kd, sd]) => {
+        setTopics(kd.topics || []);
+        setIsDefault(kd.isDefault);
+        const g = sd?.data?.mini_app_ai_greeting?.value;
+        if (g?.trim()) setGreeting(g.trim());
       })
       .catch(() => setMsg({ type: "error", text: "Không tải được dữ liệu" }))
       .finally(() => setLoading(false));
+  };
+
+  const saveGreeting = async () => {
+    setSavingGreeting(true); setGreetingMsg(null);
+    try {
+      const res = await fetch("/api/miniapp/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "mini_app_ai_greeting", value: greeting, label: "Cau chao AI Mini App" }),
+      });
+      if (res.ok) setGreetingMsg({ type: "success", text: "Đã lưu câu chào! Mini App áp dụng ngay." });
+      else setGreetingMsg({ type: "error", text: "Lưu thất bại!" });
+    } catch { setGreetingMsg({ type: "error", text: "Lỗi kết nối!" }); }
+    finally { setSavingGreeting(false); }
   };
 
   useEffect(() => { load(); }, []);
@@ -182,6 +207,56 @@ export default function MiniAppKnowledgePage() {
       </div>
 
       {/* Default notice */}
+      {/* ── Câu chào AI ── */}
+      <div className="card" style={{ marginBottom: 20, border: "1px solid #e0f2fe", background: "#f0f9ff" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#0369a1" }}>
+              💬 Câu chào mở đầu của AI
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "#0284c7", marginTop: 2 }}>
+              Hiển thị ngay khi người dùng mở chat. Lưu ở đây → Mini App cập nhật ngay, không cần deploy.
+            </div>
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={saveGreeting}
+            disabled={savingGreeting}
+            style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", padding: "6px 14px" }}
+          >
+            <Save size={13} /> {savingGreeting ? "Đang lưu..." : "Lưu câu chào"}
+          </button>
+        </div>
+        <textarea
+          value={greeting}
+          onChange={e => setGreeting(e.target.value)}
+          rows={5}
+          style={{
+            width: "100%", fontFamily: "inherit", fontSize: "0.85rem",
+            lineHeight: 1.7, padding: 12, borderRadius: 10, resize: "vertical",
+            border: "1px solid #bae6fd", background: "#fff", color: "var(--text)",
+            outline: "none", boxSizing: "border-box"
+          }}
+          placeholder="Nhập câu chào mở đầu của Trợ lý AI..."
+        />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+          <span style={{ fontSize: "0.72rem", color: "#0284c7" }}>
+            💡 Dùng ký tự xuống dòng (\n) để tạo danh sách. Ví dụ: "+ Dịch vụ tiêm chủng"
+          </span>
+          <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{greeting.length} ký tự</span>
+        </div>
+        {greetingMsg && (
+          <div style={{
+            marginTop: 8, padding: "7px 12px", borderRadius: 8, fontSize: "0.82rem",
+            background: greetingMsg.type === "success" ? "#f0fdf4" : "#fef2f2",
+            color: greetingMsg.type === "success" ? "#16a34a" : "#dc2626",
+            border: `1px solid ${greetingMsg.type === "success" ? "#bbf7d0" : "#fecaca"}`
+          }}>
+            {greetingMsg.type === "success" ? "✅ " : "❌ "}{greetingMsg.text}
+          </div>
+        )}
+      </div>
+
       {isDefault && (
         <div style={{ marginBottom: 14, padding: "10px 16px", borderRadius: 10, background: "#fffbeb", border: "1px solid #fde68a", fontSize: "0.83rem", color: "#92400e" }}>
           ⚠️ Đang dùng nội dung mặc định. Chỉnh sửa và bấm <strong>"Lưu tất cả"</strong> để lưu vào database.
