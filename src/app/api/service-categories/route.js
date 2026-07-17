@@ -32,6 +32,7 @@ export async function POST(req) {
         description: body.description || null,
         imageUrl: body.imageUrl || null,
         pdfUrl: body.pdfUrl || null,
+        priceImages: body.priceImages || null,
         order: body.order ?? 0,
       },
     });

@@ -16,14 +16,15 @@ const formatPrice = (p) => Number(p).toLocaleString("vi-VN") + " đ";
 function CategoriesTab({ categories, fetchData }) {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", pdfUrl: "" });
+  const [form, setForm] = useState({ name: "", description: "", imageUrl: "", pdfUrl: "", priceImages: [] });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingPriceImg, setUploadingPriceImg] = useState(false);
   const [error, setError] = useState("");
   const imgInputRef = useRef(null);
 
-  const openAdd = () => { setEditItem(null); setForm({ name: "", description: "", imageUrl: "", pdfUrl: "" }); setError(""); setShowForm(true); };
-  const openEdit = (cat) => { setEditItem(cat); setForm({ name: cat.name, description: cat.description || "", imageUrl: cat.imageUrl || "", pdfUrl: cat.pdfUrl || "" }); setError(""); setShowForm(true); };
+  const openAdd = () => { setEditItem(null); setForm({ name: "", description: "", imageUrl: "", pdfUrl: "", priceImages: [] }); setError(""); setShowForm(true); };
+  const openEdit = (cat) => { setEditItem(cat); setForm({ name: cat.name, description: cat.description || "", imageUrl: cat.imageUrl || "", pdfUrl: cat.pdfUrl || "", priceImages: cat.priceImages || [] }); setError(""); setShowForm(true); };
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -45,6 +46,29 @@ function CategoriesTab({ categories, fetchData }) {
       alert("Lỗi tải lên: " + err.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handlePriceImageUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploadingPriceImg(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const { url, error } = await res.json();
+        if (error) throw new Error(error);
+        uploaded.push(url);
+      }
+      setForm(f => ({ ...f, priceImages: [...(f.priceImages || []), ...uploaded] }));
+    } catch (err) {
+      alert("Lỗi tải ảnh: " + err.message);
+    } finally {
+      setUploadingPriceImg(false);
+      e.target.value = "";
     }
   };
 
@@ -191,6 +215,47 @@ function CategoriesTab({ categories, fetchData }) {
                   </div>
                   <input className="form-input" placeholder="Hoặc dán link PDF..." value={form.pdfUrl} onChange={e => setForm(f => ({ ...f, pdfUrl: e.target.value }))} style={{ marginTop: 8 }} />
                 </div>
+              </div>
+
+              {/* Ảnh bảng giá - nhiều ảnh */}
+              <div>
+                <label style={{ display: "block", marginBottom: 8, fontWeight: 600, fontSize: "0.9rem" }}>
+                  📸 Ảnh bảng giá <span style={{ fontWeight: 400, color: "var(--text-muted)", fontSize: "0.82rem" }}>(có thể chọn nhiều ảnh)</span>
+                </label>
+                
+                {/* Grid ảnh đã tải */}
+                {form.priceImages?.length > 0 && (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 8, marginBottom: 10 }}>
+                    {form.priceImages.map((url, idx) => (
+                      <div key={idx} style={{ position: "relative", aspectRatio: "1", borderRadius: 8, overflow: "hidden", border: "1px solid #e5e7eb" }}>
+                        <img src={url} alt={`Ảnh ${idx+1}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button
+                          onClick={() => setForm(f => ({ ...f, priceImages: f.priceImages.filter((_, i) => i !== idx) }))}
+                          style={{ position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.6)", color: "white", border: "none", borderRadius: "50%", width: 20, height: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}
+                        >
+                          <X size={11} />
+                        </button>
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.4)", color: "white", fontSize: 9, textAlign: "center", padding: "2px 0" }}>#{idx+1}</div>
+                      </div>
+                    ))}
+                    {/* Nút thêm ảnh */}
+                    <label style={{ aspectRatio: "1", borderRadius: 8, border: "2px dashed #d1d5db", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "var(--text-muted)", background: "#f9fafb" }}>
+                      <Upload size={18} style={{ marginBottom: 4 }} />
+                      <span style={{ fontSize: "0.7rem" }}>Thêm</span>
+                      <input type="file" accept="image/*" multiple onChange={handlePriceImageUpload} style={{ display: "none" }} disabled={uploadingPriceImg} />
+                    </label>
+                  </div>
+                )}
+
+                {/* Khu vực upload ban đầu khi chưa có ảnh */}
+                {(!form.priceImages || form.priceImages.length === 0) && (
+                  <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", minHeight: 80, border: "2px dashed #d1d5db", borderRadius: 10, cursor: "pointer", color: "var(--text-muted)", background: "#f9fafb", padding: 16 }}>
+                    <Upload size={22} style={{ marginBottom: 6 }} />
+                    <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{uploadingPriceImg ? "Đang tải lên..." : "Nhấn để chọn ảnh bảng giá"}</span>
+                    <span style={{ fontSize: "0.75rem", marginTop: 3, color: "#9ca3af" }}>Hỗ trợ JPG, PNG — có thể chọn nhiều ảnh cùng lúc</span>
+                    <input type="file" accept="image/*" multiple onChange={handlePriceImageUpload} style={{ display: "none" }} disabled={uploadingPriceImg} />
+                  </label>
+                )}
               </div>
             </div>
 

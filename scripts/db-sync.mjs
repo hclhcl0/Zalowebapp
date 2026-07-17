@@ -288,6 +288,11 @@ const statements = [
       ALTER TABLE "ServiceCategory" ADD COLUMN "pdfUrl" TEXT;
     END IF;
   END $$`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ServiceCategory' AND column_name='priceImages') THEN
+      ALTER TABLE "ServiceCategory" ADD COLUMN "priceImages" JSONB;
+    END IF;
+  END $$`,
 
   // Foreign keys (nếu chưa có)
   `DO $$ BEGIN
