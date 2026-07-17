@@ -171,6 +171,11 @@ function CategoriesTab({ categories, fetchData }) {
                 <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Tên danh mục <span style={{ color: "red" }}>*</span></label>
                 <input className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VD: Xét nghiệm, Siêu âm..." autoFocus />
               </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: 5, fontWeight: 600, fontSize: "0.9rem" }}>Mô tả ngắn (Giới thiệu)</label>
+                <textarea className="form-input" value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Nhập giới thiệu ngắn về dịch vụ..." rows={2} style={{ resize: 'vertical' }} />
+              </div>
               
               <div style={{ display: "flex", gap: 16 }}>
                 {/* Image upload */}
