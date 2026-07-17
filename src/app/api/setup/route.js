@@ -19,12 +19,12 @@ export async function GET() {
   };
 
   try {
-    // 1. Đồng bộ cấu trúc DB bằng prisma db push
-    const dbPushResult = await runCommand("npx prisma db push --accept-data-loss");
+    // 1. Đồng bộ cấu trúc DB một cách an toàn
+    const dbPushResult = await runCommand("node scripts/db-sync.mjs");
     if (!dbPushResult.success) {
       return NextResponse.json({
         success: false,
-        message: "Lỗi khi đồng bộ cấu trúc cơ sở dữ liệu (db push)",
+        message: "Lỗi khi đồng bộ cấu trúc cơ sở dữ liệu (db sync)",
         error: dbPushResult.error,
         stderr: dbPushResult.stderr
       }, { status: 500 });

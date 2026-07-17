@@ -1,7 +1,3 @@
-// This is your Prisma schema file
-// Kết nối database SQLite để dễ dùng trong giai đoạn phát triển
-// Có thể đổi sang PostgreSQL/MySQL khi deploy production
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,95 +7,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================================
-// PHẦN 1: QUẢN LÝ NGƯỜI DÙNG HỆ THỐNG
-// ============================================================
-
 model Admin {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String   // Lưu dạng hash (bcrypt)
-  fullName  String
-  role       String   @default("staff") // "admin" | "staff"
-  department String?  // Phòng ban quản lý (Ví dụ: "Khoa Dịch Tễ")
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
+  password   String
+  fullName   String
+  role       String   @default("staff")
   createdAt  DateTime @default(now())
+  department String?
 }
-
-// ============================================================
-// PHẦN 2: NGƯỜI DÂN THEO DÕI ZALO OA (Followers)
-// ============================================================
 
 model Follower {
-  id          Int      @id @default(autoincrement())
-  zaloUserId  String   @unique // ID người dùng từ Zalo
-  displayName String?
-  avatarUrl   String?
-  phone       String?
-  followedAt  DateTime @default(now())
-  
-  // Phân loại người quan tâm
-  userType    String   @default("citizen") // "citizen" | "staff"
-  accessLevel String   @default("basic")   // "basic" | "manager" | "hr" | "admin"
-  department  String?  // Phòng ban của cán bộ cơ quan
-  notes       String?  // Ghi chú nhanh
-
-  // Thông tin sức khỏe / cá nhân (Dành cho bệnh nhân)
-  fullName    String?  // Tên thật
-  dob         String?  // Ngày sinh
-  cccd        String?  // CMND/CCCD hoặc Mã BN
-
-  // Mini App tracking
-  lastSeenAt    DateTime?  // Lần cuối mở Mini App
-  totalVisits   Int        @default(0)  // Tổng số lần mở
-  miniAppVersion String?   // Phiên bản Mini App
-
-  // Quan hệ
-  appointments Appointment[]
-  testResults  TestResult[]
-  sessions     MiniAppSession[]
+  id             Int              @id @default(autoincrement())
+  zaloUserId     String           @unique
+  displayName    String?
+  avatarUrl      String?
+  phone          String?
+  followedAt     DateTime         @default(now())
+  userType       String           @default("citizen")
+  department     String?
+  notes          String?
+  cccd           String?
+  dob            String?
+  fullName       String?
+  accessLevel    String           @default("basic")
+  lastSeenAt     DateTime?
+  miniAppVersion String?
+  totalVisits    Int              @default(0)
+  appointments   Appointment[]
+  sessions       MiniAppSession[]
+  testResults    TestResult[]
 }
 
-// ============================================================
-// PHẦN 3: DỊCH VỤ Y TẾ
-// ============================================================
-
 model Appointment {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   fullName    String
   phone       String
-  dob         String?  // Ngày sinh
-  vaccineType String   // Loại vắc xin / dịch vụ đặt lịch
-  appointedAt DateTime // Ngày hẹn
-  status      String   @default("pending") // "pending" | "approved" | "cancelled"
+  dob         String?
+  vaccineType String
+  appointedAt DateTime
+  status      String    @default("pending")
   note        String?
-  createdAt   DateTime @default(now())
-
-  // Quan hệ (tuỳ chọn, liên kết với người theo dõi Zalo)
+  createdAt   DateTime  @default(now())
   followerId  Int?
   follower    Follower? @relation(fields: [followerId], references: [id])
 }
 
 model TestResult {
-  id          Int      @id @default(autoincrement())
-  fullName    String
-  phone       String
-  resultCode  String   @unique // Mã tra cứu
-  content     String   // Nội dung kết quả (có thể là text hoặc link file)
-  testedAt    DateTime
-  createdAt   DateTime @default(now())
-
-  // Quan hệ
-  followerId  Int?
-  follower    Follower? @relation(fields: [followerId], references: [id])
+  id         Int       @id @default(autoincrement())
+  fullName   String
+  phone      String
+  resultCode String    @unique
+  content    String
+  testedAt   DateTime
+  createdAt  DateTime  @default(now())
+  followerId Int?
+  follower   Follower? @relation(fields: [followerId], references: [id])
 }
 
 model MiniAppSession {
   id         Int      @id @default(autoincrement())
   followerId Int
-  follower   Follower @relation(fields: [followerId], references: [id], onDelete: Cascade)
-  action     String   // "open" | "view_article" | "booking" | "lookup_result" | "view_service" | "ai_chat"
-  metadata   String?  // JSON string: { articleId, categoryId, etc. }
+  action     String
+  metadata   String?
   createdAt  DateTime @default(now())
+  follower   Follower @relation(fields: [followerId], references: [id], onDelete: Cascade)
 
   @@index([followerId])
   @@index([action])
@@ -108,130 +80,101 @@ model MiniAppSession {
 
 model ServiceCategory {
   id          Int            @id @default(autoincrement())
-  name        String         // Tên danh mục
-  description String?        // Mô tả ngắn
-  imageUrl    String?        // Ảnh đại diện
+  name        String
   order       Int            @default(0)
   isActive    Boolean        @default(true)
   createdAt   DateTime       @default(now())
+  description String?
+  imageUrl    String?
   services    ServicePrice[]
 }
 
 model ServicePrice {
   id         Int             @id @default(autoincrement())
-  name       String          // Tên dịch vụ
-  price      BigInt          // Giá (VNĐ)
-  unit       String          @default("lần") // Đơn vị tính
-  note       String?         // Ghi chú
-  categoryId Int
-  category   ServiceCategory @relation(fields: [categoryId], references: [id])
-  order      Int             @default(0)
+  name       String
+  price      BigInt
+  unit       String          @default("lần")
   isActive   Boolean         @default(true)
-  createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
+  categoryId Int
+  createdAt  DateTime        @default(now())
+  note       String?
+  order      Int             @default(0)
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
 }
-
-// ============================================================
-// PHẦN 4: TIN TỨC & CẢNH BÁO
-// ============================================================
 
 model NewsArticle {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   title         String
   content       String
-  category      String   // "daily_news" | "vac_schedule" | "alert"
-  coverUrl      String?  // URL Ảnh bìa (bắt buộc khi đăng Zalo)
-  summary       String?  // Mô tả ngắn
-  author        String?  @default("CDC Đà Nẵng") // Tác giả bài viết
-  zaloArticleId String?  // ID bài viết trên Zalo sau khi xuất bản
-  isPublished   Boolean  @default(false)
+  category      String
+  coverUrl      String?
+  summary       String?
+  author        String?   @default("CDC Đà Nẵng")
+  zaloArticleId String?
+  isPublished   Boolean   @default(false)
   publishedAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
-
-// ============================================================
-// PHẦN 5: CẤU HÌNH HỆ THỐNG
-// ============================================================
 
 model SystemConfig {
   id        Int      @id @default(autoincrement())
-  key       String   @unique  // Khoá cấu hình (VD: "hotline", "map_url")
-  value     String            // Giá trị tương ứng
-  label     String?           // Tên mô tả cho Admin
+  key       String   @unique
+  value     String
+  label     String?
   updatedAt DateTime @updatedAt
 }
 
-// ============================================================
-// PHẦN 6: LOG TIN NHẮN ZALO (Webhook)
-// ============================================================
-
 model MessageLog {
-  id          Int      @id @default(autoincrement())
-  zaloUserId  String   // Người gửi (follower)
-  direction   String   // "inbound" (nhận) | "outbound" (gửi)
-  type        String   // "text" | "image" | "sticker" | "zns"
-  content     String?  // Nội dung tin nhắn
-  rawPayload  String?  // Toàn bộ JSON raw từ Zalo (để debug)
-  receivedAt  DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  zaloUserId String
+  direction  String
+  type       String
+  content    String?
+  rawPayload String?
+  receivedAt DateTime @default(now())
 }
-
-// ============================================================
-// PHẦN 7: LIÊN KẾT NHÂN VIÊN ↔ ZALO ID (Tự đăng ký)
-// ============================================================
 
 model StaffZaloLink {
   id           Int      @id @default(autoincrement())
-  staffNameRaw String            // Tên gốc nhân viên nhập vào form
-  staffName    String            // Tên chuẩn hóa (lowercase) — để khớp với Excel
-  zaloUserId   String   @unique  // Zalo User ID đã liên kết
-  department   String?           // Phòng ban (tùy chọn)
-  phone        String?           // SĐT bổ sung (tùy chọn)
+  staffNameRaw String
+  staffName    String
+  zaloUserId   String   @unique
+  department   String?
+  phone        String?
   registeredAt DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
-// ============================================================
-// PHẦN 8: KHO TRI THỨC AI (Knowledge Base)
-// ============================================================
-
 model AiKnowledge {
   id                Int      @id @default(autoincrement())
-  title             String   // Tên tài liệu
-  category          String   // Nhãn chuyên môn (Ví dụ: Tiêm chủng, Dịch tễ)
-  content           String   // Nội dung văn bản
-  sourceUrl         String?  // Link Google Drive (nếu nạp qua link)
-  sourceExt         String?  // Đuôi file gốc (nếu nạp qua link)
-  allowedDepartment String?  // Phòng ban được xem tài liệu này (null hoặc "ALL" cho tất cả cơ quan)
+  title             String
+  category          String
+  content           String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  sourceExt         String?
+  sourceUrl         String?
+  allowedDepartment String?
 }
-
-// ============================================================
-// PHẦN 9: DANH SÁCH API KEY GEMINI (Round-Robin Pool)
-// ============================================================
 
 model GeminiApiKey {
   id          Int      @id @default(autoincrement())
-  label       String   // Tên gợi nhớ (VD: "Key CDC chính", "Key dự phòng 1")
-  apiKey      String   // Giá trị API Key
-  isActive    Boolean  @default(true)  // Có đang kích hoạt không
-  usageTokens Int      @default(0)     // Tổng token đã dùng
-  usageCount  Int      @default(0)     // Số lượt gọi API
+  label       String
+  apiKey      String
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
+  usageCount  Int      @default(0)
+  usageTokens Int      @default(0)
 }
-
-// ============================================================
-// PHẦN 10: DANH SÁCH API KEY GROQ (Round-Robin Pool)
-// ============================================================
 
 model GroqApiKey {
   id          Int      @id @default(autoincrement())
-  label       String   // Tên gợi nhớ
-  apiKey      String   // Giá trị API Key
+  label       String
+  apiKey      String
   isActive    Boolean  @default(true)
-  usageTokens Int      @default(0)
-  usageCount  Int      @default(0)
   createdAt   DateTime @default(now())
+  usageCount  Int      @default(0)
+  usageTokens Int      @default(0)
 }
-
