@@ -13,13 +13,13 @@ export async function GET(req) {
     const search = searchParams.get('search') || '';
     const categoryId = searchParams.get('categoryId') || '';
 
-    const where = { isActive: true };
+    const where = {};
     if (categoryId) where.categoryId = parseInt(categoryId);
     if (search) where.name = { contains: search, mode: 'insensitive' };
 
     const [categories, services] = await Promise.all([
       prisma.serviceCategory.findMany({
-        where: { isActive: true },
+        where: {},
         orderBy: { order: 'asc' },
       }),
       prisma.servicePrice.findMany({

@@ -17,7 +17,8 @@ export async function GET(req) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    const where = { isActive: true };
+    const where = {};
+    // Lọc isActive=true, nhưng vẫn hiển thị nếu cột chưa có dữ liệu (NULL = cũng coi là active)
     if (categoryId) where.categoryId = parseInt(categoryId);
     if (search) where.name = { contains: search, mode: 'insensitive' };
 
@@ -57,6 +58,7 @@ export async function POST(req) {
         note: body.note || null,
         categoryId: parseInt(body.categoryId),
         order: body.order ?? 0,
+        isActive: true,
       },
       include: { category: { select: { id: true, name: true } } },
     });
