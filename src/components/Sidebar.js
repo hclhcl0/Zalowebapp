@@ -7,7 +7,7 @@ import { CDC_LOGO_BASE64 } from "@/lib/logo";
 import { 
   LayoutDashboard, Users, Megaphone, Mail, 
   Newspaper, CalendarDays, AlertTriangle, 
-  Settings, UserCog, LogOut, ChevronRight, Download, BrainCircuit, KeyRound, Tag, Smartphone
+  Settings, UserCog, LogOut, ChevronRight, Download, BrainCircuit, KeyRound, Tag, Smartphone, Phone
 } from "lucide-react";
 
 // Helper to map string/emoji to Lucide icon component
@@ -27,8 +27,9 @@ const IconMapper = ({ iconName, size = 18 }) => {
     case "UserCog": return <UserCog size={size} />;
     case "BrainCircuit": return <BrainCircuit size={size} />;
     case "Smartphone": return <Smartphone size={size} />;
-    default: return <ChevronRight size={size} />; // fallback
+    case "Phone": return <Phone size={size} />;
     case "Tag": return <Tag size={size} />;
+    default: return <ChevronRight size={size} />; // fallback
   }
 };
 
@@ -37,15 +38,27 @@ const menuGroups = [
     title: "Tổng quan",
     items: [
       { icon: "LayoutDashboard", label: "Dashboard", href: "/" },
-      { icon: "Users", label: "Người quan tâm Zalo", href: "/followers" },
-      { icon: "Smartphone", label: "Người dùng Mini App", href: "/miniapp-users" },
-      { icon: "Megaphone", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
-      { icon: "Mail", label: "Gửi tin nội bộ", href: "/salary-email" },
-      { icon: "Tag", label: "Dịch vụ", href: "/services" },
     ],
   },
   {
-    title: "Hệ thống",
+    title: "📣 Zalo OA",
+    items: [
+      { icon: "Users", label: "Người quan tâm OA", href: "/followers" },
+      { icon: "Megaphone", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
+      { icon: "Mail", label: "Gửi Tin Nội Bộ", href: "/salary-email" },
+    ],
+  },
+  {
+    title: "📱 Zalo Mini App",
+    items: [
+      { icon: "Smartphone", label: "Người dùng Mini App", href: "/miniapp-users" },
+      { icon: "Tag", label: "Dịch vụ & Bảng giá", href: "/services" },
+      { icon: "Phone", label: "Tổng đài tư vấn", href: "/miniapp-hotlines" },
+      { icon: "CalendarDays", label: "Lịch làm việc", href: "/miniapp-schedules" },
+    ],
+  },
+  {
+    title: "⚙️ Hệ thống",
     items: [
       { icon: "Settings", label: "Cài đặt & Zalo API", href: "/settings" },
       { icon: "BrainCircuit", label: "Kho tri thức AI", href: "/ai-knowledge" },
@@ -53,6 +66,7 @@ const menuGroups = [
     ],
   },
 ];
+
 
 export default function Sidebar() {
   const pathname = usePathname();
