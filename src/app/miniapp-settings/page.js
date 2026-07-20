@@ -5,18 +5,18 @@ import BannerListEditor from "../settings/BannerListEditor";
 import FooterInfoEditor from "../settings/FooterInfoEditor";
 
 const MINIAPP_FIELDS = [
-  { key: "mini_app_primary_color", label: "Màu chủ đạo (Hex)", type: "text", placeholder: "VD: #1890ff" },
-  { key: "mini_app_primary_light", label: "Màu chủ đạo nhạt (Hex)", type: "text", placeholder: "VD: #40a9ff" },
-  { key: "mini_app_primary_dark", label: "Màu chủ đạo đậm (Hex)", type: "text", placeholder: "VD: #096dd9" },
+  { key: "mini_app_primary_color", label: "Màu chủ đạo (Hex)", type: "color", placeholder: "VD: #1890ff" },
+  { key: "mini_app_primary_light", label: "Màu chủ đạo nhạt (Hex)", type: "color", placeholder: "VD: #40a9ff" },
+  { key: "mini_app_primary_dark", label: "Màu chủ đạo đậm (Hex)", type: "color", placeholder: "VD: #096dd9" },
+  { key: "mini_app_header_color", label: "Màu chữ thanh tiêu đề (Hex)", type: "color", placeholder: "Mặc định: #00a651" },
+  { key: "mini_app_footer_bg", label: "Màu nền Footer (Hex)", type: "color", placeholder: "Mặc định: #ffffff" },
   { key: "mini_app_banner_effect", label: "Hiệu ứng chuyển slide", type: "select", options: ["slide", "fade", "coverflow"], placeholder: "Mặc định: slide" },
   { key: "mini_app_banner_ratio", label: "Tỷ lệ khung hình (Slide Ratio)", type: "select", options: ["16/9", "21/9", "2/1", "1/1"], placeholder: "Mặc định: 16/9" },
   { key: "mini_app_banner_delay", label: "Tự động lướt (giây)", type: "number", placeholder: "Nhập số giây. VD: 3 (nhập 0 để tắt)" },
-  { key: "mini_app_header_bg", label: "Hình nền thanh tiêu đề (URL)", type: "text", placeholder: "VD: https://domain.com/bg.png" },
-  { key: "mini_app_header_color", label: "Màu chữ thanh tiêu đề (Hex)", type: "text", placeholder: "Mặc định: #00a651" },
-  { key: "mini_app_banners", label: "Banners Slide Đầu Trang", type: "banner_list" },
-  { key: "mini_app_mid_banners", label: "Banners Xen Kẽ Chuyên Mục", type: "banner_list" },
-  { key: "mini_app_footer_bg", label: "Màu nền Footer (Hex)", type: "text", placeholder: "Mặc định: #ffffff" },
-  { key: "mini_app_footer_info", label: "Thông tin liên hệ chân trang (Footer)", type: "footer_info_list" },
+  { key: "mini_app_header_bg", label: "Hình nền thanh tiêu đề (URL)", type: "image", placeholder: "VD: https://domain.com/bg.png", fullWidth: true },
+  { key: "mini_app_banners", label: "Banners Slide Đầu Trang", type: "banner_list", fullWidth: true },
+  { key: "mini_app_mid_banners", label: "Banners Xen Kẽ Chuyên Mục", type: "banner_list", fullWidth: true },
+  { key: "mini_app_footer_info", label: "Thông tin liên hệ chân trang (Footer)", type: "footer_info_list", fullWidth: true },
 ];
 
 export default function MiniAppSettingsPage() {
@@ -102,9 +102,19 @@ export default function MiniAppSettingsPage() {
       </div>
 
       <form onSubmit={handleSave} className="card" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           {MINIAPP_FIELDS.map((field) => (
-            <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '24px' }}>
+            <div 
+              key={field.key} 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '8px', 
+                gridColumn: field.fullWidth ? '1 / -1' : 'auto',
+                borderBottom: field.fullWidth ? '1px solid var(--border)' : 'none', 
+                paddingBottom: field.fullWidth ? '24px' : '0' 
+              }}
+            >
               <label className="form-label">{field.label}</label>
               <div style={{ width: '100%' }}>
                 {field.type === "select" ? (
@@ -129,6 +139,59 @@ export default function MiniAppSettingsPage() {
                     value={values[field.key]} 
                     onChange={(val) => handleChange(field.key, val)} 
                   />
+                ) : field.type === "color" ? (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input 
+                      type="color"
+                      value={values[field.key] || "#ffffff"}
+                      onChange={(e) => handleChange(field.key, e.target.value)}
+                      style={{ width: '40px', height: '40px', padding: '0', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer' }}
+                    />
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder={field.placeholder}
+                      value={values[field.key] || ""}
+                      onChange={(e) => handleChange(field.key, e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                ) : field.type === "image" ? (
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder={field.placeholder}
+                      value={values[field.key] || ""}
+                      onChange={(e) => handleChange(field.key, e.target.value)}
+                      style={{ flex: 1 }}
+                    />
+                    <label className="btn btn-outline" style={{ cursor: "pointer", display: "flex", alignItems: "center", whiteSpace: "nowrap" }}>
+                      Tải lên
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: "none" }} 
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          try {
+                            const res = await fetch("/api/upload", { method: "POST", body: formData });
+                            const data = await res.json();
+                            if (data.success) {
+                              handleChange(field.key, data.url);
+                            } else {
+                              alert("Lỗi tải ảnh: " + data.error);
+                            }
+                          } catch (err) {
+                            alert("Lỗi kết nối.");
+                          }
+                        }} 
+                      />
+                    </label>
+                  </div>
                 ) : (
                   <input
                     type={field.type}

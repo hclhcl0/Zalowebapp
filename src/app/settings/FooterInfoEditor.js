@@ -61,7 +61,7 @@ export default function FooterInfoEditor({ value, onChange }) {
               <select
                 value={item.type || 'text'}
                 onChange={(e) => handleUpdate(index, 'type', e.target.value)}
-                className="input-select"
+                className="form-input"
                 style={{ width: '120px' }}
               >
                 <option value="text">Văn bản</option>
@@ -74,7 +74,7 @@ export default function FooterInfoEditor({ value, onChange }) {
               <input
                 type="text"
                 placeholder="Tiêu đề (VD: Địa chỉ, Hotline)"
-                className="input-field"
+                className="form-input"
                 value={item.label}
                 onChange={(e) => handleUpdate(index, 'label', e.target.value)}
                 style={{ flex: 1 }}
@@ -84,7 +84,7 @@ export default function FooterInfoEditor({ value, onChange }) {
             <input
               type="text"
               placeholder={item.type === 'link' ? "Nhập link (https://...)" : "Nhập nội dung hiển thị"}
-              className="input-field"
+              className="form-input"
               value={item.value}
               onChange={(e) => handleUpdate(index, 'value', e.target.value)}
               style={{ width: '100%' }}
@@ -93,24 +93,24 @@ export default function FooterInfoEditor({ value, onChange }) {
 
           <button
             type="button"
-            className="btn-danger"
-            style={{ padding: '8px' }}
+            className="btn btn-outline"
+            style={{ padding: '8px', color: 'var(--danger)', borderColor: 'var(--danger)' }}
             onClick={() => handleRemove(index)}
             title="Xóa trường này"
           >
-            <Trash2 size={20} />
+            <Trash2 size={18} />
           </button>
         </div>
       ))}
       
-      <button
-        type="button"
-        className="btn-secondary"
-        style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px' }}
+      <button 
+        type="button" 
         onClick={handleAdd}
+        className="btn btn-outline"
+        style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}
       >
-        <Plus size={20} />
-        Thêm trường thông tin
+        <Plus size={18} />
+        Thêm dòng thông tin
       </button>
     </div>
   );
