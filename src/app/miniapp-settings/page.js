@@ -82,36 +82,37 @@ export default function MiniAppSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="spinner"></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div className="spinner" style={{ width: '30px', height: '30px' }}></div>
       </div>
     );
   }
 
   return (
-    <main className="max-w-4xl mx-auto p-4 md:p-8 animate-fade-in pb-20">
-      <div className="mb-8 flex items-center justify-between">
+    <main style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 16px', paddingBottom: '80px', animation: 'fadeIn 0.3s ease' }}>
+      <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span>🎨</span> Cấu hình Zalo Mini App
           </h1>
-          <p className="text-[var(--text-muted)]">
+          <p style={{ color: 'var(--text-muted)' }}>
             Tùy chỉnh giao diện, màu sắc và nội dung tĩnh cho Zalo Mini App hiển thị với người dân.
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="card p-6">
-        <div className="flex flex-col gap-6">
+      <form onSubmit={handleSave} className="card" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {MINIAPP_FIELDS.map((field) => (
-            <div key={field.key} className="flex flex-col gap-2 border-b border-[var(--border)] pb-6 last:border-0 last:pb-0">
-              <label className="font-semibold text-[var(--text)]">{field.label}</label>
-              <div className="w-full">
+            <div key={field.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '24px' }}>
+              <label className="form-label">{field.label}</label>
+              <div style={{ width: '100%' }}>
                 {field.type === "select" ? (
                   <select
-                    className="input-select w-full"
+                    className="form-input"
                     value={values[field.key] || ""}
                     onChange={(e) => handleChange(field.key, e.target.value)}
+                    style={{ width: '100%' }}
                   >
                     <option value="">{field.placeholder || "Chọn..."}</option>
                     {field.options?.map((opt) => (
@@ -131,10 +132,11 @@ export default function MiniAppSettingsPage() {
                 ) : (
                   <input
                     type={field.type}
-                    className="input-field w-full"
+                    className="form-input"
                     placeholder={field.placeholder}
                     value={values[field.key] || ""}
                     onChange={(e) => handleChange(field.key, e.target.value)}
+                    style={{ width: '100%' }}
                   />
                 )}
               </div>
@@ -142,15 +144,19 @@ export default function MiniAppSettingsPage() {
           ))}
         </div>
         
-        <div className="mt-8 flex justify-end sticky bottom-4">
-          <button type="submit" disabled={saving} className="btn-primary shadow-lg" style={{ minWidth: '150px' }}>
-            {saving ? <div className="spinner" style={{ width: '20px', height: '20px', margin: '0 auto' }}></div> : "Lưu cấu hình"}
+        <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end', position: 'sticky', bottom: '16px', zIndex: 10 }}>
+          <button type="submit" disabled={saving} className="btn btn-primary" style={{ minWidth: '150px', boxShadow: 'var(--shadow-lg)' }}>
+            {saving ? <div className="spinner" style={{ width: '20px', height: '20px', margin: '0 auto', borderColor: '#fff', borderTopColor: 'transparent' }}></div> : "Lưu cấu hình"}
           </button>
         </div>
       </form>
 
       {toast && (
-        <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl text-white font-medium z-50 animate-slide-up ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
+        <div style={{
+          position: 'fixed', bottom: '16px', right: '16px', padding: '12px 24px', borderRadius: 'var(--radius)', 
+          boxShadow: 'var(--shadow-lg)', color: '#fff', fontWeight: 500, zIndex: 50,
+          background: toast.type === 'error' ? 'var(--danger)' : 'var(--success)'
+        }}>
           {toast.msg}
         </div>
       )}
