@@ -51,6 +51,7 @@ const menuGroups = [
   {
     title: "📱 Zalo Mini App",
     items: [
+      { icon: "MonitorSmartphone", label: "Cấu hình Mini App", href: "/miniapp-settings" },
       { icon: "Smartphone", label: "Người dùng Mini App", href: "/miniapp-users" },
       { icon: "Tag", label: "Dịch vụ & Bảng giá", href: "/services" },
       { icon: "Phone", label: "Tổng đài tư vấn", href: "/miniapp-hotlines" },

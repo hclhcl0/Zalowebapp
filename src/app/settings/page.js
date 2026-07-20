@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Plus, Trash2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import WebcqCategoriesPanel from "./WebcqCategoriesPanel";
 import BannerListEditor from "./BannerListEditor";
+import FooterInfoEditor from "./FooterInfoEditor";
 import { HotlinesPanel, SchedulesPanel } from "./HotlinesSchedulesPanel";
 
 // Các nhóm cài đặt
@@ -115,22 +116,6 @@ const SETTING_GROUPS = [
     fields: [
       { key: "drive_folder_id", label: "ID Thư mục Google Drive", type: "text", placeholder: "VD: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs (lấy từ URL folder)" },
       { key: "google_api_key",  label: "Google API Key — dùng khi folder Công khai (Anyone with link)", type: "password", secret: true, placeholder: "••••••••••••••••" },
-    ],
-  },
-  {
-    id: "mini_app",
-    icon: "🎨",
-    title: "Cấu hình Zalo Mini App",
-    desc: "Tùy chỉnh giao diện và màu sắc cho Zalo Mini App hiển thị với người dân.",
-    fields: [
-      { key: "mini_app_primary_color", label: "Màu chủ đạo (Hex)", type: "text", placeholder: "VD: #1890ff" },
-      { key: "mini_app_primary_light", label: "Màu chủ đạo nhạt (Hex)", type: "text", placeholder: "VD: #40a9ff" },
-      { key: "mini_app_primary_dark", label: "Màu chủ đạo đậm (Hex)", type: "text", placeholder: "VD: #096dd9" },
-      { key: "mini_app_banner_effect", label: "Hiệu ứng chuyển slide", type: "select", options: ["slide", "fade", "coverflow"], placeholder: "Mặc định: slide" },
-      { key: "mini_app_banner_ratio", label: "Tỷ lệ khung hình (Slide Ratio)", type: "select", options: ["16/9", "21/9", "2/1", "1/1"], placeholder: "Mặc định: 16/9" },
-      { key: "mini_app_banner_delay", label: "Tự động lướt (giây)", type: "number", placeholder: "Nhập số giây. VD: 3 (nhập 0 để tắt)" },
-      { key: "mini_app_banners", label: "Banners Slide Đầu Trang", type: "banner_list" },
-      { key: "mini_app_mid_banners", label: "Banners Xen Kẽ Chuyên Mục", type: "banner_list" },
     ],
   },
 ];
