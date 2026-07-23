@@ -339,5 +339,25 @@ for (const sql of statements) {
   }
 }
 
-await prisma.$disconnect();
 console.log(`✅ DB Sync xong: ${ok} thành công, ${fail} lỗi`);
+
+// ─── Seed cấu hình Webhook Payload CMS → Zalo OA ───────────────────────────
+const webhookConfigs = [
+  { key: 'payload_webhook_secret', value: 'cdc-webhook-secret-2025', label: 'Webhook Secret tu Payload CMS' },
+  { key: 'payload_cms_url', value: 'https://ecdc.vnos.org', label: 'URL goc Payload CMS' },
+  { key: 'payload_article_url_pattern', value: 'https://ecdc.vnos.org/bai-viet/{slug}', label: 'URL pattern bai viet CMS' },
+];
+for (const cfg of webhookConfigs) {
+  try {
+    await prisma.systemConfig.upsert({
+      where: { key: cfg.key },
+      update: { label: cfg.label },   // Không ghi đè value nếu đã tồn tại (tránh reset sau khi admin đổi)
+      create: { key: cfg.key, value: cfg.value, label: cfg.label },
+    });
+  } catch (e) {
+    // Bảng chưa tồn tại hoặc lỗi khác — bỏ qua
+  }
+}
+// ────────────────────────────────────────────────────────────────────────────
+
+await prisma.$disconnect();
