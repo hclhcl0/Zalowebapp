@@ -24,11 +24,19 @@ export async function POST(request) {
     const body = await request.json();
     const { title, slug, description, htmlContent, imageUrl, webhookSecret } = body;
 
-    // 1. Xác thực webhook secret
-    const secretConfig = await prisma.systemConfig.findUnique({
-      where: { key: "payload_webhook_secret" },
-    });
-    if (!secretConfig?.value || secretConfig.value !== webhookSecret) {
+    // 1. Xác thực webhook secret — đọc từ env var (ưu tiên) hoặc DB
+    const envSecret = process.env.ZALO_ADMIN_WEBHOOK_SECRET?.trim();
+    let expectedSecret = envSecret;
+
+    if (!expectedSecret) {
+      // Fallback: đọc từ DB nếu chưa có env var
+      const secretConfig = await prisma.systemConfig.findUnique({
+        where: { key: "payload_webhook_secret" },
+      });
+      expectedSecret = secretConfig?.value;
+    }
+
+    if (!expectedSecret || expectedSecret !== webhookSecret) {
       console.warn("[Webhook] Unauthorized: invalid webhook secret");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
