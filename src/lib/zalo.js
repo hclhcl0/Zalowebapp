@@ -577,10 +577,12 @@ export async function createArticleToZalo(articleData) {
     title: articleData.title?.substring(0, 150) || "Bài viết",
     description: description?.substring(0, 300) || "",
     author: articleData.author || "CDC Đà Nẵng",
-    cover: {
-      photo_url: articleData.coverUrl || "",
-      status: articleData.coverUrl ? "show" : "hide",
-    },
+    ...(articleData.coverUrl ? {
+      cover: {
+        photo_url: articleData.coverUrl,
+        status: "show",
+      }
+    } : {}),
     body,
     status: "show",
   };
