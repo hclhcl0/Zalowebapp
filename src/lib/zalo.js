@@ -495,44 +495,175 @@ export async function refreshZaloAccessToken() {
   return data;
 }
 
+// ============================================================
+// CHUYỂN HTML SANG ZALO ARTICLE BODY BLOCKS
+// Zalo chỉ hỗ trợ: <b>, <i>, <br>, <a>, <ul>, <ol>, <li>, <p>
+// ============================================================
+export function htmlToZaloBody(html) {
+  if (!html || typeof html !== "string") return [{ type: "text", content: "" }];
+
+  // Tách theo thẻ <img> để xen kẽ text và banner
+  const parts = html.split(/(<img[^>]+src=["']([^"']+)["'][^>]*\/?>)/gi);
+  const body = [];
+
+  let buffer = "";
+  for (const part of parts) {
+    const imgMatch = part.match(/^<img[^>]+src=["']([^"']+)["']/i);
+    if (imgMatch) {
+      // Flush buffer text trước
+      if (buffer.trim()) {
+        body.push({ type: "text", content: cleanHtmlForZalo(buffer) });
+        buffer = "";
+      }
+      // Thêm block banner (Zalo dùng photo_url, không phải imageid)
+      body.push({ type: "text", content: `<a href="${imgMatch[1]}">[Xem ảnh]</a>` });
+    } else {
+      buffer += part;
+    }
+  }
+
+  // Flush phần text cuối
+  if (buffer.trim()) {
+    body.push({ type: "text", content: cleanHtmlForZalo(buffer) });
+  }
+
+  return body.length > 0 ? body : [{ type: "text", content: cleanHtmlForZalo(html) }];
+}
+
+// Làm sạch HTML: chỉ giữ các thẻ Zalo hỗ trợ, strip thẻ không hợp lệ
+function cleanHtmlForZalo(html) {
+  if (!html) return "";
+  // Xóa script/style
+  let clean = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+                  .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+  // Chuyển heading -> <b>
+  clean = clean.replace(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi, "<b>$1</b><br>");
+  // Giữ lại các thẻ Zalo cho phép
+  const allowed = /^(b|i|br|a|ul|ol|li|p|strong|em)$/i;
+  clean = clean.replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (match, tag) => {
+    if (allowed.test(tag)) return match;
+    if (tag.toLowerCase() === "strong") return match.replace(/strong/gi, "b");
+    if (tag.toLowerCase() === "em") return match.replace(/em/gi, "i");
+    return ""; // Strip thẻ không hợp lệ
+  });
+  // Decode HTML entities
+  clean = clean.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+  // Rút gọn nhiều dòng trống liên tiếp
+  clean = clean.replace(/(\s*<br\s*\/?>\s*){3,}/gi, "<br><br>");
+  return clean.trim();
+}
+
 // Tạo bài viết lên Zalo OA Media Store
 export async function createArticleToZalo(articleData) {
   const token = await getAccessToken();
   if (!token) throw new Error("Missing Zalo Access Token");
 
-  const url = `https://openapi.zalo.me/v2.0/article/create?access_token=${token}`;
+  const url = `https://openapi.zalo.me/v2.0/article/create`;
+
+  // Tạo description từ content nếu không có
+  let description = articleData.description || "";
+  if (!description && articleData.htmlContent) {
+    // Strip HTML để lấy text thuần
+    description = articleData.htmlContent.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().substring(0, 200);
+  }
+
+  // Tạo body blocks từ HTML content
+  const body = articleData.htmlContent
+    ? htmlToZaloBody(articleData.htmlContent)
+    : [{ type: "text", content: articleData.content || "" }];
 
   const payload = {
     type: "normal",
-    title: articleData.title,
-    description: articleData.summary || articleData.content.substring(0, 150) + "...",
+    title: articleData.title?.substring(0, 150) || "Bài viết",
+    description: description?.substring(0, 300) || "",
     author: articleData.author || "CDC Đà Nẵng",
     cover: {
-      photo_url: articleData.coverUrl,
-      status: "show"
+      photo_url: articleData.coverUrl || "",
+      status: articleData.coverUrl ? "show" : "hide",
     },
-    body: [
-      {
-        type: "text",
-        content: articleData.content
-      }
-    ],
-    status: "show"
+    body,
+    status: "show",
   };
 
   const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      access_token: token,
     },
     body: JSON.stringify(payload),
   });
 
   const data = await res.json();
-  if (data.error) {
-    throw new Error(`Zalo API Error: ${data.message} (Code: ${data.error})`);
+  console.log("[Zalo Article] Create response:", JSON.stringify(data));
+
+  if (data.error !== 0) {
+    throw new Error(`Zalo Article API Error: ${data.message} (Code: ${data.error})`);
   }
 
   // Zalo trả về token tiến trình tạo bài viết (data.data.token)
   return data.data;
+}
+
+// ============================================================
+// KIỂM TRA TRẠNG THÁI BÀI VIẾT ZALO OA (Polling)
+// status: 1=published, 2=processing, 3=failed
+// ============================================================
+export async function getZaloArticleStatus(articleToken) {
+  const token = await getAccessToken();
+  const res = await fetch(
+    `https://openapi.zalo.me/v2.0/article/getslice?data=${encodeURIComponent(JSON.stringify({ token: articleToken }))}`,
+    { headers: { access_token: token } }
+  );
+  const data = await res.json();
+  console.log("[Zalo Article] Status response:", JSON.stringify(data));
+  return data;
+}
+
+// ============================================================
+// ĐĂNG BÀI VIẾT VÀ CHỜ TRẠNG THÁI PUBLISHED (với timeout)
+// ============================================================
+export async function publishZaloArticleAndWait(articleData, maxWaitMs = 30000) {
+  // 1. Tạo bài
+  const result = await createArticleToZalo(articleData);
+  const articleToken = result?.token;
+  if (!articleToken) throw new Error("Không nhận được article token từ Zalo");
+
+  const articleId = result?.article_id;
+  // Zalo trả về URL chuẩn dạng: https://zalo.me/a/<article_id>
+  const articleUrl = articleId ? `https://zalo.me/a/${articleId}` : null;
+
+  console.log(`[Zalo Article] Token: ${articleToken}, ID: ${articleId}, URL: ${articleUrl}`);
+
+  // Nếu đã có articleId và URL thì trả về luôn
+  if (articleUrl) {
+    return { token: articleToken, articleId, articleUrl };
+  }
+
+  // 2. Poll status nếu chưa có URL
+  const startTime = Date.now();
+  const pollInterval = 3000;
+
+  while (Date.now() - startTime < maxWaitMs) {
+    await new Promise((r) => setTimeout(r, pollInterval));
+    try {
+      const statusData = await getZaloArticleStatus(articleToken);
+      if (statusData?.error === 0 && statusData?.data) {
+        const items = statusData.data.datas || [];
+        const article = items.find((a) => a.token === articleToken) || items[0];
+        if (article) {
+          const url = article.url || (article.article_id ? `https://zalo.me/a/${article.article_id}` : null);
+          if (url) {
+            return { token: articleToken, articleId: article.article_id, articleUrl: url };
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[Zalo Article] Poll error:", e.message);
+    }
+  }
+
+  // Timeout: trả về token để còn dùng
+  console.warn("[Zalo Article] Timeout chờ URL, dùng token làm định danh");
+  return { token: articleToken, articleId: null, articleUrl: null };
 }
