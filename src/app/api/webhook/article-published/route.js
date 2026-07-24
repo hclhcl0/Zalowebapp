@@ -72,13 +72,13 @@ async function processArticleSync({ title, slug, description, htmlContent, image
 
   // Upload ảnh lên Zalo Media Store để đảm bảo Zalo tải được
   // (CMS media URL là nội bộ, Zalo server không truy cập trực tiếp được)
+  let coverAttachmentId = null;
   if (resolvedImageUrl) {
     try {
       console.log(`[Webhook] Đang upload ảnh lên Zalo: ${resolvedImageUrl}`);
       const uploaded = await uploadImageToZalo(resolvedImageUrl);
-      // Dùng URL Zalo trả về (guaranteed accessible by Zalo)
-      resolvedImageUrl = uploaded.imageUrl || resolvedImageUrl;
-      console.log(`[Webhook] Upload ảnh Zalo OK: ${resolvedImageUrl}`);
+      coverAttachmentId = uploaded.imageId; // Dùng attachment_id cho cover
+      console.log(`[Webhook] Upload ảnh Zalo OK: attachment_id=${coverAttachmentId}`);
     } catch (uploadErr) {
       console.warn(`[Webhook] Upload ảnh lên Zalo thất bại: ${uploadErr.message} — dùng URL gốc`);
     }
@@ -96,11 +96,13 @@ async function processArticleSync({ title, slug, description, htmlContent, image
       description: description || "",
       htmlContent: htmlContent || "",
       coverUrl: resolvedImageUrl,
+      coverAttachmentId, // Ưu tiên dùng attachment_id nếu upload thành công
       author: "CDC Đà Nẵng",
     }, 20000);
     zaloArticleUrl = result.articleUrl;
     zaloArticleId = result.articleId;
     console.log(`[Webhook] Zalo article: ${zaloArticleUrl || "no URL"}`);
+
   } catch (err) {
     articleCreateError = err.message;
     console.error("[Webhook] Lỗi tạo bài Zalo OA:", err.message);

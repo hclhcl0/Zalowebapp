@@ -626,7 +626,10 @@ export async function createArticleToZalo(articleData) {
     author: articleData.author || "CDC Đà Nẵng",
     cover: {
       cover_type: "photo",
-      photo_url: articleData.coverUrl || "https://developers.zalo.me/web/static/zalo.png",
+      ...(articleData.coverAttachmentId
+        ? { attachment_id: articleData.coverAttachmentId }
+        : { photo_url: articleData.coverUrl || "https://developers.zalo.me/web/static/zalo.png" }
+      ),
       status: "show",
     },
     body,
@@ -660,7 +663,7 @@ export async function createArticleToZalo(articleData) {
 export async function getZaloArticleStatus(articleToken) {
   const token = await getAccessToken();
   const res = await fetch(
-    `https://openapi.zalo.me/v2.0/article/getslice?data=${encodeURIComponent(JSON.stringify({ token: articleToken }))}`,
+    `https://openapi.zalo.me/v2.0/article/getslice?data=${encodeURIComponent(JSON.stringify({ token: articleToken, type: "normal" }))}`,
     { headers: { access_token: token } }
   );
   const data = await res.json();
