@@ -22,12 +22,11 @@ async function processArticleSync({ title, slug, description, htmlContent, image
   let resolvedImageUrl = imageUrl || "";
   if (resolvedImageUrl.startsWith("/")) resolvedImageUrl = `${cmsUrl}${resolvedImageUrl}`;
 
-  // Zalo OA KHÔNG hỗ trợ ảnh .webp (sẽ báo lỗi -201 invalid cover).
-  // Nếu ảnh là .webp, dùng proxy wsrv.nl để chuyển sang .jpg on-the-fly
+  // Zalo OA KHÔNG hỗ trợ ảnh .webp — bỏ qua ảnh WebP, để Zalo tự dùng cover mặc định
+  // (wsrv.nl proxy không hoạt động vì Zalo CDN không tải được URL proxy từ wsrv.nl)
   if (resolvedImageUrl && resolvedImageUrl.toLowerCase().endsWith(".webp")) {
-    const cleanUrl = resolvedImageUrl.replace(/^https?:\/\//, ""); // wsrv.nl thích URL bỏ scheme
-    resolvedImageUrl = `https://wsrv.nl/?url=${cleanUrl}&output=jpg`;
-    console.log(`[Webhook] Converted WebP to JPG: ${resolvedImageUrl}`);
+    console.log(`[Webhook] Bỏ qua ảnh WebP (Zalo không hỗ trợ): ${resolvedImageUrl}`);
+    resolvedImageUrl = ""; // Để Zalo dùng cover mặc định
   }
 
   // 1. Tạo Bài viết Zalo OA
