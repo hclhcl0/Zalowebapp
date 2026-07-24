@@ -46,6 +46,29 @@ async function processArticleSync({ title, slug, description, htmlContent, image
   // Resolve relative image URL
   let resolvedImageUrl = imageUrl || "";
   if (resolvedImageUrl.startsWith("/")) resolvedImageUrl = `${cmsUrl}${resolvedImageUrl}`;
+  console.log(`[Webhook] imageUrl nhận được: "${imageUrl}" → resolved: "${resolvedImageUrl}"`);
+
+  // Nếu không có imageUrl → tự tìm ảnh từ CMS API
+  if (!resolvedImageUrl && slug) {
+    try {
+      const cmsApiUrl = `${cmsUrl}/api/articles?where[slug][equals]=${encodeURIComponent(slug)}&depth=2&limit=1`;
+      const cmsRes = await fetch(cmsApiUrl);
+      if (cmsRes.ok) {
+        const cmsData = await cmsRes.json();
+        const article = cmsData?.docs?.[0];
+        // Ưu tiên: image field → thumbnailURL → url
+        const imgField = article?.image;
+        if (imgField?.thumbnailURL) {
+          resolvedImageUrl = imgField.thumbnailURL;
+        } else if (imgField?.url) {
+          resolvedImageUrl = imgField.url;
+        }
+        console.log(`[Webhook] Tự tìm ảnh từ CMS: "${resolvedImageUrl}"`);
+      }
+    } catch (cmsErr) {
+      console.warn("[Webhook] Không lấy được ảnh từ CMS:", cmsErr.message);
+    }
+  }
 
   // Upload ảnh lên Zalo Media Store để đảm bảo Zalo tải được
   // (CMS media URL là nội bộ, Zalo server không truy cập trực tiếp được)
@@ -58,7 +81,6 @@ async function processArticleSync({ title, slug, description, htmlContent, image
       console.log(`[Webhook] Upload ảnh Zalo OK: ${resolvedImageUrl}`);
     } catch (uploadErr) {
       console.warn(`[Webhook] Upload ảnh lên Zalo thất bại: ${uploadErr.message} — dùng URL gốc`);
-      // Giữ nguyên resolvedImageUrl, fallback sẽ dùng logo mặc định trong createArticleToZalo
     }
   }
 
