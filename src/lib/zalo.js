@@ -697,12 +697,14 @@ export async function publishZaloArticleAndWait(articleData, maxWaitMs = 30000) 
     try {
       const statusData = await getZaloArticleStatus(articleToken);
       if (statusData?.error === 0 && statusData?.data) {
-        const items = statusData.data.datas || [];
-        const article = items.find((a) => a.token === articleToken) || items[0];
+        const items = statusData.data.medias || statusData.data.datas || [];
+        // Zalo getslice response doesn't include the token, so we match by title,
+        // or just take the first one since it was just created.
+        const article = items.find((a) => a.title === articleData.title) || items[0];
         if (article) {
-          const url = article.url || (article.article_id ? `https://zalo.me/a/${article.article_id}` : null);
+          const url = article.link_view || article.url || (article.id ? `https://zalo.me/a/${article.id}` : null);
           if (url) {
-            return { token: articleToken, articleId: article.article_id, articleUrl: url };
+            return { token: articleToken, articleId: article.id || article.article_id, articleUrl: url };
           }
         }
       }
