@@ -75,7 +75,13 @@ export default function BroadcastPage() {
       actionValue: articleUrl,
       actionSmsContent: "",
     };
-    setListElements((prev) => [...prev, newEl]);
+    setListElements((prev) => {
+      const isFirstEmpty = prev.length === 1 && !prev[0].title && !prev[0].actionValue;
+      if (isFirstEmpty) {
+        return [newEl];
+      }
+      return [...prev, newEl];
+    });
     setIsCmsModalOpen(false);
   };
 
