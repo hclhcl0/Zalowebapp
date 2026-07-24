@@ -54,8 +54,16 @@ async function processArticleSync({ title, slug, description, htmlContent, image
   const broadcastUrl = zaloArticleUrl || websiteArticleUrl;
 
   // 2. Broadcast đến followers
+  // Nếu có BROADCAST_TEST_ZALO_ID → chỉ gửi cho 1 người đó (chế độ test)
+  const testZaloId = process.env.BROADCAST_TEST_ZALO_ID?.trim();
   const allFollowers = await prisma.follower.findMany({ select: { zaloUserId: true } });
-  const userIds = allFollowers.map((f) => f.zaloUserId);
+  const allUserIds = allFollowers.map((f) => f.zaloUserId);
+  const userIds = testZaloId ? [testZaloId] : allUserIds;
+
+  if (testZaloId) {
+    console.log(`[Webhook] CHẾ ĐỘ TEST — chỉ gửi cho 1 người: ${testZaloId}`);
+  }
+
   let successCount = 0, failCount = 0;
 
   if (userIds.length > 0 && broadcastUrl) {
