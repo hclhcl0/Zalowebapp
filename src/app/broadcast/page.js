@@ -113,7 +113,6 @@ export default function BroadcastPage() {
   const [result, setResult] = useState(null);
 
   // Danh sách người quan tâm để chọn thủ công
-  const [followers, setFollowers] = useState([]);
   const [loadingFollowers, setLoadingFollowers] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQ, setSearchQ] = useState("");
@@ -147,16 +146,38 @@ export default function BroadcastPage() {
   };
 
 
+  const [allFollowers, setAllFollowers] = useState([]);
+  
   const fetchFollowers = useCallback(async () => {
     setLoadingFollowers(true);
     try {
-      const res = await fetch(`/api/followers?query=${encodeURIComponent(searchQ)}`);
+      const res = await fetch(`/api/followers?limit=10000`);
       const json = await res.json();
-      if (json.data) setFollowers(json.data);
+      if (json.data) setAllFollowers(json.data);
     } finally {
       setLoadingFollowers(false);
     }
-  }, [searchQ]);
+  }, []);
+
+  // Remove diacritics for search
+  const removeAccents = (str) => {
+    if (!str) return "";
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+      .toLowerCase();
+  };
+
+  const normalizedSearch = removeAccents(searchQ.trim());
+  const followers = allFollowers.filter(f => {
+    if (!normalizedSearch) return true;
+    const nameMatch = removeAccents(f.displayName || f.fullName || "").includes(normalizedSearch);
+    const phoneMatch = removeAccents(f.phone || "").includes(normalizedSearch);
+    const deptMatch = removeAccents(f.department || "").includes(normalizedSearch);
+    return nameMatch || phoneMatch || deptMatch;
+  });
 
   const fetchHistory = async () => {
     setLoadingHistory(true);
