@@ -553,6 +553,53 @@ function cleanHtmlForZalo(html) {
   return clean.trim();
 }
 
+// ============================================================
+// UPLOAD ẢNH LÊN ZALO MEDIA STORE
+// Download ảnh từ URL (kể cả URL nội bộ CMS), upload lên Zalo
+// Trả về { imageId, imageUrl } để dùng làm cover bài viết
+// ============================================================
+export async function uploadImageToZalo(imageUrl) {
+  const token = await getAccessToken();
+  if (!token) throw new Error("Missing Zalo Access Token");
+
+  // 1. Download ảnh
+  const res = await fetch(imageUrl);
+  if (!res.ok) throw new Error(`Không tải được ảnh: ${res.status} ${imageUrl}`);
+
+  const contentType = res.headers.get("content-type") || "image/jpeg";
+  const buffer = Buffer.from(await res.arrayBuffer());
+
+  // Xác định extension từ contentType
+  let ext = "jpg";
+  if (contentType.includes("png")) ext = "png";
+  else if (contentType.includes("webp")) ext = "webp";
+  else if (contentType.includes("gif")) ext = "gif";
+
+  const filename = `cover_${Date.now()}.${ext}`;
+  const blob = new Blob([buffer], { type: contentType });
+  const formData = new FormData();
+  formData.append("file", blob, filename);
+
+  // 2. Upload lên Zalo
+  const uploadRes = await fetch("https://openapi.zalo.me/v2.0/oa/upload/image", {
+    method: "POST",
+    headers: { access_token: token },
+    body: formData,
+  });
+
+  const data = await uploadRes.json();
+  console.log("[Zalo Image Upload] Response:", JSON.stringify(data));
+
+  if (data.error !== 0) {
+    throw new Error(`Zalo Image Upload Error: ${data.message} (Code: ${data.error})`);
+  }
+
+  return {
+    imageId: data.data?.attachment_id,
+    imageUrl: data.data?.url,
+  };
+}
+
 // Tạo bài viết lên Zalo OA Media Store
 export async function createArticleToZalo(articleData) {
   const token = await getAccessToken();

@@ -5,7 +5,7 @@
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendListMessage, publishZaloArticleAndWait } from "@/lib/zalo";
+import { sendListMessage, publishZaloArticleAndWait, uploadImageToZalo } from "@/lib/zalo";
 import sharp from "sharp";
 import fs from "fs";
 import path from "path";
@@ -47,12 +47,19 @@ async function processArticleSync({ title, slug, description, htmlContent, image
   let resolvedImageUrl = imageUrl || "";
   if (resolvedImageUrl.startsWith("/")) resolvedImageUrl = `${cmsUrl}${resolvedImageUrl}`;
 
-  // Zalo OA không hỗ trợ WebP → tự convert sang JPG bằng sharp
-  if (resolvedImageUrl && resolvedImageUrl.toLowerCase().endsWith(".webp")) {
-    // Force public URL for Zalo to be able to download the image. Do not use localhost.
-    const adminUrl = process.env.NODE_ENV === "development" ? (process.env.NEXTAUTH_URL || "http://localhost:3000") : "https://zcdc.ksbtdanang.vn";
-    const converted = await convertWebpToJpg(resolvedImageUrl, adminUrl);
-    resolvedImageUrl = converted || ""; // Nếu convert thất bại thì bỏ cover
+  // Upload ảnh lên Zalo Media Store để đảm bảo Zalo tải được
+  // (CMS media URL là nội bộ, Zalo server không truy cập trực tiếp được)
+  if (resolvedImageUrl) {
+    try {
+      console.log(`[Webhook] Đang upload ảnh lên Zalo: ${resolvedImageUrl}`);
+      const uploaded = await uploadImageToZalo(resolvedImageUrl);
+      // Dùng URL Zalo trả về (guaranteed accessible by Zalo)
+      resolvedImageUrl = uploaded.imageUrl || resolvedImageUrl;
+      console.log(`[Webhook] Upload ảnh Zalo OK: ${resolvedImageUrl}`);
+    } catch (uploadErr) {
+      console.warn(`[Webhook] Upload ảnh lên Zalo thất bại: ${uploadErr.message} — dùng URL gốc`);
+      // Giữ nguyên resolvedImageUrl, fallback sẽ dùng logo mặc định trong createArticleToZalo
+    }
   }
 
   // 1. Tạo Bài viết Zalo OA
