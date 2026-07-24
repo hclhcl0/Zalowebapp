@@ -578,6 +578,7 @@ export async function createArticleToZalo(articleData) {
     description: description?.substring(0, 300) || "",
     author: articleData.author || "CDC Đà Nẵng",
     cover: {
+      cover_type: 0,
       photo_url: articleData.coverUrl || "https://zcdc.ksbtdanang.vn/cdc-logo.png",
       status: "show",
     },
