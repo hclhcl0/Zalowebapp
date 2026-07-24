@@ -6,6 +6,31 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendListMessage, publishZaloArticleAndWait } from "@/lib/zalo";
+import sharp from "sharp";
+import fs from "fs";
+import path from "path";
+
+// Convert WebP → JPG và lưu vào /uploads, trả về URL công khai
+async function convertWebpToJpg(webpUrl, baseUrl) {
+  try {
+    const res = await fetch(webpUrl);
+    if (!res.ok) return null;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const jpgBuffer = await sharp(buffer).jpeg({ quality: 85 }).toBuffer();
+
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+    const filename = `cover_${Date.now()}.jpg`;
+    fs.writeFileSync(path.join(uploadDir, filename), jpgBuffer);
+    console.log(`[Webhook] Converted WebP to JPG: /uploads/${filename}`);
+    return `${baseUrl}/uploads/${filename}`;
+  } catch (e) {
+    console.warn("[Webhook] WebP convert thất bại:", e.message);
+    return null;
+  }
+}
+
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +47,11 @@ async function processArticleSync({ title, slug, description, htmlContent, image
   let resolvedImageUrl = imageUrl || "";
   if (resolvedImageUrl.startsWith("/")) resolvedImageUrl = `${cmsUrl}${resolvedImageUrl}`;
 
-  // Zalo OA KHÔNG hỗ trợ ảnh .webp — bỏ qua ảnh WebP, để Zalo tự dùng cover mặc định
-  // (wsrv.nl proxy không hoạt động vì Zalo CDN không tải được URL proxy từ wsrv.nl)
+  // Zalo OA không hỗ trợ WebP → tự convert sang JPG bằng sharp
   if (resolvedImageUrl && resolvedImageUrl.toLowerCase().endsWith(".webp")) {
-    console.log(`[Webhook] Bỏ qua ảnh WebP (Zalo không hỗ trợ): ${resolvedImageUrl}`);
-    resolvedImageUrl = ""; // Để Zalo dùng cover mặc định
+    const adminUrl = process.env.NEXTAUTH_URL?.trim() || "https://zcdc.ksbtdanang.vn";
+    const converted = await convertWebpToJpg(resolvedImageUrl, adminUrl);
+    resolvedImageUrl = converted || ""; // Nếu convert thất bại thì bỏ cover
   }
 
   // 1. Tạo Bài viết Zalo OA
