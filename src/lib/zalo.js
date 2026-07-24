@@ -578,7 +578,7 @@ export async function createArticleToZalo(articleData) {
     description: description?.substring(0, 300) || "",
     author: articleData.author || "CDC Đà Nẵng",
     cover: {
-      cover_type: 1,
+      cover_type: "photo",
       photo_url: articleData.coverUrl || "https://developers.zalo.me/web/static/zalo.png",
       status: "show",
     },
