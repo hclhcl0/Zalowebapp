@@ -70,17 +70,32 @@ async function processArticleSync({ title, slug, description, htmlContent, image
     }
   }
 
-  // Upload ảnh lên Zalo Media Store để đảm bảo Zalo tải được
-  // (CMS media URL là nội bộ, Zalo server không truy cập trực tiếp được)
-  let coverAttachmentId = null;
+  // Download ảnh từ CMS → convert sang JPG → lưu vào public/uploads/ → trả về URL public
+  // (CMS URL nội bộ, nhưng zcdc.ksbtdanang.vn là public — Zalo tải được)
   if (resolvedImageUrl) {
     try {
-      console.log(`[Webhook] Đang upload ảnh lên Zalo: ${resolvedImageUrl}`);
-      const uploaded = await uploadImageToZalo(resolvedImageUrl);
-      coverAttachmentId = uploaded.imageId; // Dùng attachment_id cho cover
-      console.log(`[Webhook] Upload ảnh Zalo OK: attachment_id=${coverAttachmentId}`);
-    } catch (uploadErr) {
-      console.warn(`[Webhook] Upload ảnh lên Zalo thất bại: ${uploadErr.message} — dùng URL gốc`);
+      console.log(`[Webhook] Đang download + convert ảnh: ${resolvedImageUrl}`);
+      const imgRes = await fetch(resolvedImageUrl);
+      if (imgRes.ok) {
+        const buffer = Buffer.from(await imgRes.arrayBuffer());
+        const jpgBuffer = await sharp(buffer).jpeg({ quality: 85 }).toBuffer();
+
+        const uploadDir = path.join(process.cwd(), "public", "uploads");
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+        const filename = `cover_${Date.now()}.jpg`;
+        fs.writeFileSync(path.join(uploadDir, filename), jpgBuffer);
+
+        // Dùng domain public cố định — không phụ thuộc NEXTAUTH_URL
+        resolvedImageUrl = `https://zcdc.ksbtdanang.vn/uploads/${filename}`;
+        console.log(`[Webhook] Ảnh đã convert và lưu: ${resolvedImageUrl}`);
+      } else {
+        console.warn(`[Webhook] Không tải được ảnh (${imgRes.status}), dùng logo CDC mặc định`);
+        resolvedImageUrl = "";
+      }
+    } catch (imgErr) {
+      console.warn(`[Webhook] Lỗi convert ảnh: ${imgErr.message}`);
+      resolvedImageUrl = "";
     }
   }
 
@@ -95,8 +110,7 @@ async function processArticleSync({ title, slug, description, htmlContent, image
       title,
       description: description || "",
       htmlContent: htmlContent || "",
-      coverUrl: resolvedImageUrl,
-      coverAttachmentId, // Ưu tiên dùng attachment_id nếu upload thành công
+      coverUrl: resolvedImageUrl, // URL public tại zcdc.ksbtdanang.vn/uploads/
       author: "CDC Đà Nẵng",
     }, 20000);
     zaloArticleUrl = result.articleUrl;
