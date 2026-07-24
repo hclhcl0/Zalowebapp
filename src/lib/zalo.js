@@ -660,7 +660,7 @@ export async function createArticleToZalo(articleData) {
 export async function getZaloArticleStatus(articleToken) {
   const token = await getAccessToken();
   const res = await fetch(
-    `https://openapi.zalo.me/v2.0/article/getslice?data=${encodeURIComponent(JSON.stringify({ token: articleToken, type: "normal" }))}`,
+    `https://openapi.zalo.me/v2.0/article/getslice?type=normal&data=${encodeURIComponent(JSON.stringify({ token: articleToken }))}`,
     { headers: { access_token: token } }
   );
   const data = await res.json();
