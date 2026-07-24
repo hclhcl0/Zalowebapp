@@ -49,7 +49,8 @@ async function processArticleSync({ title, slug, description, htmlContent, image
 
   // Zalo OA không hỗ trợ WebP → tự convert sang JPG bằng sharp
   if (resolvedImageUrl && resolvedImageUrl.toLowerCase().endsWith(".webp")) {
-    const adminUrl = process.env.NEXTAUTH_URL?.trim() || "https://zcdc.ksbtdanang.vn";
+    // Force public URL for Zalo to be able to download the image. Do not use localhost.
+    const adminUrl = process.env.NODE_ENV === "development" ? (process.env.NEXTAUTH_URL || "http://localhost:3000") : "https://zcdc.ksbtdanang.vn";
     const converted = await convertWebpToJpg(resolvedImageUrl, adminUrl);
     resolvedImageUrl = converted || ""; // Nếu convert thất bại thì bỏ cover
   }

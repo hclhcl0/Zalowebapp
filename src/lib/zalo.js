@@ -579,7 +579,7 @@ export async function createArticleToZalo(articleData) {
     author: articleData.author || "CDC Đà Nẵng",
     cover: {
       cover_type: 0,
-      photo_url: articleData.coverUrl || "https://zcdc.ksbtdanang.vn/cdc-logo.png",
+      photo_url: articleData.coverUrl || "https://developers.zalo.me/web/static/zalo.png",
       status: "show",
     },
     body,
