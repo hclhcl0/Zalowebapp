@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import BannerListEditor from "../settings/BannerListEditor";
 import FooterInfoEditor from "../settings/FooterInfoEditor";
+import WebcqCategoriesPanel from "../settings/WebcqCategoriesPanel";
 
 const MINIAPP_FIELDS = [
   { key: "mini_app_primary_color", label: "Màu chủ đạo (Hex)", type: "color", placeholder: "VD: #1890ff" },
@@ -214,6 +215,9 @@ export default function MiniAppSettingsPage() {
         </div>
       </form>
 
+      <div style={{ marginTop: '32px' }}>
+        <WebcqCategoriesPanel />
+      </div>
       {toast && (
         <div style={{
           position: 'fixed', bottom: '16px', right: '16px', padding: '12px 24px', borderRadius: 'var(--radius)', 
