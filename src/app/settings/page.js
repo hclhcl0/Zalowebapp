@@ -1413,50 +1413,7 @@ function SettingsPageContent() {
                     />
                   </div>
                 )}
-                              </div>
-                              <input
-                                type="text"
-                                className="form-input"
-                                placeholder="Đường dẫn khi click (VD: /news/123 hoặc https://google.com)"
-                                value={banner.link}
-                                onChange={(e) => {
-                                  const newArr = [...arr];
-                                  newArr[index].link = e.target.value;
-                                  handleChange("mini_app_banners", JSON.stringify(newArr));
-                                }}
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              className="btn btn-outline btn-sm"
-                              style={{ color: "var(--danger)", border: "none", height: "fit-content" }}
-                              onClick={() => {
-                                const newArr = arr.filter((_, i) => i !== index);
-                                handleChange("mini_app_banners", JSON.stringify(newArr));
-                              }}
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        ));
-                      })()}
-                    </div>
-                  </div>
-                )}
 
-                {activeGroup.id === "mini_app" && <WebcqCategoriesPanel />}
-
-                {activeGroup.id === "mini_app" && (
-                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: 24, marginTop: 8 }}>
-                    <HotlinesPanel />
-                  </div>
-                )}
-
-                {activeGroup.id === "mini_app" && (
-                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: 24, marginTop: 8 }}>
-                    <SchedulesPanel />
-                  </div>
-                )}
               </div>
             )}
           </div>
