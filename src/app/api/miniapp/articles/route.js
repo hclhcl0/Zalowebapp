@@ -28,7 +28,7 @@ export async function GET(request) {
       "where[_status][equals]": "published",
       "limit": String(limit),
       "page":  String(page),
-      "sort":  "-publishedAt",
+      "sort":  "-createdAt",
       "depth": "1",
     });
 
@@ -43,7 +43,7 @@ export async function GET(request) {
 
     const res = await fetch(`${cmsUrl}/api/articles?${params}`, {
       headers: { "Content-Type": "application/json" },
-      next: { revalidate: 60 }, // cache 60 giây
+      cache: "no-store", // luôn lấy bài mới nhất, không cache
     });
 
     if (!res.ok) {
