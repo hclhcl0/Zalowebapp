@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { Users, UserCheck, Stethoscope, Clock, Megaphone, Mail, UserCog, Settings, Activity, BrainCircuit } from "lucide-react";
+import { Users, UserCheck, Stethoscope, Clock, Megaphone, Mail, UserCog, Settings, Activity, BrainCircuit, Send } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +19,10 @@ function formatRelativeTime(date) {
 
 export default async function Dashboard() {
   const totalFollowers = await prisma.follower.count();
-  const totalStaff = await prisma.follower.count({
-    where: { userType: "staff" }
-  });
+
+  // Cán bộ liên kết: lấy từ bảng StaffZaloLink (chính xác hơn userType)
+  const totalStaff = await prisma.staffZaloLink.count();
+
   const totalCitizens = await prisma.follower.count({
     where: {
       userType: "citizen",
@@ -39,10 +40,30 @@ export default async function Dashboard() {
   // Tổng số lượng tài liệu trong Kho tri thức AI
   const totalAiDocs = await prisma.aiKnowledge.count();
 
-  // 2. Truy vấn 5 tương tác/hoạt động gần đây từ MessageLog
+  // Thống kê broadcast từ MessageLog
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const broadcastToday = await prisma.messageLog.count({
+    where: {
+      type: "broadcast",
+      direction: "outbound",
+      receivedAt: { gte: startOfToday },
+    }
+  });
+  const broadcastThisMonth = await prisma.messageLog.count({
+    where: {
+      type: "broadcast",
+      direction: "outbound",
+      receivedAt: { gte: startOfMonth },
+    }
+  });
+
+  // Truy vấn 10 tương tác/hoạt động gần đây từ MessageLog
   const logs = await prisma.messageLog.findMany({
     orderBy: { receivedAt: "desc" },
-    take: 5,
+    take: 10,
   });
 
   // Tìm nạp thông tin tên Zalo hiển thị tương ứng để thân thiện hơn
@@ -173,6 +194,20 @@ export default async function Dashboard() {
             <BrainCircuit size={24} color="#4338ca" />
           </div>
         </div>
+
+        {/* Card 6: Broadcast stats */}
+        <div className="stat-card">
+          <div className="stat-info">
+            <div className="stat-label">Tin đã gửi tháng này</div>
+            <div className="stat-value">{broadcastThisMonth.toLocaleString("vi-VN")}</div>
+            <div className="stat-change" style={{ color: "var(--success)" }}>
+              Hôm nay: <strong>{broadcastToday}</strong> tin
+            </div>
+          </div>
+          <div className="stat-icon green" style={{ background: "#d1fae5" }}>
+            <Send size={24} color="#059669" />
+          </div>
+        </div>
       </div>
 
       {/* Bottom grid: 60/40 Split */}
@@ -183,7 +218,7 @@ export default async function Dashboard() {
           <div className="card-header">
             <div>
               <div className="card-title">Hoạt động gần đây</div>
-              <div className="card-subtitle">Cập nhật tương tác trực tiếp từ Zalo OA Webhook</div>
+              <div className="card-subtitle">10 tương tác mới nhất từ Zalo OA Webhook</div>
             </div>
             <Link href="/followers" className="btn btn-outline btn-sm">Quản lý người dùng</Link>
           </div>
