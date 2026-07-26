@@ -25,8 +25,22 @@ export async function GET(request) {
 
   if (!code) {
     // Trả về HTML chứa thẻ Meta xác thực Zalo khi Zalo Bot vào kiểm tra (không có code)
+    // Thêm các thẻ title, description để Zalo Debugger không báo lỗi
     return new NextResponse(
-      `<!DOCTYPE html><html><head><meta name="zalo-platform-site-verification" content="GTcnSB_B2MPytA1gfzecS7_abawJaaCMDJas" /></head><body>Zalo Verification</body></html>`,
+      `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Xác thực Zalo - CDC Đà Nẵng</title>
+    <meta name="description" content="Trang xác thực tên miền Zalo OA cho CDC Đà Nẵng" />
+    <meta property="og:title" content="Xác thực Zalo - CDC Đà Nẵng" />
+    <meta property="og:description" content="Trang xác thực tên miền Zalo OA cho CDC Đà Nẵng" />
+    <meta property="og:image" content="https://zcdc.ksbtdanang.vn/cdc-logo.png" />
+    <meta name="zalo-platform-site-verification" content="GTcnSB_B2MPytA1gfzecS7_abawJaaCMDJas" />
+  </head>
+  <body>
+    <h1>Zalo Verification</h1>
+  </body>
+</html>`,
       { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
     );
   }
