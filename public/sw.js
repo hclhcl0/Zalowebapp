@@ -1,9 +1,8 @@
-const CACHE_NAME = 'zcdc-pwa-v1';
+const CACHE_NAME = 'zcdc-pwa-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Just cache basic assets to make it installable, or rely on network
       return cache.addAll(['/']);
     })
   );
@@ -22,11 +21,32 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // A minimal fetch handler to satisfy PWA requirements
-  // We prefer network first, fallback to cache
+  // Chỉ xử lý GET request
   if (event.request.method !== 'GET') return;
-  
+
+  // Bỏ qua các request chrome-extension và non-http
+  const url = event.request.url;
+  if (!url.startsWith('http')) return;
+
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request)
+      .then((response) => {
+        // Nếu có response hợp lệ thì trả về, đồng thời lưu vào cache
+        if (response && response.status === 200 && response.type === 'basic') {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
+        }
+        return response;
+      })
+      .catch(() => {
+        // Khi mất mạng thì thử lấy từ cache
+        return caches.match(event.request).then((cached) => {
+          // Nếu không có cache thì trả về trang offline đơn giản
+          return cached || new Response('Không có kết nối mạng. Vui lòng thử lại.', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+          });
+        });
+      })
   );
 });
