@@ -22,6 +22,11 @@ export const metadata = {
     icon: "/cdc-logo.png",
     shortcut: "/cdc-logo.png",
     apple: "/cdc-logo.png",
+  },
+  verification: {
+    other: {
+      "zalo-platform-site-verification": "GTcnSB_B2MPytA1gfzecS7_abawJaaCMDJas",
+    },
   }
 };
 
