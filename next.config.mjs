@@ -6,9 +6,6 @@ const nextConfig = {
   experimental: {
     proxyClientMaxBodySize: "50mb",
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },

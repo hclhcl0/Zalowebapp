@@ -9,7 +9,8 @@ export async function GET(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const id = parseInt(params.id);
+  const resolvedParams = await params;
+  const id = parseInt(resolvedParams.id);
   const user = await prisma.follower.findUnique({
     where: { id },
     include: {
@@ -32,7 +33,8 @@ export async function PUT(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const id = parseInt(params.id);
+  const resolvedParams = await params;
+  const id = parseInt(resolvedParams.id);
   const body = await req.json();
   const updated = await prisma.follower.update({
     where: { id },

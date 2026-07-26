@@ -36,7 +36,8 @@ export async function GET(request) {
       prisma.systemConfig.findUnique({ where: { key: "zalo_app_secret"      } }),
     ]);
 
-    const siteUrl     = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+    let siteUrl = process.env.NEXTAUTH_URL || "https://zcdc.ksbtdanang.vn";
+    if (siteUrl.endsWith('/')) siteUrl = siteUrl.slice(0, -1);
 
     // Xác minh state để chống CSRF
     if (state !== stateCfg?.value) {
