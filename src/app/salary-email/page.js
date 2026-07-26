@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Upload, Send, Plus, X, CheckCircle, XCircle,
@@ -3203,7 +3203,105 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
 // ==========================================
 // COMPONENT: ZALO STAFF MESSAGE COMPOSE TAB
 // ==========================================
+// ==========================================
+// COMPONENT: LỊCH SỬ GỬI TIN ZALO NỘI BỘ
+// ==========================================
+function ZaloStaffHistoryCard() {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLogs = () => {
+    setLoading(true);
+    fetch("/api/broadcast")
+      .then((r) => r.json())
+      .then((json) => setLogs(json.data || []))
+      .catch(() => setLogs([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchLogs(); }, []);
+
+  const parsePayload = (raw) => {
+    try { return JSON.parse(raw || "{}"); } catch { return {}; }
+  };
+
+  return (
+    <div className="card" style={{ padding: "20px" }}>
+      <div className="card-header" style={{ marginBottom: "16px" }}>
+        <div className="card-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span>📋 Lịch Sử Tin Zalo</span>
+          <button
+            onClick={fetchLogs}
+            title="Làm mới"
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)" }}>
+          <Loader2 className="w-5 h-5 animate-spin" style={{ margin: "0 auto 8px", display: "block" }} />
+          <div style={{ fontSize: "0.8rem" }}>Đang tải...</div>
+        </div>
+      ) : logs.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "24px", color: "var(--text-muted)", fontSize: "0.8rem" }}>
+          Chưa có lịch sử gửi tin Zalo nào
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {logs.slice(0, 10).map((log) => {
+            const payload = parsePayload(log.rawPayload);
+            const titleRaw = (log.content || "").split("\n")[0];
+            const title = titleRaw.replace(/^\[|\]$/g, "") || "Tin nhắn Zalo";
+            const dateStr = new Date(log.receivedAt).toLocaleString("vi-VN", {
+              day: "2-digit", month: "2-digit", year: "numeric",
+              hour: "2-digit", minute: "2-digit"
+            });
+            const success = payload.successCount ?? "?";
+            const total = payload.total ?? "?";
+            const fail = payload.failCount ?? "?";
+            return (
+              <div key={log.id} style={{
+                background: "var(--bg)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius)",
+                padding: "10px 12px",
+                fontSize: "0.78rem"
+              }}>
+                <div style={{
+                  fontWeight: 600,
+                  color: "var(--text)",
+                  marginBottom: "6px",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis"
+                }}>
+                  💬 {title}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--text-muted)" }}>
+                  <span style={{ display: "flex", gap: "8px" }}>
+                    <span style={{ color: "#16a34a" }}>✅ {success}</span>
+                    {Number(fail) > 0 && <span style={{ color: "#dc2626" }}>❌ {fail}</span>}
+                    <span>/ {total}</span>
+                  </span>
+                  <span style={{ fontSize: "0.72rem" }}>{dateStr}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// COMPONENT: GỬI TIN ZALO NỘI BỘ
+// ==========================================
 function ZaloStaffTab({ followers }) {
+
   const [scope, setScope] = useState("all_staff");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
