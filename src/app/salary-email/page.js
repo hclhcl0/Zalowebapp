@@ -3279,6 +3279,7 @@ function ZaloStaffTab({ followers }) {
 
 
   const [result, setResult] = useState(null);
+  const [sending, setSending] = useState(false);
   
   const [selectedIds, setSelectedIds] = useState([]);
   const [searchQ, setSearchQ] = useState("");
