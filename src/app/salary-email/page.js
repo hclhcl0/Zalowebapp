@@ -3215,6 +3215,7 @@ function ZaloStaffTab({ followers }) {
   ]);
 
   const [uploadingIndex, setUploadingIndex] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // CMS Article Picker
   const [isCmsModalOpen, setIsCmsModalOpen] = useState(false);
@@ -3773,7 +3774,17 @@ function ZaloStaffTab({ followers }) {
             )}
 
             {/* Nút gửi */}
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setIsPreviewOpen(true)}
+                disabled={messageType === "text" && !title.trim()}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Eye className="w-4 h-4" /> Xem trước tin
+              </button>
+
               <button
                 type="submit"
                 className="btn btn-primary"
@@ -3795,6 +3806,111 @@ function ZaloStaffTab({ followers }) {
           </div>
         </div>
       </form>
+
+      {/* ===== Modal xem trước Zalo ===== */}
+      {isPreviewOpen && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(15, 23, 42, 0.65)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000, backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "white", borderRadius: "24px",
+            width: "360px", height: "720px", maxHeight: "90vh",
+            display: "flex", flexDirection: "column",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden",
+            position: "relative"
+          }}>
+            {/* Header giả lập Zalo */}
+            <div style={{ background: "var(--primary)", padding: "16px 16px 12px", color: "white", display: "flex", alignItems: "center", gap: "12px" }}>
+              <button onClick={() => setIsPreviewOpen(false)} style={{ background: "none", border: "none", color: "white", cursor: "pointer", display: "flex", padding: 0 }}>
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1 }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "white", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>
+                  OA
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "1rem" }}>CDC Đà Nẵng</div>
+                  <div style={{ fontSize: "0.75rem", opacity: 0.8 }}>Vừa mới truy cập</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Khung chat */}
+            <div style={{ flex: 1, background: "#e2e8f0", padding: "16px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
+              {messageType === "text" ? (
+                <div style={{ display: "flex", gap: "8px", maxWidth: "85%" }}>
+                  <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.7rem", flexShrink: 0 }}>
+                    OA
+                  </div>
+                  <div style={{ background: "white", borderRadius: "8px", overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
+                    <div style={{ padding: "12px" }}>
+                      <div style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: "8px" }}>{title || "Chưa có tiêu đề"}</div>
+                      <div style={{ fontSize: "0.9rem", color: "#333", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                        {content || "Chưa có nội dung"}
+                      </div>
+                    </div>
+                    {url && (
+                      <div style={{ borderTop: "1px solid #eee", padding: "10px", textAlign: "center", color: "var(--primary)", fontWeight: 600, fontSize: "0.9rem", cursor: "pointer" }}>
+                        Xem chi tiết
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.7rem", flexShrink: 0 }}>
+                    OA
+                  </div>
+                  <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "10px", width: "100%", scrollbarWidth: "none" }}>
+                    {listElements.map((el, i) => (
+                      <div key={i} style={{ width: "240px", background: "white", borderRadius: "8px", overflow: "hidden", flexShrink: 0, boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>
+                        <div style={{ width: "100%", height: "135px", background: "#f1f5f9", position: "relative" }}>
+                          {el.imageUrl ? (
+                            <img src={el.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8" }}>
+                              Chưa có ảnh
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ padding: "12px" }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: "4px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                            {el.title || "Chưa có tiêu đề"}
+                          </div>
+                          {el.subtitle && (
+                            <div style={{ fontSize: "0.8rem", color: "#64748b", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                              {el.subtitle}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ borderTop: "1px solid #eee", padding: "10px", textAlign: "center", color: "var(--primary)", fontWeight: 600, fontSize: "0.9rem" }}>
+                          {el.actionType === "oa.open.url" ? "Xem chi tiết" :
+                           el.actionType.includes("phone") ? "Gọi ngay" :
+                           el.actionType.includes("sms") ? "Nhắn tin SMS" :
+                           "Phản hồi"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input giả lập Zalo */}
+            <div style={{ background: "#f8fafc", padding: "12px 16px", borderTop: "1px solid var(--border)", display: "flex", gap: "12px", alignItems: "center" }}>
+              <div style={{ flex: 1, height: "36px", background: "white", borderRadius: "18px", border: "1px solid var(--border)", display: "flex", alignItems: "center", padding: "0 12px", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                Nhập tin nhắn...
+              </div>
+              <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Send className="w-4 h-4" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== Modal chọn bài từ Website CMS ===== */}
       {isCmsModalOpen && (
