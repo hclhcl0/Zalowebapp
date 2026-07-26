@@ -34,7 +34,9 @@ export async function GET(request) {
     <meta name="description" content="Trang xác thực tên miền Zalo OA cho CDC Đà Nẵng" />
     <meta property="og:title" content="Xác thực Zalo - CDC Đà Nẵng" />
     <meta property="og:description" content="Trang xác thực tên miền Zalo OA cho CDC Đà Nẵng" />
-    <meta property="og:image" content="https://zcdc.ksbtdanang.vn/cdc-logo.png" />
+    <meta property="og:image" content="https://cdcqn.gov.vn/wp-content/uploads/2022/06/logo-CDC-e1654396742869.png" />
+    <meta property="og:image:width" content="200" />
+    <meta property="og:image:height" content="200" />
     <meta name="zalo-platform-site-verification" content="GTcnSB_B2MPytA1gfzecS7_abawJaaCMDJas" />
   </head>
   <body>
