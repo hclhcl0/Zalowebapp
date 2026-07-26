@@ -120,6 +120,46 @@ export async function POST() {
         });
         if (matchedStaffLink) {
           userType = "staff";
+        } else if (phone) {
+          // 3. Nếu chưa có StaffZaloLink theo Zalo ID, thử tìm theo SĐT (trường hợp đổi tài khoản Zalo)
+          const normalized = normalizePhone(phone);
+          const phoneMatchedLink = await prisma.staffZaloLink.findFirst({
+            where: { phone: { in: [normalized, phone] } }
+          });
+          if (phoneMatchedLink && phoneMatchedLink.zaloUserId !== zaloUserId) {
+            // Cập nhật zaloUserId mới cho StaffZaloLink (nhân viên đổi Zalo)
+            try {
+              await prisma.staffZaloLink.update({
+                where: { id: phoneMatchedLink.id },
+                data: { zaloUserId }
+              });
+              userType = "staff";
+            } catch {
+              // Bỏ qua nếu zaloUserId đang được dùng bởi link khác
+            }
+          }
+
+          // 4. Tự tạo StaffZaloLink nếu SĐT khớp với Admin và chưa có link nào
+          if (userType === "staff") {
+            const existingLink = await prisma.staffZaloLink.findUnique({ where: { zaloUserId } }).catch(() => null);
+            if (!existingLink) {
+              const adminMatch = await prisma.admin.findFirst({
+                where: { OR: [{ username: normalized }, { username: phone }] }
+              });
+              if (adminMatch) {
+                await prisma.staffZaloLink.upsert({
+                  where: { zaloUserId },
+                  update: { phone: normalized || phone },
+                  create: {
+                    staffNameRaw: adminMatch.name || displayName,
+                    staffName: (adminMatch.name || displayName).toLowerCase().trim(),
+                    zaloUserId,
+                    phone: normalized || phone,
+                  }
+                }).catch(() => {});
+              }
+            }
+          }
         }
 
         const existing = await prisma.follower.findUnique({
