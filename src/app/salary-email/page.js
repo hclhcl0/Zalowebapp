@@ -222,6 +222,7 @@ const normalizeName = (n) => {
 export default function SalaryEmailPage() {
 
 
+  const [activeTab, setActiveTab] = useState("custom");
 
   // === accounts states ===
   const [accounts, setAccounts] = useState([]);
@@ -287,12 +288,110 @@ export default function SalaryEmailPage() {
         </div>
       </div>
 
+      {/* Navigation Tabs */}
+      <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+        {[
+          { id: "custom", label: "📧 Email Tùy Chọn", desc: "Gửi email đính kèm Excel tùy biến" },
+          { id: "zalo", label: "💬 Tin Zalo Nội Bộ", desc: "Soạn tin nhắn gửi tới cán bộ nhân viên" }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "4px",
+              padding: "14px 18px",
+              borderRadius: "var(--radius-lg)",
+              border: `1px solid ${activeTab === tab.id ? "var(--primary)" : "var(--border)"}`,
+              background: activeTab === tab.id ? "var(--primary-light)" : "var(--card-bg)",
+              cursor: "pointer",
+              flex: "1 1 200px",
+              textAlign: "left",
+              transition: "all 0.2s",
+              boxShadow: activeTab === tab.id ? "var(--shadow-md), 0 0 0 3px var(--primary-glow)" : "var(--shadow-sm)"
+            }}
+          >
+            <span style={{ fontSize: "0.95rem", fontWeight: 700, color: activeTab === tab.id ? "var(--primary)" : "var(--text)" }}>
+              {tab.label}
+            </span>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              {tab.desc}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left main contents: active tab component */}
         <div className="lg:col-span-2 space-y-6">
-          <ZaloStaffTab followers={followers} />
+          {activeTab === "custom" ? (
+            <CustomSalaryTab accounts={accounts} batchSize={batchSize} delayMs={delayMs} followers={followers} />
+          ) : (
+            <ZaloStaffTab followers={followers} />
+          )}
         </div>
+
+        {/* Right side config panel: Settings Card or Zalo Staff History Card */}
         <div className="space-y-6">
-          <ZaloStaffHistoryCard />
+          {activeTab === "custom" ? (
+            <div className="card" style={{ padding: "20px" }}>
+              <div className="card-header" style={{ marginBottom: "16px" }}>
+                <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>🔑 Gmail Account Pool</span>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div style={{
+                  background: accounts.length > 0 ? "#f0fdf4" : "#fef2f2",
+                  border: `1px solid ${accounts.length > 0 ? "#bbf7d0" : "#fecaca"}`,
+                  color: accounts.length > 0 ? "#15803d" : "#dc2626",
+                  borderRadius: "var(--radius)",
+                  padding: "12px",
+                  fontSize: "0.8rem",
+                  lineHeight: "1.5",
+                  display: "flex",
+                  gap: "8px"
+                }}>
+                  <AlertCircle className="w-4 h-4 shrink-0 text-current mt-0.5" />
+                  <div>
+                    <strong>{accounts.length > 0 ? `Đang hoạt động (${accounts.length} Gmail)` : "Chưa cấu hình"}</strong>
+                    <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                      {accounts.length > 0 
+                        ? "Tài khoản Gmail được luân phiên tự động để gửi thông tin nội bộ cơ quan."
+                        : "Vui lòng thêm tài khoản Gmail để bắt đầu thực hiện chiến dịch."}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.8rem", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Số lượng Gmail:</span>
+                    <span style={{ fontWeight: 600 }}>{accounts.length}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Số email mỗi đợt:</span>
+                    <span style={{ fontWeight: 600 }}>{batchSize} email</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--text-muted)" }}>Thời gian giãn cách:</span>
+                    <span style={{ fontWeight: 600 }}>{delayMs / 1000} giây</span>
+                  </div>
+                </div>
+
+                <a 
+                  href="/settings?tab=gmail_pool" 
+                  className="btn btn-primary"
+                  style={{ width: "100%", justifyContent: "center", textDecoration: "none", display: "inline-flex", gap: "8px" }}
+                >
+                  <Settings2 className="w-4 h-4" /> Cấu hình Gmail &amp; Tốc độ
+                </a>
+              </div>
+            </div>
+          ) : (
+            <ZaloStaffHistoryCard />
+          )}
         </div>
       </div>
     </div>
