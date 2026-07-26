@@ -24,7 +24,11 @@ export async function GET(request) {
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL("/settings?oauth_error=no_code", process.env.NEXTAUTH_URL ?? "http://localhost:3000"));
+    // Trả về HTML chứa thẻ Meta xác thực Zalo khi Zalo Bot vào kiểm tra (không có code)
+    return new NextResponse(
+      `<!DOCTYPE html><html><head><meta name="zalo-platform-site-verification" content="GTcnSB_B2MPytA1gfzecS7_abawJaaCMDJas" /></head><body>Zalo Verification</body></html>`,
+      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
+    );
   }
 
   try {
