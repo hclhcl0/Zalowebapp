@@ -54,10 +54,8 @@ export async function GET(request) {
       }),
     ]);
 
-    // Lấy callback URL chính xác theo biến môi trường hoặc fallback cứng (đảm bảo không bị proxy sửa đổi port/domain)
-    let siteUrl = process.env.NEXTAUTH_URL || "https://zcdc.ksbtdanang.vn";
-    if (siteUrl.endsWith('/')) siteUrl = siteUrl.slice(0, -1);
-    const redirectUri = `${siteUrl}/api/zalo/callback`;
+    // Hardcode redirect URI để đảm bảo luôn khớp với Zalo portal
+    const redirectUri = "https://zcdc.ksbtdanang.vn/api/zalo/callback";
 
     // Tạo Authorization URL theo đúng chuẩn Zalo OA OAuth
     const authUrl = new URL("https://oauth.zaloapp.com/v4/oa/permission");

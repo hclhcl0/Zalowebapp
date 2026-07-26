@@ -56,15 +56,18 @@ export async function GET(request) {
       prisma.systemConfig.findUnique({ where: { key: "zalo_app_secret"      } }),
     ]);
 
-    let siteUrl = process.env.NEXTAUTH_URL || "https://zcdc.ksbtdanang.vn";
-    if (siteUrl.endsWith('/')) siteUrl = siteUrl.slice(0, -1);
+    let siteUrl = "https://zcdc.ksbtdanang.vn";
+
+    // Hardcode redirect URI để đảm bảo luôn khớp với Zalo portal
+    const redirectUri = "https://zcdc.ksbtdanang.vn/api/zalo/callback";
 
     // Xác minh state để chống CSRF
     if (state !== stateCfg?.value) {
       return NextResponse.redirect(new URL("/settings?oauth_error=invalid_state", siteUrl));
     }
 
-    const redirectUri = `${siteUrl}/api/zalo/callback`;
+
+
 
     // Đổi authorization code lấy Access Token
     const tokenRes = await fetch("https://oauth.zaloapp.com/v4/oa/access_token", {
