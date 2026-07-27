@@ -643,7 +643,7 @@ export async function sendVideoLink(userId, videoName, videoUrl) {
       const formData = new FormData();
       formData.append('file', new Blob([fileBuffer], { type: 'video/mp4' }), path.basename(localPath));
 
-      const uploadRes = await fetch('https://openapi.zalo.me/v2.0/oa/upload/file', {
+      const uploadRes = await fetch('https://openapi.zalo.me/v2.0/oa/upload/video', {
         method: 'POST',
         headers: { access_token: token },
         body: formData,
@@ -665,8 +665,11 @@ export async function sendVideoLink(userId, videoName, videoUrl) {
           recipient: { user_id: userId },
           message: {
             attachment: {
-              type: 'file',
-              payload: { attachment_id: attachmentId },
+              type: 'template',
+              payload: {
+                template_type: 'media',
+                elements: [{ media_type: 'video', attachment_id: attachmentId }],
+              },
             },
           },
         }),
