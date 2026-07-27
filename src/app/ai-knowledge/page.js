@@ -250,7 +250,7 @@ export default function AiKnowledgePage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: "24px" }}>
+      <div className="dashboard-grid">
         {/* Danh sách tài liệu */}
         <div className="card" style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
@@ -258,7 +258,7 @@ export default function AiKnowledgePage() {
               <BrainCircuit className="w-5 h-5 text-primary" />
               Tài liệu đã nạp {totalDocs > 0 ? `(${totalDocs})` : ""}
             </h2>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
               <form onSubmit={handleSearch} style={{ display: "flex", gap: "8px" }}>
                 <input
                   type="text"
@@ -592,7 +592,7 @@ export default function AiKnowledgePage() {
                   />
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Chuyên môn (Tag)</label>
                     <select
