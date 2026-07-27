@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import BottomNav from "./BottomNav";
 
 export default function DashboardShell({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -23,7 +24,11 @@ export default function DashboardShell({ children }) {
     }
   }, []);
 
-  const isNoLayoutPage = pathname === "/login" || pathname === "/register" || pathname === "/patient-register" || pathname.startsWith("/news/view/");
+  const isNoLayoutPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/patient-register" ||
+    pathname.startsWith("/news/view/");
 
   if (isNoLayoutPage) {
     return <main>{children}</main>;
@@ -31,20 +36,23 @@ export default function DashboardShell({ children }) {
 
   return (
     <div className={`app-container ${sidebarOpen ? "sidebar-open" : ""}`}>
-      {/* Overlay to dismiss sidebar on mobile */}
+      {/* Overlay để đóng sidebar khi tap ngoài trên mobile */}
       {sidebarOpen && (
-        <div 
-          className="sidebar-overlay" 
+        <div
+          className="sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      
-      <Sidebar />
-      
+
+      <Sidebar onClose={() => setSidebarOpen(false)} />
+
       <div className="main-content">
-        <Header onMenuToggle={() => setSidebarOpen(prev => !prev)} />
+        <Header onMenuToggle={() => setSidebarOpen((prev) => !prev)} />
         <main className="page-content">{children}</main>
       </div>
+
+      {/* Bottom Navigation — chỉ hiển thị trên mobile qua CSS */}
+      <BottomNav onMenuOpen={() => setSidebarOpen((prev) => !prev)} />
     </div>
   );
 }
