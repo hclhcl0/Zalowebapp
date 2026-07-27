@@ -3,6 +3,7 @@
  * Dùng chung cho: trang đăng ký Zalo, quản lý tài khoản Dashboard, Kho Tri Thức AI
  */
 export const CDC_DEPARTMENTS = [
+  "Ban giám đốc",
   "Phòng chống bệnh truyền nhiễm",
   "Kiểm dịch Y tế quốc tế",
   "Ký sinh trùng - Côn trùng",
