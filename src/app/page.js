@@ -269,7 +269,6 @@ export default async function Dashboard() {
               ))}
             </div>
           )}
-          )}
         </div>
 
         {/* Right Column: Customer Classification */}
