@@ -452,38 +452,86 @@ export async function sendVideoMessage(userId, videoUrl) {
 
 
 // ============================================================
-// GỬi ẢNH trực tiếp đến người dùng Zalo (dùng URL trực tiếp)
+// GỬi ẢNH trực tiếp đến người dùng Zalo
+// Đọc từ filesystem → upload lên Zalo lấy attachment_id → gởi
+// (Tránh lỗi Docker hairpin NAT khi fetch chính mình)
 // ============================================================
 export async function sendImageToUser(userId, imageUrl) {
   const token = await getAccessToken();
   if (!token) return { error: -1, message: 'Missing token' };
 
   try {
-    const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
+    let attachmentId = null;
+
+    // Bước 1: Nếu URL là file nội bộ /uploads/ → đọc từ filesystem rồi upload
+    const urlPath = imageUrl.includes('/uploads/')
+      ? imageUrl.replace(/^https?:\/\/[^/]+/, '') // cắt domain, lấy /uploads/...
+      : null;
+    const localPath = urlPath ? path.join(process.cwd(), 'public', urlPath) : null;
+
+    if (localPath && fs.existsSync(localPath)) {
+      const fileBuffer = fs.readFileSync(localPath);
+      const ext = path.extname(localPath).toLowerCase();
+      const mimeMap = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif' };
+      const mimeType = mimeMap[ext] || 'image/jpeg';
+
+      const formData = new FormData();
+      formData.append('file', new Blob([fileBuffer], { type: mimeType }), path.basename(localPath));
+
+      const uploadRes = await fetch('https://openapi.zalo.me/v2.0/oa/upload/image', {
+        method: 'POST',
+        headers: { access_token: token },
+        body: formData,
+      });
+      const uploadData = await uploadRes.json();
+      console.log('[sendImageToUser] Upload result:', JSON.stringify(uploadData));
+
+      if (uploadData.error === 0 && uploadData.data?.attachment_id) {
+        attachmentId = uploadData.data.attachment_id;
+      }
+    }
+
+    // Bước 2: Gởi bằng attachment_id (nếu upload thành công)
+    if (attachmentId) {
+      const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', access_token: token },
+        body: JSON.stringify({
+          recipient: { user_id: userId },
+          message: {
+            attachment: {
+              type: 'template',
+              payload: {
+                template_type: 'media',
+                elements: [{ media_type: 'image', attachment_id: attachmentId }],
+              },
+            },
+          },
+        }),
+      });
+      const msgData = await msgRes.json();
+      if (msgData.error === 0) return msgData;
+      console.warn('[sendImageToUser] template/media failed:', msgData.message);
+    }
+
+    // Bước 3: Thử gởi bằng URL trực tiếp (fallback nhẹ)
+    const directRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', access_token: token },
       body: JSON.stringify({
         recipient: { user_id: userId },
         message: {
-          attachment: {
-            type: 'image',
-            payload: {
-              url: imageUrl
-            }
-          }
-        }
+          attachment: { type: 'image', payload: { url: imageUrl } },
+        },
       }),
     });
-    
-    const data = await msgRes.json();
-    if (data.error && data.error !== 0) {
-      throw new Error(`Zalo API Error: ${data.message} (${data.error})`);
-    }
-    
-    return data;
+    const directData = await directRes.json();
+    if (directData.error === 0) return directData;
+
+    throw new Error(`Zalo từ chối gởi ảnh: ${directData.message} (${directData.error})`);
   } catch (err) {
-    console.error('[sendImageToUser]', err.message);
-    // Fallback: gởi link ảnh dưới dạng text
+    console.error('[sendImageToUser] fallback text:', err.message);
+    // Fallback cuối: gởi link text
     return sendTextMessage(userId, `🖼️ Xem hình ảnh: ${imageUrl}`);
   }
 }
