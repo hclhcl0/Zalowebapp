@@ -210,6 +210,11 @@ const statements = [
     END IF;
   END $$`,
   `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Follower' AND column_name='interestGroup') THEN
+      ALTER TABLE "Follower" ADD COLUMN "interestGroup" TEXT;
+    END IF;
+  END $$`,
+  `DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Follower' AND column_name='fullName') THEN
       ALTER TABLE "Follower" ADD COLUMN "fullName" TEXT;
     END IF;
