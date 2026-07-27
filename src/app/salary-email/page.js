@@ -273,19 +273,13 @@ export default function SalaryEmailPage() {
 
   return (
     <div>
-      {/* ── HEADER ── */}
-      <div className="page-header" style={{ marginBottom: "20px" }}>
-        <div>
-          <h1 className="page-title">📧 Gửi tin nội bộ cơ quan</h1>
-          <p className="page-desc">Gửi cập nhật thông tin nội bộ cơ quan qua Email đính kèm Excel hoặc gửi tin nhắn Zalo trực tiếp cho cán bộ nhân viên CDC Đà Nẵng</p>
-        </div>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          {accounts.length > 0 && (
-            <span className="badge badge-approved" style={{ padding: "8px 12px", gap: "6px", height: "36px", display: "inline-flex", alignItems: "center" }}>
-              <Zap className="w-3.5 h-3.5 fill-current" /> {accounts.length} Gmail Pool
-            </span>
-          )}
-        </div>
+      {/* Removed HEADER because banner is present */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+        {accounts.length > 0 && (
+          <span className="badge badge-approved" style={{ padding: "8px 12px", gap: "6px", height: "36px", display: "inline-flex", alignItems: "center" }}>
+            <Zap className="w-3.5 h-3.5 fill-current" /> {accounts.length} Gmail Pool
+          </span>
+        )}
       </div>
 
       {/* Internal Banner */}
@@ -3552,7 +3546,7 @@ function ZaloStaffTab({ followers }) {
             {/* Phạm vi gửi tin */}
             <div>
               <label className="form-label" style={{ fontWeight: 600 }}>Phạm vi gửi tin</label>
-              <div className="segmented-control" style={{ display: "flex", flexWrap: "wrap", marginTop: "6px", width: "100%" }}>
+              <div className="segmented-control" style={{ display: "flex", marginTop: "6px", width: "100%" }}>
                 <button
                   type="button"
                   className={`segmented-btn ${scope === "all_staff" ? "active" : ""}`}
@@ -3584,7 +3578,7 @@ function ZaloStaffTab({ followers }) {
                       </span>
                     )}
                   </label>
-                  <div style={{ display: "flex", gap: "8px", width: "100%", sm: "auto", flex: "1 1 200px", justifyContent: "flex-end" }}>
+                  <div style={{ display: "flex", gap: "8px", width: "100%", flex: "1 1 200px", justifyContent: "flex-end" }}>
                     <input
                       type="text"
                       className="search-input"
@@ -3660,7 +3654,7 @@ function ZaloStaffTab({ followers }) {
             {/* Loại tin nhắn */}
             <div>
               <label className="form-label" style={{ fontWeight: 600 }}>Loại tin nhắn</label>
-              <div className="segmented-control" style={{ display: "flex", flexWrap: "wrap", marginTop: "6px", marginBottom: "12px", width: "100%" }}>
+              <div className="segmented-control" style={{ display: "flex", marginTop: "6px", marginBottom: "12px", width: "100%" }}>
                 <button
                   type="button"
                   className={`segmented-btn ${messageType === "text" ? "active" : ""}`}

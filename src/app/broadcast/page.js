@@ -300,15 +300,7 @@ export default function BroadcastPage() {
 
   return (
     <div>
-      {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">📣 Gửi Tin Truyền Thông</h1>
-          <p className="page-desc">
-            Quản lý và theo dõi lịch sử gửi tin truyền thông đến người quan tâm Zalo OA của CDC Đà Nẵng.
-          </p>
-        </div>
-      </div>
+      {/* Removed HEADER because banner is present */}
 
       {/* Broadcast Banner */}
       <div style={{ marginBottom: "24px", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow-sm)", background: "white", display: "flex", justifyContent: "center" }}>

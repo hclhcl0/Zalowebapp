@@ -131,11 +131,8 @@ export default async function Dashboard() {
   return (
     <div>
       {/* Page header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Tổng quan hệ thống</h1>
-          <p className="page-desc">Hệ thống quản trị Zalo OA & Quản lý thông tin gửi thông tin nội bộ tự động CDC Đà Nẵng.</p>
-        </div>
+      {/* Removed HEADER because banner is present */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
         <Link href="/broadcast" className="btn btn-primary">
           <Megaphone size={18} /> Gửi Tin Truyền Thông
         </Link>

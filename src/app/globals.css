@@ -1622,6 +1622,8 @@ tbody tr:hover { background: #f8fafc; }
     text-align: center;
     padding: 8px 6px;
     font-size: 0.78rem;
+    white-space: normal;
+    line-height: 1.2;
   }
 
   .search-row {
