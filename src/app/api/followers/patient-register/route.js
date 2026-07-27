@@ -32,6 +32,7 @@ export async function GET(request) {
       dob: follower.dob || "",
       cccd: follower.cccd || "",
       phone: follower.phone || "",
+      interestGroup: follower.interestGroup || "",
     } : null;
 
     return NextResponse.json({
@@ -54,7 +55,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { uid, fullName, dob, cccd, phone } = body;
+    const { uid, fullName, dob, cccd, phone, interestGroup } = body;
 
     if (!uid || !fullName || !phone) {
       return NextResponse.json({ error: "Thiếu thông tin bắt buộc" }, { status: 400 });
@@ -100,6 +101,7 @@ export async function POST(request) {
         cccd: cccd ? cccd.trim() : null,
         phone: phone.trim(),
         userType: "citizen", 
+        interestGroup: interestGroup ? interestGroup.trim() : null,
       }
     });
 

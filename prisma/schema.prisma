@@ -26,6 +26,7 @@ model Follower {
   followedAt     DateTime         @default(now())
   userType       String           @default("citizen")
   department     String?
+  interestGroup  String?
   notes          String?
   cccd           String?
   dob            String?

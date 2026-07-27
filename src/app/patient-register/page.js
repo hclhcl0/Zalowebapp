@@ -82,6 +82,20 @@ function SuccessState({ fullName, displayName }) {
   );
 }
 
+const INTEREST_GROUPS = [
+  "Tiêm chủng",
+  "Khám sức khỏe",
+  "Sức khỏe sinh sản",
+  "Xét nghiệm",
+  "Khám bệnh",
+  "Khách hàng doanh nghiệp",
+  "An toàn thực phẩm",
+  "Y tế trường học",
+  "Phòng chống dịch",
+  "Đào tạo – Tập huấn",
+  "Người dân quan tâm sức khỏe"
+];
+
 // ============================================================
 // COMPONENT CHÍNH
 // ============================================================
@@ -91,7 +105,7 @@ function PatientRegisterForm() {
 
   const [phase, setPhase] = useState("loading"); // loading | invalid | form | already | submitting | success | error
   const [follower, setFollower] = useState(null);
-  const [formData, setFormData] = useState({ fullName: "", dob: "", cccd: "", phone: "" });
+  const [formData, setFormData] = useState({ fullName: "", dob: "", cccd: "", phone: "", interestGroup: "" });
   const [errorMsg, setErrorMsg] = useState("");
   const [successData, setSuccessData] = useState(null);
 
@@ -113,6 +127,7 @@ function PatientRegisterForm() {
             dob: json.existing.dob || "",
             cccd: json.existing.cccd || "",
             phone: json.existing.phone || "",
+            interestGroup: json.existing.interestGroup || "",
           });
           setPhase("already");
         } else {
@@ -124,8 +139,8 @@ function PatientRegisterForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || !formData.phone.trim()) { 
-      setErrorMsg("Vui lòng nhập Họ Tên và Số điện thoại."); 
+    if (!formData.fullName.trim() || !formData.phone.trim() || !formData.interestGroup.trim()) { 
+      setErrorMsg("Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Chọn Nhóm người dùng."); 
       return; 
     }
     setPhase("submitting");
@@ -339,6 +354,22 @@ function PatientRegisterForm() {
                     onChange={e => setFormData(p => ({ ...p, dob: e.target.value }))}
                     disabled={phase === "submitting"}
                   />
+                </div>
+
+                <div>
+                  <label>Nhóm người dùng / Mục đích <span className="required">*</span></label>
+                  <select
+                    className="form-input"
+                    value={formData.interestGroup}
+                    onChange={e => setFormData(p => ({ ...p, interestGroup: e.target.value }))}
+                    required
+                    disabled={phase === "submitting"}
+                  >
+                    <option value="">-- Chọn nhóm quan tâm --</option>
+                    {INTEREST_GROUPS.map(g => (
+                      <option key={g} value={g}>{g}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {errorMsg && (
