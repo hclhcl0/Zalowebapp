@@ -500,13 +500,12 @@ export async function sendImageToUser(userId, imageUrl) {
           recipient: { user_id: userId },
           message: {
             attachment: {
-              type: 'template',
+              type: 'image',
               payload: {
-                template_type: 'media',
-                elements: [{ media_type: 'image', attachment_id: attachmentId }],
-              },
-            },
-          },
+                attachment_id: attachmentId
+              }
+            }
+          }
         }),
       });
       const msgData = await msgRes.json();
@@ -531,8 +530,8 @@ export async function sendImageToUser(userId, imageUrl) {
     throw new Error(`Zalo từ chối gởi ảnh: ${directData.message} (${directData.error})`);
   } catch (err) {
     console.error('[sendImageToUser] fallback text:', err.message);
-    // Fallback cuối: gởi link text
-    return sendTextMessage(userId, `🖼️ Xem hình ảnh: ${imageUrl}`);
+    // Fallback cuối: gởi link text kèm lỗi để debug
+    return sendTextMessage(userId, `🖼️ Xem hình ảnh: ${imageUrl}\n\n(Lỗi gởi Zalo: ${err.message})`);
   }
 }
 
