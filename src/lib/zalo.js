@@ -497,11 +497,41 @@ export async function sendFileAsLink(userId, fileName, fileUrl) {
 }
 
 // ============================================================
-// GỬi VIDEO link (wrapper rõ ràng hơn sendVideoMessage)
+// GỬi VIDEO trực tiếp đến người dùng Zalo (dùng URL trực tiếp)
 // ============================================================
 export async function sendVideoLink(userId, videoName, videoUrl) {
-  const msg = `🎥 *Video đính kèm*\n\n🎞️ *${videoName}*\n\n🔗 Xem/Tải tại:\n${videoUrl}`;
-  return sendTextMessage(userId, msg);
+  const token = await getAccessToken();
+  if (!token) return { error: -1, message: 'Missing token' };
+
+  try {
+    const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', access_token: token },
+      body: JSON.stringify({
+        recipient: { user_id: userId },
+        message: {
+          attachment: {
+            type: 'video',
+            payload: {
+              url: videoUrl
+            }
+          }
+        }
+      }),
+    });
+
+    const data = await msgRes.json();
+    if (data.error && data.error !== 0) {
+      throw new Error(`Zalo API Error: ${data.message} (${data.error})`);
+    }
+
+    return data;
+  } catch (err) {
+    console.error('[sendVideoLink]', err.message);
+    // Fallback: gởi link video dưới dạng text
+    const fallback = `🎥 *${videoName}*\n\n🔗 Xem/Tải tại:\n${videoUrl}`;
+    return sendTextMessage(userId, fallback);
+  }
 }
 
 // ============================================================
