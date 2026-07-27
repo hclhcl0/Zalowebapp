@@ -252,6 +252,10 @@ export default function FollowersPage() {
   const [newFullName, setNewFullName] = useState("");
   const [newDob, setNewDob] = useState("");
   const [newCccd, setNewCccd] = useState("");
+
+  // Bulk Delete states
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
   const [updatingMeta, setUpdatingMeta] = useState(false);
   
   // Sync state
@@ -495,11 +499,54 @@ export default function FollowersPage() {
   // Reset về trang 1 khi thay đổi bộ lọc hoặc tìm kiếm
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedIds([]); // Clear selection when filters change
   }, [searchQuery, userTypeFilter]);
 
   useEffect(() => {
     fetchFollowers();
+    setSelectedIds([]); // Clear selection when page changes
   }, [fetchFollowers]);
+
+  // Handler for checkboxes
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(followers.map(f => f.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  // Handler for bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} người dùng đã chọn? Thao tác này sẽ xóa họ khỏi hệ thống (nhưng giữ lại lịch sử y tế).`)) return;
+
+    setIsDeletingBulk(true);
+    try {
+      const res = await fetch("/api/followers/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ followerIds: selectedIds })
+      });
+      const json = await res.json();
+      
+      if (!res.ok) throw new Error(json.error || "Xóa thất bại");
+      
+      showToast(`✅ Đã xóa thành công ${json.deletedCount} người dùng.`);
+      setSelectedIds([]);
+      fetchFollowers();
+    } catch (err) {
+      alert("Lỗi khi xóa: " + err.message);
+    } finally {
+      setIsDeletingBulk(false);
+    }
+  };
 
   // Load chat history & follower details
   const handleOpenDetail = async (follower) => {
@@ -739,6 +786,37 @@ export default function FollowersPage() {
               </button>
             </div>
           </div>
+          {/* Bulk Action Bar */}
+          {selectedIds.length > 0 && (
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px",
+              paddingTop: "12px", marginTop: "12px", borderTop: "1px dashed var(--border)",
+              animation: "slideInUp 0.2s ease"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <label className="mobile-only" style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem", color: "var(--text)" }}>
+                  <input 
+                    type="checkbox" 
+                    checked={followers.length > 0 && selectedIds.length === followers.length}
+                    onChange={handleSelectAll}
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                  />
+                  Chọn tất cả
+                </label>
+                <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text)" }}>
+                  Đã chọn <strong style={{ color: "var(--primary)" }}>{selectedIds.length}</strong> người dùng
+                </span>
+              </div>
+              <button 
+                className="btn btn-outline" 
+                style={{ borderColor: "#ef4444", color: "#ef4444", padding: "6px 14px", height: "auto" }}
+                onClick={handleBulkDelete}
+                disabled={isDeletingBulk}
+              >
+                {isDeletingBulk ? "Đang xóa..." : "🗑️ Xóa người đã chọn"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Main List Card */}
@@ -759,6 +837,14 @@ export default function FollowersPage() {
                 <table className="followers-table">
                   <thead>
                     <tr>
+                      <th style={{ width: "40px", textAlign: "center" }}>
+                        <input 
+                          type="checkbox" 
+                          checked={followers.length > 0 && selectedIds.length === followers.length}
+                          onChange={handleSelectAll}
+                          style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                        />
+                      </th>
                       <th style={{ width: "50px" }}></th>
                       <th>Tên Zalo</th>
                       <th style={{ width: "110px" }}>Loại</th>
@@ -769,7 +855,16 @@ export default function FollowersPage() {
                   </thead>
                   <tbody>
                     {followers.map(f => (
-                      <tr key={f.id}>
+                      <tr key={f.id} style={{ background: selectedIds.includes(f.id) ? "#f0fdf4" : "transparent" }}>
+                        {/* Checkbox */}
+                        <td style={{ textAlign: "center" }}>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedIds.includes(f.id)}
+                            onChange={() => handleSelectRow(f.id)}
+                            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                          />
+                        </td>
                         {/* Avatar */}
                         <td style={{ padding: "10px 14px" }}>
                           <div style={{ position: "relative", display: "inline-flex" }}>
@@ -872,9 +967,17 @@ export default function FollowersPage() {
                     ? f.staffLink.staffNameRaw
                     : f.fullName || f.displayName || "Người dùng Zalo";
                   return (
-                    <div key={f.id} className="mobile-card-item">
-                      <div className="mobile-card-main">
-                        <div className="mobile-card-avatar">
+                    <div key={f.id} className="mobile-card-item" style={{ background: selectedIds.includes(f.id) ? "#f0fdf4" : "white", border: selectedIds.includes(f.id) ? "1px solid #bbf7d0" : "1px solid var(--border)" }}>
+                      <div className="mobile-card-main" style={{ position: "relative" }}>
+                        <div style={{ position: "absolute", top: 12, right: 12 }}>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedIds.includes(f.id)}
+                            onChange={() => handleSelectRow(f.id)}
+                            style={{ cursor: "pointer", width: "18px", height: "18px" }}
+                          />
+                        </div>
+                        <div className="mobile-card-avatar" style={{ marginTop: "4px" }}>
                           {f.avatarUrl
                             ? <img src={f.avatarUrl} alt={f.displayName} style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
                             : initials}

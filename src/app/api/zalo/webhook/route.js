@@ -406,24 +406,43 @@ async function handleFollow(userId, data) {
 // ============================================================
 async function handleUnfollow(userId) {
   try {
-    // Xóa liên kết nhân viên nếu có
-    const link = await prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } });
-    if (link) {
-      await prisma.staffZaloLink.delete({ where: { zaloUserId: userId } });
-      console.log(`[WEBHOOK] Xóa liên kết nhân viên: ${link.staffNameRaw} (${userId})`);
+    const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
+    
+    if (follower) {
+      // 1. Xóa liên kết nhân viên (nếu có)
+      const link = await prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } });
+      if (link) {
+        await prisma.staffZaloLink.delete({ where: { zaloUserId: userId } });
+        console.log(`[WEBHOOK] Xóa liên kết nhân viên: ${link.staffNameRaw} (${userId})`);
+      }
+
+      // 2. Gỡ liên kết (set null) trong Appointment và TestResult để tránh lỗi Foreign Key
+      // (Không xóa lịch sử y tế của bệnh nhân)
+      await prisma.appointment.updateMany({
+        where: { followerId: follower.id },
+        data: { followerId: null }
+      });
+      await prisma.testResult.updateMany({
+        where: { followerId: follower.id },
+        data: { followerId: null }
+      });
+
+      // 3. Xóa lịch sử tin nhắn của người này
+      await prisma.messageLog.deleteMany({
+        where: { zaloUserId: userId }
+      });
+
+      // 4. Xóa Follower khỏi CSDL (các bảng có onDelete: Cascade như MiniAppSession sẽ tự động bị xóa)
+      await prisma.follower.delete({
+        where: { zaloUserId: userId }
+      });
     }
 
-    // Reset loại người dùng về citizen
-    await prisma.follower.update({
-      where: { zaloUserId: userId },
-      data: { userType: "citizen", department: null, phone: null },
-    }).catch(() => {});
-
-    // Xóa lịch sử hội thoại AI
+    // Xóa lịch sử hội thoại AI trong bộ nhớ đệm
     const { clearUserHistory } = await import("@/lib/gemini");
     clearUserHistory(userId);
 
-    console.log(`[WEBHOOK] Unfollow xử lý xong: ${userId}`);
+    console.log(`[WEBHOOK] Unfollow xử lý xong: đã xóa hoàn toàn user ${userId}`);
   } catch (e) {
     console.error(`[WEBHOOK] Lỗi xử lý unfollow ${userId}:`, e.message);
   }

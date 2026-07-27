@@ -804,7 +804,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               </div>
 
               {/* Table list */}
-              <div className="table-wrapper" style={{ minHeight: "350px" }}>
+              <div className="table-wrapper" style={{ minHeight: "350px", overflowX: "auto", maxWidth: "100vw" }}>
                 <table>
                   <thead>
                     <tr>
@@ -1981,7 +1981,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
               </div>
 
               {/* Records preview table */}
-              <div className="table-wrapper" style={{ minHeight: "350px" }}>
+              <div className="table-wrapper" style={{ minHeight: "350px", overflowX: "auto", maxWidth: "100vw" }}>
                 <table>
                   <thead>
                     <tr>
@@ -2793,7 +2793,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               </div>
 
               {/* Table check list */}
-              <div className="table-wrapper" style={{ minHeight: "350px" }}>
+              <div className="table-wrapper" style={{ minHeight: "350px", overflowX: "auto", maxWidth: "100vw" }}>
                 <table>
                   <thead>
                     <tr>

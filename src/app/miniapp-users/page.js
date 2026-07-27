@@ -246,67 +246,114 @@ export default function MiniAppUsersPage() {
           </select>
         </div>
 
-        {/* Table */}
+        {/* Table / List */}
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "var(--bg-subtle)" }}>
-                {["Người dùng", "Lần mở", "Lần cuối", "Lịch hẹn", "Tra cứu", "Loại", ""].map(h => (
-                  <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
-                  <RefreshCw size={20} style={{ animation: "spin 1s linear infinite" }} />
-                </td></tr>
-              ) : users.length === 0 ? (
-                <tr><td colSpan={7} style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
-                  Không tìm thấy người dùng nào.
-                </td></tr>
-              ) : users.map(u => (
-                <tr
-                  key={u.id}
-                  style={{ borderTop: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "var(--bg-subtle)"}
-                  onMouseLeave={e => e.currentTarget.style.background = ""}
-                  onClick={() => setSelectedId(u.id)}
-                >
-                  <td style={{ padding: "10px 14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      {u.avatarUrl ? (
-                        <img src={u.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
-                      ) : (
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>👤</div>
-                      )}
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontWeight: 600, fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 160 }}>{u.displayName || "Ẩn danh"}</p>
-                        <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "monospace" }}>{u.zaloUserId.slice(0, 10)}…</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: "10px 14px", fontSize: "0.88rem", fontWeight: 600, color: "var(--primary)" }}>{u.totalVisits ?? 0}</td>
-                  <td style={{ padding: "10px 14px", fontSize: "0.82rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>{timeAgo(u.lastSeenAt)}</td>
-                  <td style={{ padding: "10px 14px", fontSize: "0.88rem" }}>{u._count?.appointments ?? 0}</td>
-                  <td style={{ padding: "10px 14px", fontSize: "0.88rem" }}>{u._count?.testResults ?? 0}</td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <span style={{ fontSize: "0.75rem", padding: "3px 8px", borderRadius: 12, fontWeight: 500, background: u.userType === "staff" ? "#dbeafe" : "#dcfce7", color: u.userType === "staff" ? "#1d4ed8" : "#15803d" }}>
-                      {u.userType === "staff" ? "Cán bộ" : "Dân"}
-                    </span>
-                    {u.userType === "staff" && u.department && (
-                      <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 4, fontFamily: "monospace" }}>
-                        {u.department}
-                      </div>
-                    )}
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <ChevronRight size={16} style={{ color: "var(--text-muted)" }} />
-                  </td>
+          
+          <div className="desktop-only" style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "var(--bg-subtle)" }}>
+                  {["Người dùng", "Lần mở", "Lần cuối", "Lịch hẹn", "Tra cứu", "Loại", ""].map(h => (
+                    <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={7} style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
+                    <RefreshCw size={20} style={{ animation: "spin 1s linear infinite" }} />
+                  </td></tr>
+                ) : users.length === 0 ? (
+                  <tr><td colSpan={7} style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
+                    Không tìm thấy người dùng nào.
+                  </td></tr>
+                ) : users.map(u => (
+                  <tr
+                    key={u.id}
+                    style={{ borderTop: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg-subtle)"}
+                    onMouseLeave={e => e.currentTarget.style.background = ""}
+                    onClick={() => setSelectedId(u.id)}
+                  >
+                    <td style={{ padding: "10px 14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        {u.avatarUrl ? (
+                          <img src={u.avatarUrl} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>👤</div>
+                        )}
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ margin: 0, fontWeight: 600, fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 160 }}>{u.displayName || "Ẩn danh"}</p>
+                          <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--text-muted)", fontFamily: "monospace" }}>{u.zaloUserId.slice(0, 10)}…</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "10px 14px", fontSize: "0.88rem", fontWeight: 600, color: "var(--primary)" }}>{u.totalVisits ?? 0}</td>
+                    <td style={{ padding: "10px 14px", fontSize: "0.82rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>{timeAgo(u.lastSeenAt)}</td>
+                    <td style={{ padding: "10px 14px", fontSize: "0.88rem" }}>{u._count?.appointments ?? 0}</td>
+                    <td style={{ padding: "10px 14px", fontSize: "0.88rem" }}>{u._count?.testResults ?? 0}</td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <span style={{ fontSize: "0.75rem", padding: "3px 8px", borderRadius: 12, fontWeight: 500, background: u.userType === "staff" ? "#dbeafe" : "#dcfce7", color: u.userType === "staff" ? "#1d4ed8" : "#15803d" }}>
+                        {u.userType === "staff" ? "Cán bộ" : "Dân"}
+                      </span>
+                      {u.userType === "staff" && u.department && (
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: 4, fontFamily: "monospace" }}>
+                          {u.department}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <ChevronRight size={16} style={{ color: "var(--text-muted)" }} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mobile-card-list mobile-only" style={{ flexDirection: "column" }}>
+            {loading ? (
+              <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
+                <RefreshCw size={20} style={{ animation: "spin 1s linear infinite" }} />
+              </div>
+            ) : users.length === 0 ? (
+              <div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Không tìm thấy người dùng nào.</div>
+            ) : users.map(u => (
+              <div 
+                key={u.id} 
+                className="mobile-card-item" 
+                onClick={() => setSelectedId(u.id)}
+                style={{ cursor: "pointer" }}
+              >
+                <div className="mobile-card-main">
+                  <div className="mobile-card-avatar">
+                    {u.avatarUrl
+                      ? <img src={u.avatarUrl} alt="" style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                      : <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "var(--primary)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>👤</div>}
+                  </div>
+                  <div className="mobile-card-body">
+                    <div className="mobile-card-name" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {u.displayName || "Ẩn danh"}
+                      <span style={{ fontSize: "0.65rem", padding: "2px 6px", borderRadius: 10, fontWeight: 500, background: u.userType === "staff" ? "#dbeafe" : "#dcfce7", color: u.userType === "staff" ? "#1d4ed8" : "#15803d" }}>
+                        {u.userType === "staff" ? "Cán bộ" : "Dân"}
+                      </span>
+                    </div>
+                    <div className="mobile-card-meta" style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Truy cập: <strong style={{ color: "var(--primary)" }}>{u.totalVisits ?? 0}</strong> lần</span>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{timeAgo(u.lastSeenAt)}</span>
+                    </div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-light)", marginTop: "2px", display: "flex", gap: "8px" }}>
+                      <span>Hẹn: {u._count?.appointments ?? 0}</span>
+                      <span>Tra cứu: {u._count?.testResults ?? 0}</span>
+                    </div>
+                  </div>
+                  <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
+                    <ChevronRight size={18} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Pagination */}

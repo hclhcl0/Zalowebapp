@@ -596,33 +596,65 @@ function PricesTab({ categories, services, fetchData }) {
                       </table>
                     </div>
                   ) : (
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <thead>
-                        <tr style={{ background: "var(--bg)", fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                          <th style={{ textAlign: "left", padding: "7px 16px", fontWeight: 600 }}>Tên dịch vụ</th>
-                          <th style={{ textAlign: "right", padding: "7px 12px", fontWeight: 600, whiteSpace: "nowrap" }}>Đơn giá</th>
-                          <th style={{ padding: "7px 8px", fontWeight: 600 }}>ĐVT</th>
-                          <th style={{ padding: "7px 8px", fontWeight: 600 }}>Ghi chú</th>
-                          <th style={{ width: 60 }}></th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <div style={{ width: "100%" }}>
+                      <div className="desktop-only" style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                          <thead>
+                            <tr style={{ background: "var(--bg)", fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                              <th style={{ textAlign: "left", padding: "7px 16px", fontWeight: 600 }}>Tên dịch vụ</th>
+                              <th style={{ textAlign: "right", padding: "7px 12px", fontWeight: 600, whiteSpace: "nowrap" }}>Đơn giá</th>
+                              <th style={{ padding: "7px 8px", fontWeight: 600 }}>ĐVT</th>
+                              <th style={{ padding: "7px 8px", fontWeight: 600 }}>Ghi chú</th>
+                              <th style={{ width: 60 }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {svcs.map(svc => (
+                              <tr key={svc.id} style={{ borderTop: "1px solid var(--border)", fontSize: "0.88rem" }}>
+                                <td style={{ padding: "9px 16px" }}>{svc.name}</td>
+                                <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 600, color: "var(--primary)", whiteSpace: "nowrap" }}>{formatPrice(svc.price)}</td>
+                                <td style={{ padding: "9px 8px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{svc.unit}</td>
+                                <td style={{ padding: "9px 8px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{svc.note}</td>
+                                <td style={{ padding: "9px 8px" }}>
+                                  <div style={{ display: "flex", gap: 4 }}>
+                                    <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 3 }} onClick={() => openEditSvc(svc)}><Pencil size={13} /></button>
+                                    <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger)", padding: 3 }} onClick={() => deleteSvc(svc)}><Trash2 size={13} /></button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      <div className="mobile-card-list mobile-only" style={{ flexDirection: "column" }}>
                         {svcs.map(svc => (
-                          <tr key={svc.id} style={{ borderTop: "1px solid var(--border)", fontSize: "0.88rem" }}>
-                            <td style={{ padding: "9px 16px" }}>{svc.name}</td>
-                            <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 600, color: "var(--primary)", whiteSpace: "nowrap" }}>{formatPrice(svc.price)}</td>
-                            <td style={{ padding: "9px 8px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{svc.unit}</td>
-                            <td style={{ padding: "9px 8px", color: "var(--text-muted)", fontSize: "0.8rem" }}>{svc.note}</td>
-                            <td style={{ padding: "9px 8px" }}>
-                              <div style={{ display: "flex", gap: 4 }}>
-                                <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 3 }} onClick={() => openEditSvc(svc)}><Pencil size={13} /></button>
-                                <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger)", padding: 3 }} onClick={() => deleteSvc(svc)}><Trash2 size={13} /></button>
+                          <div key={svc.id} className="mobile-card-item">
+                            <div className="mobile-card-main">
+                              <div className="mobile-card-avatar" style={{ background: "var(--primary-light)", color: "var(--primary)", width: 40, height: 40 }}>
+                                💊
                               </div>
-                            </td>
-                          </tr>
+                              <div className="mobile-card-body">
+                                <div className="mobile-card-name">{svc.name}</div>
+                                <div className="mobile-card-meta" style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                                  <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--primary)" }}>{formatPrice(svc.price)}</span>
+                                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", padding: "2px 6px", background: "var(--bg-subtle)", borderRadius: 10 }}>
+                                    {svc.unit}
+                                  </span>
+                                </div>
+                                {svc.note && (
+                                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>📝 {svc.note}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mobile-card-actions">
+                              <button className="mobile-card-action-btn" onClick={() => openEditSvc(svc)}>✏️ Sửa</button>
+                              <button className="mobile-card-action-btn" onClick={() => deleteSvc(svc)} style={{ color: "var(--danger)" }}>🗑️ Xóa</button>
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    </div>
                   )}
                 </>
               )}
