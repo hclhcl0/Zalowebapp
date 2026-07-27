@@ -1065,7 +1065,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               <div style={{ width: `${pct}%`, background: "var(--primary)", height: "100%", transition: "width 0.3s ease" }}></div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", textAlign: "center" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "12px", textAlign: "center" }}>
               <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "10px" }}>
                 <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text)" }}>{prog.sent}</span>
                 <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>Đã xử lý</p>
@@ -2247,7 +2247,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
               <div style={{ width: `${pct}%`, background: "var(--primary)", height: "100%", transition: "width 0.3s ease" }}></div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", textAlign: "center" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "12px", textAlign: "center" }}>
               <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "10px" }}>
                 <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text)" }}>{prog.sent}</span>
                 <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>Đã gửi</p>
@@ -3070,7 +3070,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               <div style={{ width: `${pct}%`, background: "var(--primary)", height: "100%", transition: "width 0.3s ease" }}></div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", textAlign: "center" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "12px", textAlign: "center" }}>
               <div style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "10px" }}>
                 <span style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text)" }}>{prog.sent}</span>
                 <p style={{ margin: "2px 0 0 0", fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: 600 }}>Đã gửi</p>
@@ -3552,7 +3552,7 @@ function ZaloStaffTab({ followers }) {
             {/* Phạm vi gửi tin */}
             <div>
               <label className="form-label" style={{ fontWeight: 600 }}>Phạm vi gửi tin</label>
-              <div className="segmented-control" style={{ display: "flex", marginTop: "6px", width: "100%" }}>
+              <div className="segmented-control" style={{ display: "flex", flexWrap: "wrap", marginTop: "6px", width: "100%" }}>
                 <button
                   type="button"
                   className={`segmented-btn ${scope === "all_staff" ? "active" : ""}`}
@@ -3599,7 +3599,7 @@ function ZaloStaffTab({ followers }) {
                   </div>
                 </div>
                 
-                <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius)", maxHeight: "250px", overflowY: "auto" }}>
+                <div style={{ border: "1px solid var(--border)", borderRadius: "var(--radius)", maxHeight: "350px", overflowY: "auto" }}>
                   {filteredStaff.length === 0 ? (
                     <div style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
                       Không tìm thấy nhân viên nào đã liên kết Zalo.
@@ -3660,7 +3660,7 @@ function ZaloStaffTab({ followers }) {
             {/* Loại tin nhắn */}
             <div>
               <label className="form-label" style={{ fontWeight: 600 }}>Loại tin nhắn</label>
-              <div className="segmented-control" style={{ display: "flex", marginTop: "6px", marginBottom: "12px", width: "100%" }}>
+              <div className="segmented-control" style={{ display: "flex", flexWrap: "wrap", marginTop: "6px", marginBottom: "12px", width: "100%" }}>
                 <button
                   type="button"
                   className={`segmented-btn ${messageType === "text" ? "active" : ""}`}
@@ -3748,7 +3748,7 @@ function ZaloStaffTab({ followers }) {
                       </div>
                     </div>
                     
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
                       <div>
                         <label className="form-label" style={{ fontSize: "0.8rem" }}>Tiêu đề</label>
                         <input type="text" className="form-input" style={{ padding: "6px 10px" }} value={el.title} onChange={(e) => handleElementChange(index, "title", e.target.value)} required={messageType === "list"} />
@@ -3926,7 +3926,7 @@ function ZaloStaffTab({ followers }) {
         }}>
           <div style={{
             background: "white", borderRadius: "24px",
-            width: "360px", height: "720px", maxHeight: "90vh",
+            width: "100%", maxWidth: "360px", height: "720px", maxHeight: "90vh",
             display: "flex", flexDirection: "column",
             boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden",
             position: "relative"
