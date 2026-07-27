@@ -6,7 +6,8 @@ import { useSession, signOut } from "next-auth/react";
 import { 
   LayoutDashboard, Users, Megaphone, Mail, 
   Newspaper, CalendarDays, AlertTriangle, 
-  Settings, UserCog, LogOut, ChevronRight, Download, BrainCircuit, KeyRound, Tag, Smartphone, Phone, Activity
+  Settings, UserCog, LogOut, ChevronRight, Download, BrainCircuit, KeyRound, Tag, Smartphone, Phone, Activity,
+  MessageSquarePlus
 } from "lucide-react";
 
 // Helper to map string/emoji to Lucide icon component
@@ -29,6 +30,7 @@ const IconMapper = ({ iconName, size = 18 }) => {
     case "Phone": return <Phone size={size} />;
     case "Tag": return <Tag size={size} />;
     case "Activity": return <Activity size={size} />;
+    case "MessageSquarePlus": return <MessageSquarePlus size={size} />;
     default: return <ChevronRight size={size} />; // fallback
   }
 };
@@ -46,6 +48,7 @@ const menuGroups = [
       { icon: "Users", label: "Người quan tâm OA", href: "/followers" },
       { icon: "Activity", label: "Nhật ký Hoạt động", href: "/logs" },
       { icon: "Megaphone", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
+      { icon: "MessageSquarePlus", label: "Gửi Zalo", href: "/send-zalo" },
       { icon: "Mail", label: "Gửi Tin Nội Bộ", href: "/salary-email" },
     ],
   },

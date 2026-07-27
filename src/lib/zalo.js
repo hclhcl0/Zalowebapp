@@ -452,6 +452,80 @@ export async function sendVideoMessage(userId, videoUrl) {
 
 
 // ============================================================
+// GỬi ẢNH trực tiếp đến người dùng Zalo (upload rồi gời)
+// ============================================================
+export async function sendImageToUser(userId, imageUrl) {
+  const token = await getAccessToken();
+  if (!token) return { error: -1, message: 'Missing token' };
+
+  try {
+    // 1. Lấy buffer ảnh
+    const res = await fetch(imageUrl);
+    if (!res.ok) throw new Error(`Không tải được ảnh: ${imageUrl}`);
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
+    const buffer = Buffer.from(await res.arrayBuffer());
+
+    let ext = 'jpg';
+    if (contentType.includes('png')) ext = 'png';
+    else if (contentType.includes('webp')) ext = 'webp';
+    const filename = `img_${Date.now()}.${ext}`;
+
+    const formData = new FormData();
+    formData.append('file', new Blob([buffer], { type: contentType }), filename);
+
+    // 2. Upload lên Zalo
+    const uploadRes = await fetch('https://openapi.zalo.me/v2.0/oa/upload/image', {
+      method: 'POST',
+      headers: { access_token: token },
+      body: formData,
+    });
+    const uploadData = await uploadRes.json();
+    if (uploadData.error !== 0) throw new Error(`Upload ảnh thất bại: ${uploadData.message}`);
+
+    const attachmentId = uploadData.data?.attachment_id;
+
+    // 3. GỜi ảnh
+    const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', access_token: token },
+      body: JSON.stringify({
+        recipient: { user_id: userId },
+        message: {
+          attachment: {
+            type: 'template',
+            payload: {
+              template_type: 'media',
+              elements: [{ media_type: 'image', attachment_id: attachmentId }]
+            }
+          }
+        }
+      }),
+    });
+    return msgRes.json();
+  } catch (err) {
+    console.error('[sendImageToUser]', err.message);
+    // Fallback: gỜi link ảnh dưới dạng text
+    return sendTextMessage(userId, `🖼️ Xem hình ảnh: ${imageUrl}`);
+  }
+}
+
+// ============================================================
+// GỬi FILE dưới dạng link tải xuống (Zalo không hỗ trợ file trực tiếp)
+// ============================================================
+export async function sendFileAsLink(userId, fileName, fileUrl) {
+  const msg = `📥 *Tài liệu đính kèm*\n\n📄 *${fileName}*\n\n🔗 Tải xuống tại:\n${fileUrl}`;
+  return sendTextMessage(userId, msg);
+}
+
+// ============================================================
+// GỬi VIDEO link (wrapper rõ ràng hơn sendVideoMessage)
+// ============================================================
+export async function sendVideoLink(userId, videoName, videoUrl) {
+  const msg = `🎥 *Video đính kèm*\n\n🎞️ *${videoName}*\n\n🔗 Xem/Tải tại:\n${videoUrl}`;
+  return sendTextMessage(userId, msg);
+}
+
+// ============================================================
 // LÀM MỚI ACCESS TOKEN
 // ============================================================
 export async function refreshZaloAccessToken() {
