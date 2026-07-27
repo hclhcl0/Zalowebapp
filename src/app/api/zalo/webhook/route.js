@@ -145,24 +145,25 @@ async function handleTextMessage(userId, text) {
 
     let welcomeMsg = "";
     try {
-      const welcomeConfig = await prisma.systemConfig.findUnique({
-        where: { key: "oa_welcome_msg" },
-      });
-      if (welcomeConfig?.value && welcomeConfig.value.trim().length > 0) {
-        welcomeMsg = welcomeConfig.value
-          .replace(/{displayName}/g, displayName)
-          .replace(/{name}/g, displayName).replace(/{userId}/g, userId).replace(/{uid}/g, userId);
-      }
-    } catch (dbErr) {}
+      const welcomeConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_welcome_msg" } });
+      const staffLinkConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_register_link_staff" } });
+      const patientLinkConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_register_link_patient" } });
 
-    if (!welcomeMsg) {
-      welcomeMsg =
-        `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\n` +
-        `Vui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:\n\n` +
-        `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n` +
-        `🔗 https://zcdc.ksbtdanang.vn/register?uid=${userId}\n\n` +
-        `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n` +
-        `🔗 https://zcdc.ksbtdanang.vn/patient-register?uid=${userId}`;
+      let greetingText = welcomeConfig?.value?.trim() 
+        ? welcomeConfig.value 
+        : `Xin chào {displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\nVui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:`;
+      
+      greetingText = greetingText.replace(/{displayName}/g, displayName).replace(/{name}/g, displayName).replace(/{userId}/g, userId).replace(/{uid}/g, userId);
+
+      const staffLinkBase = staffLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/register";
+      const patientLinkBase = patientLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/patient-register";
+
+      welcomeMsg = `${greetingText}\n\n` +
+        `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n🔗 ${staffLinkBase}?uid=${userId}\n\n` +
+        `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n🔗 ${patientLinkBase}?uid=${userId}`;
+    } catch (dbErr) {
+      console.error("[ZALO WEBHOOK] Lỗi tạo welcomeMsg (reset):", dbErr.message);
+      welcomeMsg = `Xin chào ${displayName}! Vui lòng đăng ký:\n🔗 https://zcdc.ksbtdanang.vn/patient-register?uid=${userId}`;
     }
 
     await sendTextMessage(userId, welcomeMsg);
@@ -376,26 +377,25 @@ async function handleFollow(userId, data) {
   // Gửi tin chào mừng (Tự động lấy cấu hình từ DB nếu có)
   let welcomeMsg = "";
   try {
-    const welcomeConfig = await prisma.systemConfig.findUnique({
-      where: { key: "oa_welcome_msg" },
-    });
-    if (welcomeConfig?.value && welcomeConfig.value.trim().length > 0) {
-      welcomeMsg = welcomeConfig.value
-        .replace(/{displayName}/g, displayName)
-        .replace(/{name}/g, displayName).replace(/{userId}/g, userId).replace(/{uid}/g, userId);
-    }
-  } catch (dbErr) {
-    console.error("[ZALO WEBHOOK] Lỗi lấy oa_welcome_msg:", dbErr.message);
-  }
+    const welcomeConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_welcome_msg" } });
+    const staffLinkConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_register_link_staff" } });
+    const patientLinkConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_register_link_patient" } });
 
-  if (!welcomeMsg) {
-    welcomeMsg =
-      `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\n` +
-      `Vui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:\n\n` +
-      `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n` +
-      `🔗 https://zcdc.ksbtdanang.vn/register?uid=${userId}\n\n` +
-      `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n` +
-      `🔗 https://zcdc.ksbtdanang.vn/patient-register?uid=${userId}`;
+    let greetingText = welcomeConfig?.value?.trim() 
+      ? welcomeConfig.value 
+      : `Xin chào {displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\nVui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:`;
+    
+    greetingText = greetingText.replace(/{displayName}/g, displayName).replace(/{name}/g, displayName).replace(/{userId}/g, userId).replace(/{uid}/g, userId);
+
+    const staffLinkBase = staffLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/register";
+    const patientLinkBase = patientLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/patient-register";
+
+    welcomeMsg = `${greetingText}\n\n` +
+      `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n🔗 ${staffLinkBase}?uid=${userId}\n\n` +
+      `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n🔗 ${patientLinkBase}?uid=${userId}`;
+  } catch (dbErr) {
+    console.error("[ZALO WEBHOOK] Lỗi tạo oa_welcome_msg:", dbErr.message);
+    welcomeMsg = `Xin chào ${displayName}! Vui lòng đăng ký:\n🔗 https://zcdc.ksbtdanang.vn/patient-register?uid=${userId}`;
   }
 
   await sendTextMessage(userId, welcomeMsg);
