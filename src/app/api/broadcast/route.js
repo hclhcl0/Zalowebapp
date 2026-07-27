@@ -9,11 +9,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPromotionMessage, sendListMessage, sendVideoMessage, uploadVideoToZalo } from "@/lib/zalo";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { canBroadcast } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
   try {
+    // ── Kiểm tra quyền truy cập ──
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Vui lòng đăng nhập" }, { status: 401 });
+    }
+    if (!canBroadcast(session.user.role)) {
+      return NextResponse.json({ error: "Bạn không có quyền gởi tin truyền thông. Liên hệ Quản trị viên để được cấp quyền 'Tin truyền thông'." }, { status: 403 });
+    }
+
     const body = await request.json();
     const { scope, userIds, title, content, url = "", imageUrl = "", messageType = "text", elements = [] } = body;
 

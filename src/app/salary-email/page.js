@@ -8,6 +8,8 @@ import {
 import { generateSalaryEmail } from "@/lib/salaryEmailTemplate";
 import { generateCustomEmail } from "@/lib/customEmailTemplate";
 import { generateTaxEmail } from "@/lib/taxEmailTemplate";
+import { useSession } from "next-auth/react";
+import { canSendInternal } from "@/lib/roles";
 
 // Page size for tables pagination
 const PAGE_SIZE = 8;
@@ -220,7 +222,20 @@ const normalizeName = (n) => {
 }
 
 export default function SalaryEmailPage() {
+  const { data: session, status } = useSession();
 
+  // Guard: kiểm tra quyền
+  if (status === "authenticated" && !canSendInternal(session?.user?.role)) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "16px", color: "var(--text-muted)" }}>
+        <div style={{ fontSize: "3rem" }}>🚫</div>
+        <div style={{ fontWeight: 700, fontSize: "1.2rem", color: "var(--text)" }}>Không có quyền truy cập</div>
+        <div style={{ fontSize: "0.9rem", textAlign: "center", maxWidth: 360 }}>
+          Trang này yêu cầu quyền <strong>📧 Tin nội bộ</strong>.<br/>Liên hệ Quản trị viên để được cấp quyền.
+        </div>
+      </div>
+    );
+  }
 
   const [activeTab, setActiveTab] = useState("custom");
 

@@ -3,6 +3,26 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { CDC_DEPARTMENTS } from "@/lib/departments";
+import { ROLE_LABELS } from "@/lib/roles";
+
+// Badge màu sắc theo role
+const ROLE_BADGE_STYLE = {
+  admin:            { backgroundColor: "#f3e8ff", color: "#6b21a8" },
+  staff:            { backgroundColor: "#e0f2fe", color: "#0369a1" },
+  broadcaster:      { backgroundColor: "#fef9c3", color: "#854d0e" },
+  internal_sender:  { backgroundColor: "#dcfce7", color: "#166534" },
+  knowledge_editor: { backgroundColor: "#fee2e2", color: "#991b1b" },
+};
+
+function RoleBadge({ role }) {
+  const label = ROLE_LABELS[role] || role;
+  const style = ROLE_BADGE_STYLE[role] || { backgroundColor: "#f1f5f9", color: "#475569" };
+  return (
+    <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold", ...style }}>
+      {label}
+    </span>
+  );
+}
 
 export default function UserManagementPage() {
   const { data: session } = useSession();
@@ -245,15 +265,7 @@ export default function UserManagementPage() {
                           <code>{u.username}</code>
                         </td>
                         <td style={{ padding: "16px 8px" }}>
-                          {u.role === "admin" ? (
-                            <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", backgroundColor: "#f3e8ff", color: "#6b21a8", fontSize: "0.75rem", fontWeight: "bold" }}>
-                              ⚙️ Quản trị viên
-                            </span>
-                          ) : (
-                            <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", backgroundColor: "#e0f2fe", color: "#0369a1", fontSize: "0.75rem", fontWeight: "bold" }}>
-                              👥 Nhân viên
-                            </span>
-                          )}
+                          <RoleBadge role={u.role} />
                         </td>
                         <td style={{ padding: "16px 8px", fontSize: "0.85rem", color: "var(--text)" }}>
                           {u.department || "-"}
@@ -424,8 +436,11 @@ export default function UserManagementPage() {
                   onChange={(e) => setFormRole(e.target.value)}
                   style={{ cursor: "pointer" }}
                 >
-                  <option value="staff">Nhân viên</option>
-                  <option value="admin">Quản trị viên</option>
+                  <option value="staff">👤 Nhân viên</option>
+                  <option value="admin">👑 Quản trị viên</option>
+                  <option value="broadcaster">📢 Tin truyền thông</option>
+                  <option value="internal_sender">📧 Tin nội bộ</option>
+                  <option value="knowledge_editor">🧠 Kho tri thức AI</option>
                 </select>
               </div>
 

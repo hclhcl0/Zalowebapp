@@ -1,9 +1,24 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { canBroadcast } from "@/lib/roles";
 
 export default function BroadcastPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  // Guard: kiểm tra quyền
+  if (status === "authenticated" && !canBroadcast(session?.user?.role)) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "16px", color: "var(--text-muted)" }}>
+        <div style={{ fontSize: "3rem" }}>🚫</div>
+        <div style={{ fontWeight: 700, fontSize: "1.2rem", color: "var(--text)" }}>Không có quyền truy cập</div>
+        <div style={{ fontSize: "0.9rem", textAlign: "center", maxWidth: 360 }}>
+          Trang này yêu cầu quyền <strong>📢 Tin truyền thông</strong>.<br/>Liên hệ Quản trị viên để được cấp quyền.
+        </div>
+      </div>
+    );
+  }
+
   const [scope, setScope] = useState("all");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");

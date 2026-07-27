@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { canEditKnowledge } from "@/lib/roles";
 
 // GET /api/knowledge
 // Hỗ trợ phân trang và tìm kiếm: /api/knowledge?page=1&limit=10&search=keyword
@@ -93,6 +94,9 @@ export async function POST(request) {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+    if (!canEditKnowledge(session.user.role)) {
+      return NextResponse.json({ success: false, error: "Bạn không có quyền quản lý Kho tri thức AI. Liên hệ Quản trị viên để được cấp quyền 'Kho tri thức AI'." }, { status: 403 });
     }
 
     const formData = await request.formData();

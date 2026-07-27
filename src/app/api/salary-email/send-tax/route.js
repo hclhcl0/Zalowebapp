@@ -7,6 +7,10 @@ import { generateTaxEmail } from "@/lib/taxEmailTemplate";
 import { sendTextMessage } from "@/lib/zalo";
 import { generateTaxZaloMessage } from "@/lib/zaloMessageTemplates";
 import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { canSendInternal } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +74,10 @@ async function findZaloUserId(record) {
 
 
 export async function POST(req) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Vui lòng đăng nhập" }, { status: 401 });
+  if (!canSendInternal(session.user.role)) return NextResponse.json({ error: "Bạn không có quyền gởi tin nội bộ. Liên hệ Quản trị viên để được cấp quyền 'Tin nội bộ'." }, { status: 403 });
+
   try {
     const body = await req.json();
     const {

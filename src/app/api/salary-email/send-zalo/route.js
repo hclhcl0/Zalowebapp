@@ -6,10 +6,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPromotionMessage, sendListMessage } from "@/lib/zalo";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { canSendInternal } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Vui lòng đăng nhập" }, { status: 401 });
+  if (!canSendInternal(session.user.role)) return NextResponse.json({ error: "Bạn không có quyền gởi tin nội bộ. Liên hệ Quản trị viên để được cấp quyền 'Tin nội bộ'." }, { status: 403 });
+
   try {
     const body = await request.json();
     const { scope, userIds, title, content, url = "", messageType = "text", elements = [] } = body;
@@ -151,6 +158,10 @@ export async function POST(request) {
 }
 
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Vui lòng đăng nhập" }, { status: 401 });
+  if (!canSendInternal(session.user.role)) return NextResponse.json({ error: "Bạn không có quyền gởi tin nội bộ. Liên hệ Quản trị viên để được cấp quyền 'Tin nội bộ'." }, { status: 403 });
+
   try {
     const logs = await prisma.messageLog.findMany({
       where: { zaloUserId: "__broadcast_staff__" },
