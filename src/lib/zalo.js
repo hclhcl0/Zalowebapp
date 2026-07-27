@@ -489,12 +489,89 @@ export async function sendImageToUser(userId, imageUrl) {
 }
 
 // ============================================================
-// GỬi FILE dưới dạng link tải xuống (Zalo không hỗ trợ file trực tiếp)
+// GỬi FILE trực tiếp đến người dùng Zalo
+// Upload lên Zalo từ filesystem (đọc file /public/uploads/...)
+// rồi gởi qua attachment_id
 // ============================================================
 export async function sendFileAsLink(userId, fileName, fileUrl) {
-  const msg = `📥 *Tài liệu đính kèm*\n\n📄 *${fileName}*\n\n🔗 Tải xuống tại:\n${fileUrl}`;
-  return sendTextMessage(userId, msg);
+  const token = await getAccessToken();
+  if (!token) return { error: -1, message: 'Missing token' };
+
+  try {
+    // Chuyển URL thành đường dẫn filesystem
+    // fileUrl dạng "/uploads/abc.pdf" → process.cwd()/public/uploads/abc.pdf
+    let localPath = null;
+    if (fileUrl.startsWith('/uploads/')) {
+      localPath = path.join(process.cwd(), 'public', fileUrl);
+    }
+
+    if (localPath && fs.existsSync(localPath)) {
+      // 1. Upload file lên Zalo từ filesystem
+      const fileBuffer = fs.readFileSync(localPath);
+      const mimeType = getMimeType(fileName);
+      const formData = new FormData();
+      formData.append('file', new Blob([fileBuffer], { type: mimeType }), fileName);
+
+      const uploadRes = await fetch('https://openapi.zalo.me/v2.0/oa/upload/file', {
+        method: 'POST',
+        headers: { access_token: token },
+        body: formData,
+      });
+      const uploadData = await uploadRes.json();
+
+      if (uploadData.error === 0 && uploadData.data?.attachment_id) {
+        // 2. Gởi file qua attachment_id
+        const attachmentId = uploadData.data.attachment_id;
+        const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', access_token: token },
+          body: JSON.stringify({
+            recipient: { user_id: userId },
+            message: {
+              attachment: {
+                type: 'file',
+                payload: { attachment_id: attachmentId }
+              }
+            }
+          }),
+        });
+        const msgData = await msgRes.json();
+        if (msgData.error === 0) return msgData;
+        throw new Error(`Gởi file thất bại: ${msgData.message}`);
+      }
+      throw new Error(`Upload file thất bại: ${uploadData.message}`);
+    }
+
+    throw new Error('Không tìm thấy file trên filesystem');
+  } catch (err) {
+    console.error('[sendFileAsLink]', err.message);
+    // Fallback: gởi link tải xuống dạng text
+    const absUrl = fileUrl.startsWith('/')
+      ? `${process.env.NEXTAUTH_URL || 'https://zcdc.ksbtdanang.vn'}${fileUrl}`
+      : fileUrl;
+    const fallback = `📥 *Tài liệu đính kèm*\n\n📄 ${fileName}\n\n🔗 Tải xuống tại:\n${absUrl}`;
+    return sendTextMessage(userId, fallback);
+  }
 }
+
+// Helper: xác định MIME type từ tên file
+function getMimeType(fileName) {
+  const ext = path.extname(fileName).toLowerCase();
+  const map = {
+    '.pdf':  'application/pdf',
+    '.doc':  'application/msword',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.xls':  'application/vnd.ms-excel',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.ppt':  'application/vnd.ms-powerpoint',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    '.zip':  'application/zip',
+    '.rar':  'application/x-rar-compressed',
+    '.txt':  'text/plain',
+  };
+  return map[ext] || 'application/octet-stream';
+}
+
 
 // ============================================================
 // GỬi VIDEO trực tiếp đến người dùng Zalo (dùng URL trực tiếp)
