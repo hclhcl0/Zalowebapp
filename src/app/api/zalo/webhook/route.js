@@ -151,7 +151,7 @@ async function handleTextMessage(userId, text) {
       if (welcomeConfig?.value && welcomeConfig.value.trim().length > 0) {
         welcomeMsg = welcomeConfig.value
           .replace(/{displayName}/g, displayName)
-          .replace(/{name}/g, displayName);
+          .replace(/{name}/g, displayName).replace(/{userId}/g, userId).replace(/{uid}/g, userId);
       }
     } catch (dbErr) {}
 
@@ -382,7 +382,7 @@ async function handleFollow(userId, data) {
     if (welcomeConfig?.value && welcomeConfig.value.trim().length > 0) {
       welcomeMsg = welcomeConfig.value
         .replace(/{displayName}/g, displayName)
-        .replace(/{name}/g, displayName);
+        .replace(/{name}/g, displayName).replace(/{userId}/g, userId).replace(/{uid}/g, userId);
     }
   } catch (dbErr) {
     console.error("[ZALO WEBHOOK] Lỗi lấy oa_welcome_msg:", dbErr.message);
