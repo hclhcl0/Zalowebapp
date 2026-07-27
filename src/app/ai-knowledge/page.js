@@ -37,11 +37,12 @@ export default function AiKnowledgePage() {
   const [totalDocs, setTotalDocs] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchInput, setSearchInput] = useState(""); // Lưu giá trị input đang gõ
+  const [audienceFilter, setAudienceFilter] = useState(""); // "", "CITIZEN_ONLY", "STAFF"
 
-  const fetchDocuments = async (currentPage = page, searchStr = searchKeyword) => {
+  const fetchDocuments = async (currentPage = page, searchStr = searchKeyword, audience = audienceFilter) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/knowledge?page=${currentPage}&limit=${limit}&search=${encodeURIComponent(searchStr)}`);
+      const res = await fetch(`/api/knowledge?page=${currentPage}&limit=${limit}&search=${encodeURIComponent(searchStr)}&audience=${audience}`);
       const json = await res.json();
       if (json.success) {
         setDocuments(json.data);
@@ -56,8 +57,8 @@ export default function AiKnowledgePage() {
   };
 
   useEffect(() => {
-    fetchDocuments(page, searchKeyword);
-  }, [page, searchKeyword]);
+    fetchDocuments(page, searchKeyword, audienceFilter);
+  }, [page, searchKeyword, audienceFilter]);
 
   // Update category if staff has a department
   useEffect(() => {
@@ -283,6 +284,30 @@ export default function AiKnowledgePage() {
             </div>
           </div>
 
+          <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap", borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
+            <button 
+              onClick={() => { setAudienceFilter(""); setPage(1); }} 
+              className={`btn btn-sm ${audienceFilter === "" ? "btn-primary" : "btn-ghost"}`}
+              style={{ borderRadius: "20px" }}
+            >
+              🌐 Tất cả tài liệu
+            </button>
+            <button 
+              onClick={() => { setAudienceFilter("CITIZEN_ONLY"); setPage(1); }} 
+              className={`btn btn-sm ${audienceFilter === "CITIZEN_ONLY" ? "btn-primary" : "btn-ghost"}`}
+              style={{ borderRadius: "20px", color: audienceFilter === "CITIZEN_ONLY" ? "white" : "#a21caf" }}
+            >
+              🧑‍🤝‍🧑 Chỉ cho người dân
+            </button>
+            <button 
+              onClick={() => { setAudienceFilter("STAFF"); setPage(1); }} 
+              className={`btn btn-sm ${audienceFilter === "STAFF" ? "btn-primary" : "btn-ghost"}`}
+              style={{ borderRadius: "20px", color: audienceFilter === "STAFF" ? "white" : "#047857" }}
+            >
+              💼 Dành cho nhân viên
+            </button>
+          </div>
+
           {loading ? (
             <div style={{ padding: "40px 0", textAlign: "center", color: "var(--text-muted)", flex: 1 }}>
               <div className="spinner" style={{ margin: "0 auto 12px", width: 24, height: 24, borderColor: "var(--border)", borderTopColor: "var(--primary)" }} />
@@ -306,13 +331,21 @@ export default function AiKnowledgePage() {
                         <span className="badge" style={{ background: "#fef3c7", color: "#b45309", border: "1px solid #fde68a" }}>
                           {doc.category}
                         </span>
-                        {doc.allowedDepartment ? (
+                        {doc.allowedDepartment === 'CITIZEN_ONLY' ? (
+                          <span className="badge" style={{ background: "#fdf4ff", color: "#a21caf", border: "1px solid #f5d0fe" }}>
+                            🧑‍🤝‍🧑 Chỉ người dân
+                          </span>
+                        ) : doc.allowedDepartment === 'STAFF_ONLY' ? (
+                          <span className="badge" style={{ background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0" }}>
+                            💼 Chỉ nhân viên
+                          </span>
+                        ) : doc.allowedDepartment ? (
                           <span className="badge" style={{ background: "#fee2e2", color: "#991b1b", border: "1px solid #fecaca" }}>
                             🔒 Chỉ {doc.allowedDepartment}
                           </span>
                         ) : (
                           <span className="badge" style={{ background: "#dbeafe", color: "#1e40af", border: "1px solid #bfdbfe" }}>
-                            🌐 Tất cả cơ quan
+                            🌐 Tất cả cơ quan & người dân
                           </span>
                         )}
                       </div>
@@ -448,6 +481,8 @@ export default function AiKnowledgePage() {
                 style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
               >
                 <option value="ALL">🌐 Tất cả cơ quan & người dân</option>
+                <option value="CITIZEN_ONLY">🧑‍🤝‍🧑 Chỉ cho Người dân (không áp dụng Nhân viên)</option>
+                <option value="STAFF_ONLY">💼 Chỉ cho Nhân viên (tất cả các phòng)</option>
                 {CDC_DEPARTMENTS.map(d => (
                   <option key={d} value={d}>🔒 Chỉ {d}</option>
                 ))}
@@ -620,6 +655,8 @@ export default function AiKnowledgePage() {
                       style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
                     >
                       <option value="ALL">🌐 Tất cả cơ quan & người dân</option>
+                      <option value="CITIZEN_ONLY">🧑‍🤝‍🧑 Chỉ cho Người dân (không áp dụng Nhân viên)</option>
+                      <option value="STAFF_ONLY">💼 Chỉ cho Nhân viên (tất cả các phòng)</option>
                       {CDC_DEPARTMENTS.map(d => (
                         <option key={d} value={d}>🔒 Chỉ {d}</option>
                       ))}

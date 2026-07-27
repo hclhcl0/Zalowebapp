@@ -16,10 +16,21 @@ export async function GET(request) {
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 10;
     const search = searchParams.get("search") || "";
+    const audience = searchParams.get("audience") || "";
 
     const skip = (page - 1) * limit;
 
     let whereClause = {};
+    
+    if (audience === "CITIZEN_ONLY") {
+      whereClause.allowedDepartment = "CITIZEN_ONLY";
+    } else if (audience === "STAFF") {
+      whereClause.allowedDepartment = {
+        not: null,
+        notIn: ["CITIZEN_ONLY"]
+      };
+    }
+
     if (session.user.role === "staff") {
       if (!session.user.department) {
         return NextResponse.json({ success: true, data: [], total: 0, page: 1, totalPages: 0 });
