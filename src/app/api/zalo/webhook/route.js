@@ -160,9 +160,9 @@ async function handleTextMessage(userId, text) {
         `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\n` +
         `Vui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:\n\n` +
         `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n` +
-        `🔗 https://sender.ksbtdanang.vn/register?uid=${userId}\n\n` +
+        `🔗 https://zcdc.ksbtdanang.vn/register?uid=${userId}\n\n` +
         `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n` +
-        `🔗 https://sender.ksbtdanang.vn/patient-register?uid=${userId}`;
+        `🔗 https://zcdc.ksbtdanang.vn/patient-register?uid=${userId}`;
     }
 
     await sendTextMessage(userId, welcomeMsg);
@@ -172,7 +172,7 @@ async function handleTextMessage(userId, text) {
   // Lệnh đặc biệt: Yêu cầu gửi link liên kết Cán bộ / Nhân viên
   const staffKeywords = ["tôi là nhân viên", "toi la nhan vien", "nhân viên cdc", "nhan vien cdc", "đăng ký nhân viên", "dang ky nhan vien"];
   if (staffKeywords.some(kw => lowerText.includes(kw))) {
-    const registerLink = `https://sender.ksbtdanang.vn/register?uid=${userId}`;
+    const registerLink = `https://zcdc.ksbtdanang.vn/register?uid=${userId}`;
     const replyMsg = `Chào bạn, để Trợ lý AI nhận diện bạn là Cán bộ/Nhân viên của Trung tâm Kiểm soát Bệnh tật TP. Đà Nẵng và cấp quyền tra cứu thông tin nội bộ, vui lòng truy cập đường link dưới đây để liên kết tài khoản:\n\n🔗 ${registerLink}\n\n(Lưu ý: Link này chỉ dành riêng cho tài khoản Zalo của bạn, vui lòng không chia sẻ cho người khác)`;
     await sendTextMessage(userId, replyMsg);
     // Ghi log Outbound
@@ -393,9 +393,9 @@ async function handleFollow(userId, data) {
       `Xin chào ${displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\n` +
       `Vui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:\n\n` +
       `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n` +
-      `🔗 https://sender.ksbtdanang.vn/register?uid=${userId}\n\n` +
+      `🔗 https://zcdc.ksbtdanang.vn/register?uid=${userId}\n\n` +
       `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n` +
-      `🔗 https://sender.ksbtdanang.vn/patient-register?uid=${userId}`;
+      `🔗 https://zcdc.ksbtdanang.vn/patient-register?uid=${userId}`;
   }
 
   await sendTextMessage(userId, welcomeMsg);
