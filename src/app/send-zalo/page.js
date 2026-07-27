@@ -283,9 +283,9 @@ export default function SendZaloPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "20px", alignItems: "start" }}>
-        {/* ─── LEFT: Compose ─── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        {/* ─── TOP: Compose ─── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
 
           {/* Scope selector */}
           <div className="card" style={{ padding: "20px" }}>
@@ -527,36 +527,73 @@ export default function SendZaloPage() {
           </div>
         </div>
 
-        {/* ─── RIGHT: History ─── */}
-        <div className="card" style={{ padding: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-            <div style={{ fontWeight: 700, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
-              <Clock size={16} /> Lịch sử gởi
+        {/* ─── BOTTOM: History Table ─── */}
+        <div className="card" style={{ padding: "0" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
+            <div style={{ fontWeight: 700, fontSize: "1rem", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Clock size={18} color="var(--primary)" /> Lịch sử gởi tin
             </div>
-            <button onClick={loadHistory} className="btn btn-ghost btn-sm" style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-              <RefreshCw size={13} />
+            <button onClick={loadHistory} className="btn btn-ghost btn-sm" style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              <RefreshCw size={14} /> Làm mới
             </button>
           </div>
 
           {loadingHistory ? (
-            <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "20px", fontSize: "0.85rem" }}>Đang tải...</div>
+            <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "40px", fontSize: "0.9rem" }}>
+              <RefreshCw size={20} style={{ animation: "spin 1s linear infinite", margin: "0 auto 10px" }} />
+              Đang tải lịch sử...
+            </div>
           ) : history.length === 0 ? (
-            <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "20px", fontSize: "0.85rem" }}>Chưa có lịch sử gởi tin</div>
+            <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "40px", fontSize: "0.9rem" }}>
+              Chưa có lịch sử gởi tin Zalo nào.
+            </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {history.map(log => (
-                <div key={log.id} style={{
-                  padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)",
-                  background: "var(--surface)", fontSize: "0.82rem",
-                }}>
-                  <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {log.content || "(Không có nội dung)"}
-                  </div>
-                  <div style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
-                    {new Date(log.receivedAt).toLocaleString("vi-VN")}
-                  </div>
-                </div>
-              ))}
+            <div className="table-responsive">
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", color: "var(--text-muted)", fontSize: "0.8rem", textTransform: "uppercase" }}>
+                    <th style={{ padding: "12px 16px" }}>Thời gian</th>
+                    <th style={{ padding: "12px 16px", minWidth: "250px" }}>Nội dung</th>
+                    <th style={{ padding: "12px 16px" }}>Phạm vi</th>
+                    <th style={{ padding: "12px 16px" }}>Đính kèm</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map(log => {
+                    let payload = {};
+                    try { payload = JSON.parse(log.rawPayload || "{}"); } catch(e) {}
+                    
+                    const scopeLabel = SCOPE_OPTIONS.find(s => s.value === payload.scope)?.label || payload.scope || "Không rõ";
+                    const hasImages = payload.imageUrls?.length > 0;
+                    const hasVideos = payload.videoUrls?.length > 0;
+                    const hasFiles = payload.fileAttachments?.length > 0;
+                    
+                    return (
+                      <tr key={log.id} style={{ borderBottom: "1px solid var(--border)", fontSize: "0.85rem" }}>
+                        <td style={{ padding: "12px 16px", color: "var(--text-muted)" }}>
+                          {new Date(log.receivedAt).toLocaleString("vi-VN")}
+                        </td>
+                        <td style={{ padding: "12px 16px", fontWeight: 500, color: "var(--text)" }}>
+                          <div style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                            {log.content || "(Không có nội dung)"}
+                          </div>
+                        </td>
+                        <td style={{ padding: "12px 16px", color: "var(--primary)", fontWeight: 600 }}>
+                          {scopeLabel}
+                        </td>
+                        <td style={{ padding: "12px 16px" }}>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                            {hasImages && <span style={{ background: "#e0f2fe", color: "#0369a1", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", display: "flex", alignItems: "center", gap: "4px" }}><Image size={10} /> {payload.imageUrls.length}</span>}
+                            {hasVideos && <span style={{ background: "#fef9c3", color: "#854d0e", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", display: "flex", alignItems: "center", gap: "4px" }}><FileVideo size={10} /> {payload.videoUrls.length}</span>}
+                            {hasFiles && <span style={{ background: "#f3e8ff", color: "#6b21a8", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", display: "flex", alignItems: "center", gap: "4px" }}><FileText size={10} /> {payload.fileAttachments.length}</span>}
+                            {!hasImages && !hasVideos && !hasFiles && <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>-</span>}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
