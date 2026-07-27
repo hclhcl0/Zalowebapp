@@ -58,7 +58,7 @@ export function HotlinesPanel() {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {hotlines.map((h, idx) => (
           <div key={h.id} style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 14, background: "var(--surface)" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 8 }}>
               <div>
                 <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: 3 }}>Icon</label>
                 <input className="form-input" value={h.icon} onChange={e => update(idx, "icon", e.target.value)} style={{ fontSize: "1.2rem", width: 60, textAlign: "center" }} />
@@ -227,7 +227,7 @@ export function SchedulesPanel() {
             {expanded[si] && (
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
                 {/* Basic fields */}
-                <div style={{ display: "grid", gridTemplateColumns: "60px 1fr 1fr", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                   <div>
                     <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: 3 }}>Icon</label>
                     <input className="form-input" value={sch.icon} onChange={e => updateSchedule(si, "icon", e.target.value)} style={{ fontSize: "1.2rem", textAlign: "center" }} />

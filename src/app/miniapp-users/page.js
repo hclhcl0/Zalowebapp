@@ -86,7 +86,7 @@ function UserDetail({ userId, onClose }) {
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 10, marginBottom: 20 }}>
         {[
           { icon: "🚀", label: "Lần mở", value: user.totalVisits ?? 0 },
           { icon: "📅", label: "Lịch hẹn", value: user._count?.appointments ?? 0 },

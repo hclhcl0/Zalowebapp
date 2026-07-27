@@ -521,7 +521,7 @@ export default function BroadcastPage() {
                         </div>
                       </div>
                       
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
                         <div>
                           <label className="form-label" style={{ fontSize: "0.8rem" }}>Tiêu đề của tham số {index + 1}</label>
                           <input type="text" className="form-input" style={{ padding: "6px 10px" }} value={el.title} onChange={(e) => handleElementChange(index, "title", e.target.value)} required={messageType === "list"} />

@@ -103,7 +103,7 @@ export default function MiniAppSettingsPage() {
       </div>
 
       <form onSubmit={handleSave} className="card" style={{ padding: '24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
           {MINIAPP_FIELDS.map((field) => (
             <div 
               key={field.key} 

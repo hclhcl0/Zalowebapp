@@ -1139,7 +1139,7 @@ export default function FollowersPage() {
                       <input type="text" className="form-input" placeholder="Tên khai báo..."
                         value={newFullName} onChange={e => setNewFullName(e.target.value)} style={{ padding: "6px 10px", fontSize: "0.85rem" }} />
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px" }}>
                       <div>
                         <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>💳 CCCD/Mã BN</label>
                         <input type="text" className="form-input" placeholder="Số CCCD..."

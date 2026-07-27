@@ -772,7 +772,7 @@ function SettingsPageContent() {
                           <button className="btn btn-outline btn-sm" onClick={() => navigator.clipboard.writeText(oauthData.authUrl)}>📋</button>
                         </div>
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "16px" }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                            <label className="form-label" style={{ fontSize: "0.75rem" }}>Code Challenge (tự động)</label>
                            <input type="text" className="form-input" value={oauthData.codeChallenge} readOnly style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "var(--text-muted)" }} />
@@ -809,7 +809,7 @@ function SettingsPageContent() {
                     </div>
                   )}
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "24px", alignItems: "start" }}>
+                  <div className="dashboard-grid">
                     {/* Cột trái: Danh sách & form thêm */}
                     <div>
                       <h3 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>

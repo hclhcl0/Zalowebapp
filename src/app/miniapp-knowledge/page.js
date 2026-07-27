@@ -445,7 +445,7 @@ export default function MiniAppKnowledgePage() {
                 {/* Topic editor */}
                 {isOpen && (
                   <div style={{ padding: 16, background: "var(--surface)", display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
                       {/* Category */}
                       <div>
                         <label style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", display: "block", marginBottom: 4 }}>
