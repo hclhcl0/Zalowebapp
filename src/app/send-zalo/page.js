@@ -169,14 +169,17 @@ export default function SendZaloPage() {
 
   // ─── Send ─────────────────────────────────────────────────
   const handleSend = async () => {
-    if (!content.trim()) { alert("Vui lòng nhập nội dung"); return; }
+    const hasAttachments = imageAttachments.length > 0 || videoAttachments.length > 0 || fileAttachments.length > 0;
+    if (!content.trim() && !hasAttachments) { alert("Vui lòng nhập nội dung hoặc thêm đính kèm"); return; }
     if (scope.includes("list") && selectedIds.length === 0) {
       alert("Vui lòng chọn ít nhất 1 người nhận");
       return;
     }
     const scopeLabel = SCOPE_OPTIONS.find(s => s.value === scope)?.label || scope;
     const recipText  = scope.includes("list") ? `${selectedIds.length} người đã chọn` : scopeLabel;
-    if (!window.confirm(`Xác nhận gởi tin đến ${recipText}?\n\n"${content.substring(0, 100)}..."`)) return;
+    
+    const previewContent = content.trim() ? `"${content.substring(0, 100)}..."` : "(Chỉ gởi đính kèm)";
+    if (!window.confirm(`Xác nhận gởi tin đến ${recipText}?\n\n${previewContent}`)) return;
 
     setSending(true); setSendProgress(10); setSendResult(null);
     try {

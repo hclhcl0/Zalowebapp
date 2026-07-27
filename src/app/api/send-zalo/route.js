@@ -34,8 +34,9 @@ export async function POST(request) {
       delay = 300,       // ms giữa mỗi lần gởi
     } = body;
 
-    if (!content?.trim()) {
-      return NextResponse.json({ error: 'Nội dung tin nhắn không được để trống' }, { status: 400 });
+    const hasAttachments = imageUrls.length > 0 || videoUrls.length > 0 || fileAttachments.length > 0;
+    if (!content?.trim() && !hasAttachments) {
+      return NextResponse.json({ error: 'Nội dung tin nhắn và đính kèm không được cùng trống' }, { status: 400 });
     }
 
     // ── Xác định danh sách ZaloUserID ──
@@ -88,14 +89,17 @@ export async function POST(request) {
     const errors = [];
 
     // Xây dựng nội dung tin nhắn
-    let mainText = title ? `${title.toUpperCase()}\n\n${content}` : content;
-    if (url) mainText += `\n\n🔗 Xem thêm: ${url}`;
+    let mainText = content ? (title ? `${title.toUpperCase()}\n\n${content}` : content) : '';
+    if (mainText && url) mainText += `\n\n🔗 Xem thêm: ${url}`;
+    else if (!mainText && url) mainText = `🔗 Xem thêm: ${url}`;
 
     for (const userId of targetUserIds) {
       try {
-        // 1. GỜi tin văn bản chính
-        const textRes = await sendTextMessage(userId, mainText);
-        if (textRes.error && textRes.error !== 0) throw new Error(textRes.message || 'Lỗi gởi text');
+        // 1. GỜi tin văn bản chính (nếu có nội dung)
+        if (mainText) {
+          const textRes = await sendTextMessage(userId, mainText);
+          if (textRes.error && textRes.error !== 0) throw new Error(textRes.message || 'Lỗi gởi text');
+        }
 
         // 2. GỜi từng ảnh kèm theo
         for (const imgUrl of imageUrls) {
