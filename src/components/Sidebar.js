@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { CDC_LOGO_BASE64 } from "@/lib/logo";
 import { 
   LayoutDashboard, Users, Megaphone, Mail, 
   Newspaper, CalendarDays, AlertTriangle, 
@@ -203,9 +202,9 @@ export default function Sidebar() {
     <aside className="sidebar">
       {/* Logo */}
       <div className="sidebar-header">
-        <img src={CDC_LOGO_BASE64} alt="CDC Logo" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
+        <img src="/images/logo-zcdc.jpg" alt="CDC Logo" style={{ width: 44, height: 44, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
         <div className="sidebar-logo-text">
-          <span className="sidebar-logo-main">CDC Đà Nẵng</span>
+          <span className="sidebar-logo-main">ZCDC Dashboard</span>
           <span className="sidebar-logo-sub">Quản trị Zalo OA</span>
         </div>
       </div>

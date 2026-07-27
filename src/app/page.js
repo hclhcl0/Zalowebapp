@@ -141,6 +141,15 @@ export default async function Dashboard() {
         </Link>
       </div>
       
+      {/* Dashboard Banner */}
+      <div style={{ marginBottom: "24px", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow-sm)", background: "white", display: "flex", justifyContent: "center" }}>
+        <img 
+          src="/images/banner-zcdc.png" 
+          alt="ZCDC Quản lý Zalo CDC" 
+          style={{ width: "100%", maxWidth: "800px", height: "auto", display: "block", objectFit: "contain" }} 
+        />
+      </div>
+
       {/* Real-time Stat cards */}
       <div className="stat-grid">
         {/* Card 1: Followers */}

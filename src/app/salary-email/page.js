@@ -288,6 +288,15 @@ export default function SalaryEmailPage() {
         </div>
       </div>
 
+      {/* Internal Banner */}
+      <div style={{ marginBottom: "24px", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow-sm)", background: "white", display: "flex", justifyContent: "center" }}>
+        <img 
+          src="/images/banner-internal.png" 
+          alt="Gửi tin nội bộ" 
+          style={{ width: "100%", maxWidth: "800px", height: "auto", display: "block", objectFit: "contain" }} 
+        />
+      </div>
+
       {/* Navigation Tabs */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
         {[
