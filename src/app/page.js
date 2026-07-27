@@ -131,20 +131,23 @@ export default async function Dashboard() {
   return (
     <div>
       {/* Page header */}
-      {/* Removed HEADER because banner is present */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "16px" }}>
-        <Link href="/broadcast" className="btn btn-primary">
-          <Megaphone size={18} /> Gửi Tin Truyền Thông
-        </Link>
-      </div>
-      
       {/* Dashboard Banner */}
-      <div style={{ marginBottom: "24px", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow-sm)", background: "white", display: "flex", justifyContent: "center" }}>
+      <div style={{ marginBottom: "16px", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow-sm)", background: "white", display: "flex", justifyContent: "center" }}>
         <img 
-          src="/images/banner-zcdc.png" 
+          src="/images/banner-zcdc-new.png" 
           alt="ZCDC Quản lý Zalo CDC" 
           style={{ width: "100%", maxWidth: "800px", height: "auto", display: "block", objectFit: "contain" }} 
         />
+      </div>
+
+      {/* Action Buttons Below Banner */}
+      <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap", justifyContent: "center" }}>
+        <Link href="/broadcast" className="btn btn-primary" style={{ flex: "1", maxWidth: "300px", justifyContent: "center", padding: "12px" }}>
+          <Megaphone size={20} /> Gửi Tin Truyền Thông
+        </Link>
+        <Link href="/salary-email" className="btn btn-primary" style={{ flex: "1", maxWidth: "300px", justifyContent: "center", padding: "12px", background: "linear-gradient(135deg, #059669, #10b981)" }}>
+          <Mail size={20} /> Gửi Tin Nội Bộ
+        </Link>
       </div>
 
       {/* Real-time Stat cards */}
