@@ -81,7 +81,9 @@ const SETTING_GROUPS = [
     fields: [
       { key: "oa_display_name", label: "Tên hiển thị OA",   type: "text",     placeholder: "VD: CDC Đà Nẵng" },
       { key: "oa_welcome_msg",  label: "Tin chào (Chỉ ghi lời chào, 2 link dưới sẽ tự động được chèn vào đuôi)", type: "textarea", placeholder: "VD: Xin chào! Cảm ơn bạn đã quan tâm..." },
+      { key: "oa_register_text_staff", label: "Câu dẫn link Đăng ký Nhân viên", type: "text", placeholder: "VD: 💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:" },
       { key: "oa_register_link_staff", label: "Đường link Đăng ký Nhân viên (Hệ thống sẽ tự động ghép UID)", type: "text", placeholder: "VD: https://zcdc.ksbtdanang.vn/register" },
+      { key: "oa_register_text_patient", label: "Câu dẫn link Đăng ký Người dân", type: "text", placeholder: "VD: 🏥 Dành cho Người dân (Nhận kết quả xét nghiệm...):" },
       { key: "oa_register_link_patient", label: "Đường link Đăng ký Người dân (Hệ thống sẽ tự động ghép UID)", type: "text", placeholder: "VD: https://zcdc.ksbtdanang.vn/patient-register" },
       { key: "chatbot_default_reply", label: "Tin nhắn mặc định (không khớp từ khoá)", type: "textarea", placeholder: "VD: Xin chào! Bạn có thể hỏi về đặt lịch..." },
     ],

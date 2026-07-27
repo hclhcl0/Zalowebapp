@@ -145,9 +145,16 @@ async function handleTextMessage(userId, text) {
 
     let welcomeMsg = "";
     try {
-      const welcomeConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_welcome_msg" } });
-      const staffLinkConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_register_link_staff" } });
-      const patientLinkConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_register_link_patient" } });
+      const [
+        welcomeConfig, staffLinkConfig, patientLinkConfig,
+        staffTextConfig, patientTextConfig
+      ] = await Promise.all([
+        prisma.systemConfig.findUnique({ where: { key: "oa_welcome_msg" } }),
+        prisma.systemConfig.findUnique({ where: { key: "oa_register_link_staff" } }),
+        prisma.systemConfig.findUnique({ where: { key: "oa_register_link_patient" } }),
+        prisma.systemConfig.findUnique({ where: { key: "oa_register_text_staff" } }),
+        prisma.systemConfig.findUnique({ where: { key: "oa_register_text_patient" } })
+      ]);
 
       let greetingText = welcomeConfig?.value?.trim() 
         ? welcomeConfig.value 
@@ -158,9 +165,12 @@ async function handleTextMessage(userId, text) {
       const staffLinkBase = staffLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/register";
       const patientLinkBase = patientLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/patient-register";
 
+      const staffText = staffTextConfig?.value?.trim() || "💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:";
+      const patientText = patientTextConfig?.value?.trim() || "🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):";
+
       welcomeMsg = `${greetingText}\n\n` +
-        `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n🔗 ${staffLinkBase}?uid=${userId}\n\n` +
-        `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n🔗 ${patientLinkBase}?uid=${userId}`;
+        `${staffText}\n🔗 ${staffLinkBase}?uid=${userId}\n\n` +
+        `${patientText}\n🔗 ${patientLinkBase}?uid=${userId}`;
     } catch (dbErr) {
       console.error("[ZALO WEBHOOK] Lỗi tạo welcomeMsg (reset):", dbErr.message);
       welcomeMsg = `Xin chào ${displayName}! Vui lòng đăng ký:\n🔗 https://zcdc.ksbtdanang.vn/patient-register?uid=${userId}`;
@@ -377,9 +387,16 @@ async function handleFollow(userId, data) {
   // Gửi tin chào mừng (Tự động lấy cấu hình từ DB nếu có)
   let welcomeMsg = "";
   try {
-    const welcomeConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_welcome_msg" } });
-    const staffLinkConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_register_link_staff" } });
-    const patientLinkConfig = await prisma.systemConfig.findUnique({ where: { key: "oa_register_link_patient" } });
+    const [
+      welcomeConfig, staffLinkConfig, patientLinkConfig,
+      staffTextConfig, patientTextConfig
+    ] = await Promise.all([
+      prisma.systemConfig.findUnique({ where: { key: "oa_welcome_msg" } }),
+      prisma.systemConfig.findUnique({ where: { key: "oa_register_link_staff" } }),
+      prisma.systemConfig.findUnique({ where: { key: "oa_register_link_patient" } }),
+      prisma.systemConfig.findUnique({ where: { key: "oa_register_text_staff" } }),
+      prisma.systemConfig.findUnique({ where: { key: "oa_register_text_patient" } })
+    ]);
 
     let greetingText = welcomeConfig?.value?.trim() 
       ? welcomeConfig.value 
@@ -390,9 +407,12 @@ async function handleFollow(userId, data) {
     const staffLinkBase = staffLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/register";
     const patientLinkBase = patientLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/patient-register";
 
+    const staffText = staffTextConfig?.value?.trim() || "💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:";
+    const patientText = patientTextConfig?.value?.trim() || "🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):";
+
     welcomeMsg = `${greetingText}\n\n` +
-      `💼 Dành cho Cán bộ, Nhân viên CDC Đà Nẵng:\n🔗 ${staffLinkBase}?uid=${userId}\n\n` +
-      `🏥 Dành cho Người dân (Nhận kết quả xét nghiệm, lịch tiêm, tư vấn):\n🔗 ${patientLinkBase}?uid=${userId}`;
+      `${staffText}\n🔗 ${staffLinkBase}?uid=${userId}\n\n` +
+      `${patientText}\n🔗 ${patientLinkBase}?uid=${userId}`;
   } catch (dbErr) {
     console.error("[ZALO WEBHOOK] Lỗi tạo oa_welcome_msg:", dbErr.message);
     welcomeMsg = `Xin chào ${displayName}! Vui lòng đăng ký:\n🔗 https://zcdc.ksbtdanang.vn/patient-register?uid=${userId}`;
