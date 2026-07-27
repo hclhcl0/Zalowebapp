@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { scope, userIds, title, content, url = "", messageType = "text", elements = [] } = body;
+    const { scope, userIds, title, content, url = "", imageUrl = "", messageType = "text", elements = [] } = body;
 
     // Validate inputs
     if (messageType === "text") {
@@ -107,7 +107,7 @@ export async function POST(request) {
         } else if (messageType === "video") {
           result = await sendVideoMessage(userId, finalVideoUrl);
         } else {
-          result = await sendPromotionMessage(userId, title, content, processedUrl);
+          result = await sendPromotionMessage(userId, title, content, processedUrl, imageUrl);
         }
 
         if (result.error && result.error !== 0) {

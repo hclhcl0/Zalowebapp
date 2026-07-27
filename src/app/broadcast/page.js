@@ -8,6 +8,7 @@ export default function BroadcastPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [url, setUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   
   // Tin nhắn danh sách (Carousel)
   const [messageType, setMessageType] = useState("text"); // 'text' | 'list'
@@ -112,6 +113,34 @@ export default function BroadcastPage() {
     } finally {
       setUploadingIndex(null);
       e.target.value = "";
+    }
+  };
+
+  const handleSingleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Chỉ chấp nhận tập tin hình ảnh.");
+      return;
+    }
+
+    setUploadingIndex(-1); // Use -1 to represent single image upload
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Tải ảnh thất bại");
+      setImageUrl(data.url);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUploadingIndex(null);
     }
   };
 
@@ -273,6 +302,7 @@ export default function BroadcastPage() {
           title: title.trim(),
           content: content.trim(),
           url: url.trim() || undefined,
+          imageUrl: imageUrl.trim() || undefined,
           elements: messageType === "list" ? listElements : [],
         }),
       });
@@ -282,6 +312,7 @@ export default function BroadcastPage() {
       setTitle("");
       setContent("");
       setUrl("");
+      setImageUrl("");
       setSelectedIds([]);
       // Do not reset listElements to preserve user's work, let them clear manually if needed, or maybe reset to 1 element
       setListElements([{ title: "", subtitle: "", imageUrl: "", actionType: "oa.open.url", actionValue: "", actionSmsContent: "" }]);
@@ -490,6 +521,38 @@ export default function BroadcastPage() {
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
                     />
+                  </div>
+                  
+                  {/* Image URL (optional) */}
+                  <div>
+                    <label className="form-label">Hình ảnh kèm theo <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>(tùy chọn)</span></label>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        style={{ flex: 1 }} 
+                        value={imageUrl} 
+                        placeholder="Nhập link hoặc tải ảnh lên"
+                        onChange={(e) => setImageUrl(e.target.value)} 
+                      />
+                      <label 
+                        htmlFor="single-file-upload" 
+                        style={{ 
+                          padding: "8px 16px", background: "#f1f5f9", border: "1px solid var(--border)", 
+                          borderRadius: "4px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px",
+                          color: "#334155", fontWeight: 600, fontSize: "0.8rem", flexShrink: 0, height: "40px"
+                        }}
+                      >
+                        {uploadingIndex === -1 ? "⏳..." : "📁 Tải lên"}
+                      </label>
+                      <input 
+                        id="single-file-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: "none" }} 
+                        onChange={handleSingleImageUpload} 
+                      />
+                    </div>
                   </div>
                 </>
               )}
