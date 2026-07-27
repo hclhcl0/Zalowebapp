@@ -251,7 +251,145 @@ export default function AiKnowledgePage() {
         </div>
       </div>
 
-      <div className="dashboard-grid">
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        {/* Form Upload */}
+        <div className="card" style={{ height: "fit-content" }}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: "bold", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <Upload className="w-5 h-5 text-primary" />
+            Nạp tài liệu mới
+          </h2>
+          
+          <form onSubmit={handleUpload} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Tên tài liệu (Tùy chọn)</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="VD: Phác đồ điều trị Sốt xuất huyết"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Chuyên môn (Tag)</label>
+              <select
+                className="form-input"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                disabled={session?.user?.role === "staff"}
+                required
+                style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
+              >
+                {CDC_DEPARTMENTS.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              {session?.user?.role === "staff" && (
+                <p style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px" }}>
+                  * Tự động gán theo phòng ban của bạn.
+                </p>
+              )}
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Quyền xem tài liệu</label>
+              <select
+                className="form-input"
+                value={allowedDepartment}
+                onChange={(e) => setAllowedDepartment(e.target.value)}
+                disabled={session?.user?.role === "staff"}
+                required
+                style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
+              >
+                <option value="ALL">🌐 Tất cả cơ quan & người dân</option>
+                <option value="CITIZEN_ONLY">🧑‍🤝‍🧑 Chỉ cho Người dân (không áp dụng Nhân viên)</option>
+                <option value="STAFF_ONLY">💼 Chỉ cho Nhân viên (tất cả các phòng)</option>
+                {CDC_DEPARTMENTS.map(d => (
+                  <option key={d} value={d}>🔒 Chỉ {d}</option>
+                ))}
+              </select>
+              {session?.user?.role === "staff" && (
+                <p style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px" }}>
+                  * Tài liệu của nhân viên mặc định chỉ dành riêng cho phòng ban của bạn.
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: "8px", marginBottom: "16px", background: "var(--bg)", padding: "4px", borderRadius: "8px" }}>
+              <button
+                type="button"
+                onClick={() => setUploadType("file")}
+                style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "none", background: uploadType === "file" ? "white" : "transparent", boxShadow: uploadType === "file" ? "0 1px 3px rgba(0,0,0,0.1)" : "none", fontWeight: uploadType === "file" ? 600 : 400, color: uploadType === "file" ? "var(--primary)" : "var(--text-muted)", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                Tải file lên
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadType("link")}
+                style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "none", background: uploadType === "link" ? "white" : "transparent", boxShadow: uploadType === "link" ? "0 1px 3px rgba(0,0,0,0.1)" : "none", fontWeight: uploadType === "link" ? 600 : 400, color: uploadType === "link" ? "var(--primary)" : "var(--text-muted)", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                Link Google Drive
+              </button>
+            </div>
+
+            {uploadType === "file" ? (
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Chọn File (Hỗ trợ .PDF, .DOCX, .PPTX, .TXT, .XLSX, .CSV)</label>
+                <input
+                  type="file"
+                  className="form-input"
+                  accept=".pdf,.docx,.pptx,.txt,.md,.xlsx,.xls,.csv"
+                  ref={fileInputRef}
+                  required
+                  style={{ padding: "8px", background: "var(--bg)" }}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Link Google Drive (Phải bật Bất kỳ ai có liên kết)</label>
+                  <input
+                    type="url"
+                    className="form-input"
+                    placeholder="https://drive.google.com/file/d/..."
+                    value={driveUrl}
+                    onChange={(e) => setDriveUrl(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Định dạng file (để AI đọc đúng chuẩn)</label>
+                  <select
+                    className="form-input"
+                    value={driveExt}
+                    onChange={(e) => setDriveExt(e.target.value)}
+                  >
+                    <option value="pdf">PDF (Ảnh/Văn bản)</option>
+                    <option value="docx">Word (.docx)</option>
+                    <option value="pptx">PowerPoint (.pptx)</option>
+                    <option value="xlsx">Excel (.xlsx)</option>
+                    <option value="csv">CSV</option>
+                    <option value="txt">Text (.txt)</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            <button type="submit" className="btn btn-primary" disabled={uploading} style={{ width: "100%", justifyContent: "center", marginTop: "8px" }}>
+              {uploading ? (
+                <><span className="spinner" style={{ width: 14, height: 14, borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} /> Đang xử lý file...</>
+              ) : (
+                <><Plus className="w-4 h-4" /> Nạp vào Khối óc AI</>
+              )}
+            </button>
+          </form>
+
+          <div style={{ marginTop: "24px", fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.6, padding: "12px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", color: "#166534" }}>
+            <strong>💡 Mẹo:</strong> Tài liệu càng có cấu trúc rõ ràng thì AI học càng nhanh. File Word, PDF, Excel sẽ tự động được trích xuất thành văn bản (text/csv) để AI có thể ghi nhớ. Đặc biệt, dữ liệu bảng (Excel) rất hữu ích cho các bảng giá, lịch trực.
+          </div>
+        </div>
+
         {/* Danh sách tài liệu */}
         <div className="card" style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
@@ -430,143 +568,6 @@ export default function AiKnowledgePage() {
           )}
         </div>
 
-        {/* Form Upload */}
-        <div className="card" style={{ height: "fit-content", position: "sticky", top: "24px" }}>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: "bold", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <Upload className="w-5 h-5 text-primary" />
-            Nạp tài liệu mới
-          </h2>
-          
-          <form onSubmit={handleUpload} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Tên tài liệu (Tùy chọn)</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="VD: Phác đồ điều trị Sốt xuất huyết"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Chuyên môn (Tag)</label>
-              <select
-                className="form-input"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                disabled={session?.user?.role === "staff"}
-                required
-                style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
-              >
-                {CDC_DEPARTMENTS.map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-              {session?.user?.role === "staff" && (
-                <p style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px" }}>
-                  * Tự động gán theo phòng ban của bạn.
-                </p>
-              )}
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Quyền xem tài liệu</label>
-              <select
-                className="form-input"
-                value={allowedDepartment}
-                onChange={(e) => setAllowedDepartment(e.target.value)}
-                disabled={session?.user?.role === "staff"}
-                required
-                style={{ cursor: session?.user?.role === "staff" ? "not-allowed" : "pointer" }}
-              >
-                <option value="ALL">🌐 Tất cả cơ quan & người dân</option>
-                <option value="CITIZEN_ONLY">🧑‍🤝‍🧑 Chỉ cho Người dân (không áp dụng Nhân viên)</option>
-                <option value="STAFF_ONLY">💼 Chỉ cho Nhân viên (tất cả các phòng)</option>
-                {CDC_DEPARTMENTS.map(d => (
-                  <option key={d} value={d}>🔒 Chỉ {d}</option>
-                ))}
-              </select>
-              {session?.user?.role === "staff" && (
-                <p style={{ fontSize: "0.75rem", color: "var(--primary)", marginTop: "4px" }}>
-                  * Tài liệu của nhân viên mặc định chỉ dành riêng cho phòng ban của bạn.
-                </p>
-              )}
-            </div>
-
-            <div style={{ display: "flex", gap: "8px", marginBottom: "16px", background: "var(--bg)", padding: "4px", borderRadius: "8px" }}>
-              <button
-                type="button"
-                onClick={() => setUploadType("file")}
-                style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "none", background: uploadType === "file" ? "white" : "transparent", boxShadow: uploadType === "file" ? "0 1px 3px rgba(0,0,0,0.1)" : "none", fontWeight: uploadType === "file" ? 600 : 400, color: uploadType === "file" ? "var(--primary)" : "var(--text-muted)", cursor: "pointer", transition: "all 0.2s" }}
-              >
-                Tải file lên
-              </button>
-              <button
-                type="button"
-                onClick={() => setUploadType("link")}
-                style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "none", background: uploadType === "link" ? "white" : "transparent", boxShadow: uploadType === "link" ? "0 1px 3px rgba(0,0,0,0.1)" : "none", fontWeight: uploadType === "link" ? 600 : 400, color: uploadType === "link" ? "var(--primary)" : "var(--text-muted)", cursor: "pointer", transition: "all 0.2s" }}
-              >
-                Link Google Drive
-              </button>
-            </div>
-
-            {uploadType === "file" ? (
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Chọn File (Hỗ trợ .PDF, .DOCX, .PPTX, .TXT, .XLSX, .CSV)</label>
-                <input
-                  type="file"
-                  className="form-input"
-                  accept=".pdf,.docx,.pptx,.txt,.md,.xlsx,.xls,.csv"
-                  ref={fileInputRef}
-                  required
-                  style={{ padding: "8px", background: "var(--bg)" }}
-                />
-              </div>
-            ) : (
-              <>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Link Google Drive (Phải bật Bất kỳ ai có liên kết)</label>
-                  <input
-                    type="url"
-                    className="form-input"
-                    placeholder="https://drive.google.com/file/d/..."
-                    value={driveUrl}
-                    onChange={(e) => setDriveUrl(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Định dạng file (để AI đọc đúng chuẩn)</label>
-                  <select
-                    className="form-input"
-                    value={driveExt}
-                    onChange={(e) => setDriveExt(e.target.value)}
-                  >
-                    <option value="pdf">PDF (Ảnh/Văn bản)</option>
-                    <option value="docx">Word (.docx)</option>
-                    <option value="pptx">PowerPoint (.pptx)</option>
-                    <option value="xlsx">Excel (.xlsx)</option>
-                    <option value="csv">CSV</option>
-                    <option value="txt">Text (.txt)</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            <button type="submit" className="btn btn-primary" disabled={uploading} style={{ width: "100%", justifyContent: "center", marginTop: "8px" }}>
-              {uploading ? (
-                <><span className="spinner" style={{ width: 14, height: 14, borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} /> Đang xử lý file...</>
-              ) : (
-                <><Plus className="w-4 h-4" /> Nạp vào Khối óc AI</>
-              )}
-            </button>
-          </form>
-
-          <div style={{ marginTop: "24px", fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.6, padding: "12px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", color: "#166534" }}>
-            <strong>💡 Mẹo:</strong> Tài liệu càng có cấu trúc rõ ràng thì AI học càng nhanh. File Word, PDF, Excel sẽ tự động được trích xuất thành văn bản (text/csv) để AI có thể ghi nhớ. Đặc biệt, dữ liệu bảng (Excel) rất hữu ích cho các bảng giá, lịch trực.
-          </div>
-        </div>
       </div>
 
       {/* Modal Sửa Tài Liệu */}
@@ -714,3 +715,4 @@ export default function AiKnowledgePage() {
     </div>
   );
 }
+
