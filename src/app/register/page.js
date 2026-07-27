@@ -326,7 +326,7 @@ function RegisterForm() {
             )}
 
             <form onSubmit={handleSubmit}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {/* Họ và tên */}
                 <div>
                   <label>Họ và Tên đầy đủ <span className="required">*</span></label>
@@ -415,10 +415,13 @@ function RegisterForm() {
         )}
 
         {/* Footer */}
-        <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #f1f5f9", textAlign: "center" }}>
+        <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid #f1f5f9", textAlign: "center" }}>
           <p style={{ fontSize: "0.75rem", color: "#94a3b8", lineHeight: 1.6 }}>
             🔒 Thông tin của bạn được bảo mật và chỉ dùng để gửi thông báo nội bộ.<br />
-            Mọi thắc mắc liên hệ Phòng Kế Hoạch - Nghiệp vụ – CDC Đà Nẵng.
+            Mọi thắc mắc liên hệ Phòng Kế hoạch - Nghiệp vụ – CDC Đà Nẵng.
+          </p>
+          <p style={{ fontSize: "0.85rem", color: "#64748b", marginTop: 8, fontWeight: 500 }}>
+            Website: <a href="https://ksbtdanang.vn" target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}>https://ksbtdanang.vn</a>
           </p>
         </div>
       </div>
