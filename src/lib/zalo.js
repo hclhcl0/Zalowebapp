@@ -452,39 +452,13 @@ export async function sendVideoMessage(userId, videoUrl) {
 
 
 // ============================================================
-// GỬi ẢNH trực tiếp đến người dùng Zalo (upload rồi gời)
+// GỬi ẢNH trực tiếp đến người dùng Zalo (dùng URL trực tiếp)
 // ============================================================
 export async function sendImageToUser(userId, imageUrl) {
   const token = await getAccessToken();
   if (!token) return { error: -1, message: 'Missing token' };
 
   try {
-    // 1. Lấy buffer ảnh
-    const res = await fetch(imageUrl);
-    if (!res.ok) throw new Error(`Không tải được ảnh: ${imageUrl}`);
-    const contentType = res.headers.get('content-type') || 'image/jpeg';
-    const buffer = Buffer.from(await res.arrayBuffer());
-
-    let ext = 'jpg';
-    if (contentType.includes('png')) ext = 'png';
-    else if (contentType.includes('webp')) ext = 'webp';
-    const filename = `img_${Date.now()}.${ext}`;
-
-    const formData = new FormData();
-    formData.append('file', new Blob([buffer], { type: contentType }), filename);
-
-    // 2. Upload lên Zalo
-    const uploadRes = await fetch('https://openapi.zalo.me/v2.0/oa/upload/image', {
-      method: 'POST',
-      headers: { access_token: token },
-      body: formData,
-    });
-    const uploadData = await uploadRes.json();
-    if (uploadData.error !== 0) throw new Error(`Upload ảnh thất bại: ${uploadData.message}`);
-
-    const attachmentId = uploadData.data?.attachment_id;
-
-    // 3. GỜi ảnh
     const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', access_token: token },
@@ -492,19 +466,24 @@ export async function sendImageToUser(userId, imageUrl) {
         recipient: { user_id: userId },
         message: {
           attachment: {
-            type: 'template',
+            type: 'image',
             payload: {
-              template_type: 'media',
-              elements: [{ media_type: 'image', attachment_id: attachmentId }]
+              url: imageUrl
             }
           }
         }
       }),
     });
-    return msgRes.json();
+    
+    const data = await msgRes.json();
+    if (data.error && data.error !== 0) {
+      throw new Error(`Zalo API Error: ${data.message} (${data.error})`);
+    }
+    
+    return data;
   } catch (err) {
     console.error('[sendImageToUser]', err.message);
-    // Fallback: gỜi link ảnh dưới dạng text
+    // Fallback: gởi link ảnh dưới dạng text
     return sendTextMessage(userId, `🖼️ Xem hình ảnh: ${imageUrl}`);
   }
 }
