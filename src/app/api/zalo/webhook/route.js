@@ -158,7 +158,7 @@ async function handleTextMessage(userId, text) {
 
       let greetingText = welcomeConfig?.value?.trim() 
         ? welcomeConfig.value 
-        : `Xin chào {displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\nVui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:`;
+        : `Trung tâm Kiểm soát bệnh tật (CDC) Đà Nẵng xin chào {displayName}! Cảm ơn anh/chị đã quan tâm.\n\nVui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:`;
       
       greetingText = greetingText.replace(/{displayName}/g, displayName).replace(/{name}/g, displayName).replace(/{userId}/g, userId).replace(/{uid}/g, userId);
 
@@ -400,8 +400,8 @@ async function handleFollow(userId, data) {
 
     let greetingText = welcomeConfig?.value?.trim() 
       ? welcomeConfig.value 
-      : `Xin chào {displayName}! Cảm ơn bạn đã quan tâm CDC Đà Nẵng.\n\nVui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:`;
-    
+      : `Trung tâm Kiểm soát bệnh tật (CDC) Đà Nẵng xin chào {displayName}! Cảm ơn anh/chị đã quan tâm.\n\nVui lòng chọn liên kết đăng ký phù hợp để được hỗ trợ tốt nhất:`;
+      
     greetingText = greetingText.replace(/{displayName}/g, displayName).replace(/{name}/g, displayName).replace(/{userId}/g, userId).replace(/{uid}/g, userId);
 
     const staffLinkBase = staffLinkConfig?.value?.trim() || "https://zcdc.ksbtdanang.vn/register";

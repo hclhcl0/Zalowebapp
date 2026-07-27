@@ -37,6 +37,15 @@ export default async function Dashboard() {
     }
   });
 
+  const classificationStatsRaw = await prisma.follower.groupBy({
+    by: ['interestGroup'],
+    where: { userType: "citizen", interestGroup: { not: null } },
+    _count: {
+      _all: true,
+    },
+  });
+  const classificationStats = classificationStatsRaw.sort((a, b) => b._count._all - a._count._all);
+
   // Tổng số lượng tài liệu trong Kho tri thức AI
   const totalAiDocs = await prisma.aiKnowledge.count();
 
@@ -111,7 +120,7 @@ export default async function Dashboard() {
       text = `Hệ thống gửi tin nhắn đến <strong>${name}</strong>: <em>"${log.content || 'Gửi liên kết định danh'}"</em>`;
       dotColor = "blue";
     } else if (log.direction === "inbound") {
-      text = `Nhận tin phản hồi từ <strong>${name}</strong>: <em>"${log.content}"</em>`;
+      text = `Nhận tin phản hồi từ <strong>${name}</strong>: <em>"${log.content || '[Hình ảnh/Tệp đính kèm]'}"</em>`;
       dotColor = "yellow";
     } else {
       text = `Hoạt động <strong>${log.type}</strong> từ <strong>${name}</strong>: ${log.content || ''}`;
@@ -219,8 +228,15 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      {/* Bottom section: Recent Activity */}
-      <div style={{ marginTop: "24px" }}>
+      {/* Bottom section: Recent Activity & Classification */}
+      <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: "minmax(0, 3fr) minmax(0, 2fr)", gap: "24px", alignItems: "start" }} className="dashboard-bottom-grid">
+        <style>{`
+          @media (max-width: 900px) {
+            .dashboard-bottom-grid {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}</style>
         
         {/* Left Column: Recent activity (Live from Prisma) */}
         <div className="card">
@@ -253,7 +269,40 @@ export default async function Dashboard() {
               ))}
             </div>
           )}
+          )}
         </div>
+
+        {/* Right Column: Customer Classification */}
+        <div className="card">
+          <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "12px" }}>
+            <div>
+              <div className="card-title">Phân loại Khách hàng</div>
+              <div className="card-subtitle">Thống kê theo mức độ quan tâm</div>
+            </div>
+            <div className="stat-icon purple" style={{ background: "#f3e8ff", width: 36, height: 36 }}><Users size={18} color="#9333ea" /></div>
+          </div>
+          
+          {classificationStats.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "30px 20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+              Chưa có dữ liệu phân loại.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {classificationStats.map(stat => (
+                <div key={stat.interestGroup} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", padding: "10px 14px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b82f6" }}></div>
+                    <span style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text)" }}>{stat.interestGroup}</span>
+                  </div>
+                  <div style={{ fontWeight: 700, color: "#1d4ed8", fontSize: "0.9rem", background: "#eff6ff", padding: "2px 8px", borderRadius: "12px" }}>
+                    {stat._count._all}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );

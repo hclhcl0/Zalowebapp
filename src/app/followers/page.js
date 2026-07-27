@@ -4,23 +4,20 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import * as XLSX from "xlsx";
 
-const DEPARTMENTS = [
-  "Phòng chống bệnh truyền nhiễm",
-  "Kiểm dịch Y tế quốc tế",
-  "Ký sinh trùng - Côn trùng",
-  "Phòng chống bệnh không lây nhiễm",
-  "Sức khoẻ môi trường - YTTH",
-  "Sức khoẻ sinh sản",
-  "Dinh dưỡng",
-  "Phòng chống HIV/AIDS - ĐTNC",
-  "Truyền thông giáo dục sức khoẻ",
-  "Phòng khám đa khoa",
-  "Bệnh nghề nghiệp",
-  "Xét nghiệm – CĐHA - TDCN",
-  "Dược – VTYT",
-  "Tổ chức - Hành chính",
-  "Tài chính - Kế toán",
-  "Kế hoạch - Nghiệp vụ"
+import { CDC_DEPARTMENTS as DEPARTMENTS } from "@/lib/departments";
+
+const INTEREST_GROUPS = [
+  "Tiêm chủng",
+  "Khám sức khỏe",
+  "Sức khỏe sinh sản",
+  "Xét nghiệm",
+  "Khám bệnh",
+  "Khách hàng doanh nghiệp",
+  "An toàn thực phẩm",
+  "Y tế trường học",
+  "Phòng chống dịch",
+  "Đào tạo – Tập huấn",
+  "Người dân quan tâm sức khỏe"
 ];
 
 // ============================================================
@@ -151,7 +148,7 @@ function SingleTestSend({ onSend, sendingSingle }) {
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {f.displayName}
-                      {f.userType === "staff" && <span style={{ marginLeft: 6, fontSize: "0.7rem", color: "var(--primary)", background: "var(--primary-light)", padding: "1px 5px", borderRadius: 4 }}>Cán bộ</span>}
+                      {f.userType === "staff" && <span style={{ marginLeft: 6, fontSize: "0.7rem", color: "var(--primary)", background: "var(--primary-light)", padding: "1px 5px", borderRadius: 4 }}>Nhân viên</span>}
                     </div>
                     <div style={{ fontSize: "0.73rem", color: "var(--text-muted)" }}>
                       {f.phone || "Chưa có SĐT"} · <code style={{ fontSize: "0.7rem" }}>{f.zaloUserId}</code>
@@ -228,6 +225,7 @@ export default function FollowersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [regSearchQuery, setRegSearchQuery] = useState(""); // State cho ô tìm kiếm danh sách đã đăng ký
   const [userTypeFilter, setUserTypeFilter] = useState("all");
+  const [interestGroupFilter, setInterestGroupFilter] = useState("");
 
   // Phân trang
   const [currentPage, setCurrentPage] = useState(1);
@@ -480,7 +478,7 @@ export default function FollowersPage() {
   const fetchFollowers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/followers?query=${encodeURIComponent(searchQuery)}&userType=${userTypeFilter}&page=${currentPage}&limit=${pageSize}`);
+      const res = await fetch(`/api/followers?query=${encodeURIComponent(searchQuery)}&userType=${userTypeFilter}&interestGroup=${encodeURIComponent(interestGroupFilter)}&page=${currentPage}&limit=${pageSize}`);
       const json = await res.json();
       if (json.data) {
         setFollowers(json.data);
@@ -491,16 +489,16 @@ export default function FollowersPage() {
       }
     } catch (err) {
       console.error("Error fetching followers:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery, userTypeFilter, currentPage, pageSize]);
+      } finally {
+        setLoading(false);
+      }
+    }, [searchQuery, userTypeFilter, interestGroupFilter, currentPage, pageSize]);
 
   // Reset về trang 1 khi thay đổi bộ lọc hoặc tìm kiếm
   useEffect(() => {
     setCurrentPage(1);
     setSelectedIds([]); // Clear selection when filters change
-  }, [searchQuery, userTypeFilter]);
+  }, [searchQuery, userTypeFilter, interestGroupFilter]);
 
   useEffect(() => {
     fetchFollowers();
@@ -735,7 +733,7 @@ export default function FollowersPage() {
       {/* ── TAB NAVIGATION (PILL STYLE) ─────────────────────── */}
       <div className="followers-tabs">
         {[
-          { id: "registration", label: "🔗 Đăng ký NV" },
+          { id: "registration", label: "🏢 Đồng bộ Nhân sự" },
           { id: "followers", label: "👥 Danh sách" },
         ].map(tab => (
           <button
@@ -770,8 +768,8 @@ export default function FollowersPage() {
                 >{f.label}</button>
               ))}
             </div>
-            {/* Search */}
-            <div className="search-row">
+            {/* Search and Filters */}
+            <div className="search-row" style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "12px" }}>
               <input
                 type="text"
                 className="search-input"
@@ -779,8 +777,19 @@ export default function FollowersPage() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && fetchFollowers()}
-                style={{ flex: 1 }}
+                style={{ flex: "1 1 200px" }}
               />
+              <select
+                className="form-input"
+                value={interestGroupFilter}
+                onChange={e => setInterestGroupFilter(e.target.value)}
+                style={{ flex: "0 0 auto", height: "38px", fontSize: "0.85rem", cursor: "pointer", width: "180px" }}
+              >
+                <option value="">🏷️ Tất cả quan tâm</option>
+                {INTEREST_GROUPS.map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
               <button className="btn btn-primary" onClick={fetchFollowers} style={{ whiteSpace: "nowrap" }}>
                 🔍 Tìm
               </button>
@@ -914,8 +923,13 @@ export default function FollowersPage() {
                         {/* Loại */}
                         <td>
                           {f.userType === "staff"
-                            ? <span className="user-badge user-badge-staff">💼 Cơ quan</span>
-                            : <span className="user-badge user-badge-citizen">🟢 Khách hàng</span>}
+                            ? <span className="user-badge user-badge-staff">💼 Nhân viên</span>
+                            : <span className="user-badge user-badge-citizen">🏥 Khách hàng</span>}
+                          {f.interestGroup && (
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                              🏷️ {f.interestGroup}
+                            </div>
+                          )}
                         </td>
                         {/* SĐT */}
                         <td style={{ fontSize: "0.875rem" }}>
@@ -991,12 +1005,17 @@ export default function FollowersPage() {
                           <div className="mobile-card-name">{displayName}</div>
                           <div className="mobile-card-meta">
                             {f.userType === "staff"
-                              ? <span className="user-badge user-badge-staff" style={{ fontSize: "0.62rem" }}>💼 Cơ quan</span>
-                              : <span className="user-badge user-badge-citizen" style={{ fontSize: "0.62rem" }}>🟢 KH</span>}
+                              ? <span className="user-badge user-badge-staff" style={{ fontSize: "0.62rem" }}>💼 Nhân viên</span>
+                              : <span className="user-badge user-badge-citizen" style={{ fontSize: "0.62rem" }}>🏥 KH</span>}
                             <span className="mobile-card-phone">
                               {f.phone || <em style={{ color: "var(--text-light)" }}>Chưa có SĐT</em>}
                             </span>
                           </div>
+                          {f.interestGroup && (
+                            <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                              🏷️ {f.interestGroup}
+                            </div>
+                          )}
                         </div>
                         <div className="mobile-card-date">
                           {new Date(f.followedAt).toLocaleDateString("vi-VN")}
@@ -1097,9 +1116,9 @@ export default function FollowersPage() {
                   <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏷️ Phân loại</label>
                   <select className="form-input" value={newUserType}
                     onChange={e => { setNewUserType(e.target.value); if (e.target.value !== "staff") { setNewDept(""); setNewAccessLevel("basic"); } }}
-                    style={{ padding: "6px 10px", fontSize: "0.85rem", background: "white", cursor: "pointer" }}>
-                    <option value="citizen">🟢 Khách hàng / Người dân</option>
-                    <option value="staff">💼 Cán bộ cơ quan</option>
+                    style={{ padding: "6px 10px", fontSize: "0.85rem", background: "white", cursor: "pointer", height: "38px" }}>
+                    <option value="citizen">🏥 Khách hàng / Người dân</option>
+                    <option value="staff">💼 Nhân viên cơ quan</option>
                   </select>
                 </div>
 
@@ -1107,7 +1126,7 @@ export default function FollowersPage() {
                   <div>
                     <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🔐 Cấp truy cập AI</label>
                     <select className="form-input" value={newAccessLevel} onChange={e => setNewAccessLevel(e.target.value)}
-                      style={{ padding: "6px 10px", fontSize: "0.85rem", background: "white", cursor: "pointer" }}>
+                      style={{ padding: "6px 10px", fontSize: "0.85rem", background: "white", cursor: "pointer", height: "38px" }}>
                       <option value="basic">🔒 Nhân viên thường — Chỉ xem bản thân</option>
                       <option value="manager">🔓 Trưởng đơn vị — Xem nhân viên cùng phòng</option>
                       <option value="hr">🔑 Phòng TCKT — Xem tất cả nhân viên</option>
@@ -1315,7 +1334,7 @@ export default function FollowersPage() {
                 className="form-input"
                 value={regDeptFilter}
                 onChange={e => setRegDeptFilter(e.target.value)}
-                style={{ flex: "0 0 auto", height: "34px", fontSize: "0.82rem", minWidth: "180px", cursor: "pointer" }}
+                style={{ flex: "0 0 auto", height: "38px", fontSize: "0.82rem", minWidth: "180px", cursor: "pointer" }}
               >
                 <option value="">🏢 Tất cả đơn vị</option>
                 {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -1327,7 +1346,7 @@ export default function FollowersPage() {
                 </button>
               )}
               <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-                {filteredRegLinks.length}/{regStats?.totalRegistered ?? 0} cán bộ
+                {filteredRegLinks.length}/{regStats?.totalRegistered ?? 0} nhân viên
               </div>
             </div>
 
@@ -1345,7 +1364,7 @@ export default function FollowersPage() {
             ) : filteredRegLinks.length === 0 ? (
               <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
                 <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔍</div>
-                <div style={{ fontWeight: 600 }}>Không tìm thấy cán bộ phù hợp</div>
+                <div style={{ fontWeight: 600 }}>Không tìm thấy nhân viên phù hợp</div>
                 <div style={{ fontSize: "0.85rem", marginTop: "4px" }}>Thử tìm với từ khóa khác.</div>
               </div>
             ) : (
@@ -1500,7 +1519,7 @@ export default function FollowersPage() {
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, backdropFilter: "blur(4px)" }}>
           <div style={{ background: "white", borderRadius: "var(--radius-lg)", width: "90%", maxWidth: "450px", padding: "28px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", animation: "slideInUp 0.3s ease" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>✏️ Sửa Thông Tin Cán Bộ</h3>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>✏️ Sửa Thông Tin Nhân Viên</h3>
               <button type="button" onClick={() => { setIsEditLinkModalOpen(false); setEditingLink(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.2rem" }}>✕</button>
             </div>
             <div style={{ background: "var(--primary-light)", border: "1px solid var(--border-focus)", borderRadius: "10px", padding: "12px 14px", marginBottom: "18px", display: "flex", alignItems: "center", gap: "10px" }}>
@@ -1526,7 +1545,7 @@ export default function FollowersPage() {
               <div>
                 <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>🏢 Khoa / Phòng ban</label>
                 <select className="form-input" value={editDept} onChange={e => setEditDept(e.target.value)}
-                  style={{ padding: "8px 12px", cursor: "pointer" }}>
+                  style={{ padding: "8px 12px", cursor: "pointer", height: "40px" }}>
                   <option value="">-- Chọn đơn vị công tác --</option>
                   {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
