@@ -500,12 +500,13 @@ export async function sendImageToUser(userId, imageUrl) {
           recipient: { user_id: userId },
           message: {
             attachment: {
-              type: 'image',
+              type: 'template',
               payload: {
-                attachment_id: attachmentId
-              }
-            }
-          }
+                template_type: 'media',
+                elements: [{ media_type: 'image', attachment_id: attachmentId }],
+              },
+            },
+          },
         }),
       });
       const msgData = await msgRes.json();
