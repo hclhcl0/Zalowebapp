@@ -622,14 +622,62 @@ function getMimeType(fileName) {
 
 
 // ============================================================
-// GỬi VIDEO trực tiếp đến người dùng Zalo (dùng URL trực tiếp)
+// GỬi VIDEO đến người dùng Zalo
+// Upload lên Zalo qua upload/file (vì Zalo OA không có upload/video riêng)
 // ============================================================
 export async function sendVideoLink(userId, videoName, videoUrl) {
   const token = await getAccessToken();
   if (!token) return { error: -1, message: 'Missing token' };
 
   try {
-    const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
+    let attachmentId = null;
+
+    // Bước 1: Đọc từ filesystem và upload lên như 1 file
+    const urlPath = videoUrl.includes('/uploads/')
+      ? videoUrl.replace(/^https?:\/\/[^/]+/, '')
+      : null;
+    const localPath = urlPath ? path.join(process.cwd(), 'public', urlPath) : null;
+
+    if (localPath && fs.existsSync(localPath)) {
+      const fileBuffer = fs.readFileSync(localPath);
+      const formData = new FormData();
+      formData.append('file', new Blob([fileBuffer], { type: 'video/mp4' }), path.basename(localPath));
+
+      const uploadRes = await fetch('https://openapi.zalo.me/v2.0/oa/upload/file', {
+        method: 'POST',
+        headers: { access_token: token },
+        body: formData,
+      });
+      const uploadData = await uploadRes.json();
+      console.log('[sendVideoLink] Upload result:', JSON.stringify(uploadData));
+
+      if (uploadData.error === 0 && uploadData.data?.attachment_id) {
+        attachmentId = uploadData.data.attachment_id;
+      }
+    }
+
+    // Bước 2: Gởi bằng attachment_id của file
+    if (attachmentId) {
+      const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', access_token: token },
+        body: JSON.stringify({
+          recipient: { user_id: userId },
+          message: {
+            attachment: {
+              type: 'file',
+              payload: { attachment_id: attachmentId },
+            },
+          },
+        }),
+      });
+      const msgData = await msgRes.json();
+      if (msgData.error === 0) return msgData;
+      console.warn('[sendVideoLink] template/file failed:', msgData.message);
+    }
+
+    // Bước 3: Thử gởi direct URL (fallback)
+    const directRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', access_token: token },
       body: JSON.stringify({
@@ -637,15 +685,13 @@ export async function sendVideoLink(userId, videoName, videoUrl) {
         message: {
           attachment: {
             type: 'video',
-            payload: {
-              url: videoUrl
-            }
+            payload: { url: videoUrl }
           }
         }
       }),
     });
 
-    const data = await msgRes.json();
+    const data = await directRes.json();
     if (data.error && data.error !== 0) {
       throw new Error(`Zalo API Error: ${data.message} (${data.error})`);
     }
