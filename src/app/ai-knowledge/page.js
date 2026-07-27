@@ -244,11 +244,8 @@ export default function AiKnowledgePage() {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">🧠 Kho Tri Thức AI</h1>
-          <p className="page-desc">Quản lý và dán nhãn các tài liệu chuyên môn để AI học và trả lời người dân.</p>
-        </div>
+      <div style={{ marginBottom: "24px", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow)" }}>
+        <img src="/banner-ai-knowledge.png" alt="Kho Tri Thức AI" style={{ width: "100%", height: "auto", display: "block" }} />
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
