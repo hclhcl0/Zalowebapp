@@ -219,8 +219,8 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      {/* Bottom grid: 60/40 Split */}
-      <div className="dashboard-grid">
+      {/* Bottom section: Recent Activity */}
+      <div style={{ marginTop: "24px" }}>
         
         {/* Left Column: Recent activity (Live from Prisma) */}
         <div className="card">
@@ -254,32 +254,6 @@ export default async function Dashboard() {
             </div>
           )}
         </div>
-
-        {/* Right Column: Quick actions */}
-        <div className="card" style={{ alignSelf: "start" }}>
-          <div className="card-header">
-            <div className="card-title">Thao tác nhanh</div>
-          </div>
-          <div className="quick-actions" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
-            <Link href="/broadcast" className="quick-action-btn">
-              <Megaphone size={28} strokeWidth={1.5} color="var(--primary)" />
-              <strong>Gửi Tin Truyền Thông</strong>
-            </Link>
-            <Link href="/salary-email" className="quick-action-btn">
-              <Mail size={28} strokeWidth={1.5} color="var(--success)" />
-              <strong>Cập Nhật Thông Tin Cơ Quan</strong>
-            </Link>
-            <Link href="/followers" className="quick-action-btn">
-              <Users size={28} strokeWidth={1.5} color="#3b82f6" />
-              <strong>Quản Lý Đăng Ký</strong>
-            </Link>
-            <Link href="/settings" className="quick-action-btn">
-              <Settings size={28} strokeWidth={1.5} color="var(--text-muted)" />
-              <strong>Cài Đặt Hệ Thống</strong>
-            </Link>
-          </div>
-        </div>
-
       </div>
     </div>
   );
