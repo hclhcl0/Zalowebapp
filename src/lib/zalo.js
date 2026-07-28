@@ -470,13 +470,29 @@ export async function sendImageToUser(userId, imageUrl) {
     const localPath = urlPath ? path.join(process.cwd(), 'public', urlPath) : null;
 
     if (localPath && fs.existsSync(localPath)) {
-      const fileBuffer = fs.readFileSync(localPath);
-      const ext = path.extname(localPath).toLowerCase();
+      let fileBuffer = fs.readFileSync(localPath);
+      let ext = path.extname(localPath).toLowerCase();
       const mimeMap = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif' };
-      const mimeType = mimeMap[ext] || 'image/jpeg';
+      let mimeType = mimeMap[ext] || 'image/jpeg';
+      let fileName = path.basename(localPath);
+
+      // Tự động nén ảnh nếu dung lượng > 1MB để tránh lỗi Zalo (-201 file is invalid)
+      if (fileBuffer.length > 1000000) {
+        try {
+          const sharp = require('sharp');
+          fileBuffer = await sharp(fileBuffer)
+            .resize({ width: 1024, withoutEnlargement: true })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+          mimeType = 'image/jpeg';
+          fileName = fileName.replace(ext, '.jpg');
+        } catch (err) {
+          console.warn('[sendImageToUser] Nén ảnh thất bại:', err);
+        }
+      }
 
       const formData = new FormData();
-      formData.append('file', new Blob([fileBuffer], { type: mimeType }), path.basename(localPath));
+      formData.append('file', new Blob([fileBuffer], { type: mimeType }), fileName);
 
       const uploadRes = await fetch('https://openapi.zalo.me/v2.0/oa/upload/image', {
         method: 'POST',
