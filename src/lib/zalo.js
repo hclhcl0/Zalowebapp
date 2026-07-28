@@ -484,14 +484,17 @@ export async function sendImageToUser(userId, imageUrl) {
         body: formData,
       });
       const uploadData = await uploadRes.json();
-      console.log('[sendImageToUser] Upload result:', JSON.stringify(uploadData));
-
+      
       if (uploadData.error === 0 && uploadData.data?.attachment_id) {
         attachmentId = uploadData.data.attachment_id;
+      } else {
+        throw new Error(`Lỗi upload ảnh Zalo: ${uploadData.message || JSON.stringify(uploadData)}`);
       }
+    } else {
+      throw new Error(`Không tìm thấy file ảnh trên server: ${localPath}`);
     }
 
-    // Bước 2: Gởi bằng attachment_id (nếu upload thành công)
+    // Bước 2: Gởi bằng attachment_id
     if (attachmentId) {
       const msgRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
         method: 'POST',
@@ -511,24 +514,10 @@ export async function sendImageToUser(userId, imageUrl) {
       });
       const msgData = await msgRes.json();
       if (msgData.error === 0) return msgData;
-      console.warn('[sendImageToUser] template/media failed:', msgData.message);
+      throw new Error(`Zalo từ chối template media ảnh: ${msgData.message} (${msgData.error})`);
     }
 
-    // Bước 3: Thử gởi bằng URL trực tiếp (fallback nhẹ)
-    const directRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', access_token: token },
-      body: JSON.stringify({
-        recipient: { user_id: userId },
-        message: {
-          attachment: { type: 'image', payload: { url: imageUrl } },
-        },
-      }),
-    });
-    const directData = await directRes.json();
-    if (directData.error === 0) return directData;
-
-    throw new Error(`Zalo từ chối gởi ảnh: ${directData.message} (${directData.error})`);
+    throw new Error('Không lấy được attachmentId để gởi ảnh.');
   } catch (err) {
     console.error('[sendImageToUser] fallback text:', err.message);
     // Fallback cuối: gởi link text kèm lỗi để debug
@@ -649,11 +638,14 @@ export async function sendVideoLink(userId, videoName, videoUrl) {
         body: formData,
       });
       const uploadData = await uploadRes.json();
-      console.log('[sendVideoLink] Upload result:', JSON.stringify(uploadData));
-
+      
       if (uploadData.error === 0 && uploadData.data?.attachment_id) {
         attachmentId = uploadData.data.attachment_id;
+      } else {
+        throw new Error(`Lỗi upload video Zalo: ${uploadData.message || JSON.stringify(uploadData)}`);
       }
+    } else {
+      throw new Error(`Không tìm thấy file video trên server: ${localPath}`);
     }
 
     // Bước 2: Gởi bằng attachment_id của file
@@ -676,30 +668,10 @@ export async function sendVideoLink(userId, videoName, videoUrl) {
       });
       const msgData = await msgRes.json();
       if (msgData.error === 0) return msgData;
-      console.warn('[sendVideoLink] template/file failed:', msgData.message);
+      throw new Error(`Zalo từ chối template media video: ${msgData.message} (${msgData.error})`);
     }
 
-    // Bước 3: Thử gởi direct URL (fallback)
-    const directRes = await fetch('https://openapi.zalo.me/v2.0/oa/message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', access_token: token },
-      body: JSON.stringify({
-        recipient: { user_id: userId },
-        message: {
-          attachment: {
-            type: 'video',
-            payload: { url: videoUrl }
-          }
-        }
-      }),
-    });
-
-    const data = await directRes.json();
-    if (data.error && data.error !== 0) {
-      throw new Error(`Zalo API Error: ${data.message} (${data.error})`);
-    }
-
-    return data;
+    throw new Error('Không lấy được attachmentId để gởi video.');
   } catch (err) {
     console.error('[sendVideoLink]', err.message);
     // Fallback: gởi link video dưới dạng text
