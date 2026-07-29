@@ -230,8 +230,11 @@ export default function SendZaloPage() {
   const selectCmsArticle = (article) => {
     if (listElements.length >= 5) { alert("Tối đa 5 thẻ"); return; }
     
-    const imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
-    const resolvedImg = imgPath.startsWith("/") ? `${cmsUrl}${imgPath}` : imgPath;
+    let imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
+    if (imgPath.startsWith("http")) {
+      try { imgPath = new URL(imgPath).pathname; } catch (e) {}
+    }
+    const resolvedImg = imgPath.startsWith("/") && cmsUrl ? `${cmsUrl}${imgPath}` : imgPath;
     const articleUrl = cmsUrl ? `${cmsUrl}/bai-viet/${article.slug}` : "";
 
     const newEl = {
@@ -729,8 +732,11 @@ export default function SendZaloPage() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   {cmsArticles.map(article => {
-                    const imgPath = article.image?.sizes?.thumbnail?.url || article.image?.url || "";
-                    const resolvedImg = imgPath.startsWith("/") ? `${cmsUrl}${imgPath}` : imgPath;
+                    let imgPath = article.image?.sizes?.thumbnail?.url || article.image?.url || "";
+                    if (imgPath.startsWith("http")) {
+                      try { imgPath = new URL(imgPath).pathname; } catch (e) {}
+                    }
+                    const resolvedImg = imgPath.startsWith("/") && cmsUrl ? `${cmsUrl}${imgPath}` : imgPath;
                     return (
                     <div key={article.id} onClick={() => selectCmsArticle(article)} style={{ display: "flex", gap: "12px", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--surface)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                       {resolvedImg ? (

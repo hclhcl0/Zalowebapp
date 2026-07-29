@@ -79,8 +79,11 @@ export default function BroadcastPage() {
       return;
     }
     // Resolve image URL
-    const imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
-    const resolvedImg = imgPath.startsWith("/") ? `${cmsUrl}${imgPath}` : imgPath;
+    let imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
+    if (imgPath.startsWith("http")) {
+      try { imgPath = new URL(imgPath).pathname; } catch (e) {}
+    }
+    const resolvedImg = imgPath.startsWith("/") && cmsUrl ? `${cmsUrl}${imgPath}` : imgPath;
     // Build article URL using slug
     const articleUrl = cmsUrl ? `${cmsUrl}/bai-viet/${article.slug}` : "";
     const newEl = {
@@ -878,8 +881,11 @@ export default function BroadcastPage() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   {cmsArticles.map((article) => {
-                    const imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
-                    const thumbUrl = imgPath.startsWith("/") ? `${cmsUrl}${imgPath}` : imgPath;
+                    let imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
+                    if (imgPath.startsWith("http")) {
+                      try { imgPath = new URL(imgPath).pathname; } catch (e) {}
+                    }
+                    const thumbUrl = imgPath.startsWith("/") && cmsUrl ? `${cmsUrl}${imgPath}` : imgPath;
                     return (
                       <div
                         key={article.id}
