@@ -46,21 +46,25 @@ export async function POST(request) {
   const timestamp = body.timestamp;
   const senderId = body.sender?.id || body.user_id_by_app || body.follower?.id;
 
+  const ignoredEvents = ["user_received_message", "user_seen_message"];
+
   // Lưu log vào DB (không chặn response)
   after(async () => {
-    try {
-      await prisma.messageLog.create({
-        data: {
-          zaloUserId: senderId || "unknown",
-          direction: "inbound",
-          type: event_name || "unknown",
-          content: message?.text || null,
-          rawPayload: JSON.stringify(body),
-          receivedAt: timestamp ? new Date(parseInt(timestamp)) : new Date(),
-        },
-      });
-    } catch (dbErr) {
-      console.error("[ZALO WEBHOOK DB ERROR]", dbErr.message);
+    if (!ignoredEvents.includes(event_name)) {
+      try {
+        await prisma.messageLog.create({
+          data: {
+            zaloUserId: senderId || "unknown",
+            direction: "inbound",
+            type: event_name || "unknown",
+            content: message?.text || null,
+            rawPayload: JSON.stringify(body),
+            receivedAt: timestamp ? new Date(parseInt(timestamp)) : new Date(),
+          },
+        });
+      } catch (dbErr) {
+        console.error("[ZALO WEBHOOK DB ERROR]", dbErr.message);
+      }
     }
 
     // Xử lý từng loại sự kiện trong nền
