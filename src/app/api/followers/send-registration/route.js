@@ -127,8 +127,11 @@ export async function POST(request) {
 }
 
 // GET: Thống kê trạng thái đăng ký
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const fetchAll = searchParams.get("all") === "true";
+
     const [totalFollowers, totalRegistered] = await Promise.all([
       prisma.follower.count(),
       prisma.staffZaloLink.count(),
@@ -136,7 +139,7 @@ export async function GET() {
 
     const recentLinks = await prisma.staffZaloLink.findMany({
       orderBy: { registeredAt: "desc" },
-      take: 100,
+      ...(fetchAll ? {} : { take: 100 }),
       select: {
         id: true,
         staffNameRaw: true,

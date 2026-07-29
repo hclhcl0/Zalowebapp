@@ -383,15 +383,22 @@ export default function FollowersPage() {
     finally { setDeletingId(null); }
   };
 
-  const handleExportExcel = () => {
-    if (!regStats?.links || regStats.links.length === 0) {
-      alert("Không có dữ liệu để xuất!");
-      return;
-    }
-
+  const handleExportExcel = async () => {
     try {
+      showToast("Đang tải toàn bộ dữ liệu để xuất...", "info");
+      const res = await fetch("/api/followers/send-registration?all=true");
+      const json = await res.json();
+      
+      if (!res.ok || json.error) throw new Error(json.error || "Lỗi tải dữ liệu");
+      
+      const allLinks = json.links;
+      if (!allLinks || allLinks.length === 0) {
+        alert("Không có dữ liệu để xuất!");
+        return;
+      }
+
       // Chuẩn bị dữ liệu xuất
-      const exportData = regStats.links.map((link, index) => ({
+      const exportData = allLinks.map((link, index) => ({
         "STT": index + 1,
         "Họ và Tên": link.staffNameRaw,
         "Phòng / Khoa / Bộ phận": link.department || "Chưa chọn",
