@@ -95,6 +95,9 @@ export default function SendZaloPage() {
   const [showCmsModal, setShowCmsModal] = useState(false);
   const [loadingCms, setLoadingCms] = useState(false);
   const [cmsUrl, setCmsUrl] = useState("");
+  const [cmsSearchTerm, setCmsSearchTerm] = useState("");
+  const [cmsPage, setCmsPage] = useState(1);
+  const [cmsHasMore, setCmsHasMore] = useState(false);
 
   const imgInputRef  = useRef(null);
   const vidInputRef  = useRef(null);
@@ -214,19 +217,34 @@ export default function SendZaloPage() {
     e.target.value = "";
   };
 
-  const openCmsModal = async () => {
+  const fetchCmsArticles = async (search = "", page = 1, append = false) => {
+    setLoadingCms(true);
+    try {
+      const res = await fetch(`/api/payload-articles?search=${encodeURIComponent(search)}&page=${page}`).then(r => r.json());
+      if (res.docs) {
+        if (append) {
+          setCmsArticles(prev => [...prev, ...res.docs]);
+        } else {
+          setCmsArticles(res.docs);
+        }
+        setCmsHasMore(res.hasNextPage);
+        setCmsPage(page);
+        setCmsUrl(res.cmsUrl || "");
+      }
+    } catch (err) { console.error(err); }
+    setLoadingCms(false);
+  };
+
+  const openCmsModal = () => {
     setShowCmsModal(true);
     if (cmsArticles.length === 0) {
-      setLoadingCms(true);
-      try {
-        const res = await fetch("/api/payload-articles?limit=20").then(r => r.json());
-        if (res.docs) {
-          setCmsArticles(res.docs);
-          setCmsUrl(res.cmsUrl || "");
-        }
-      } catch (err) { console.error(err); }
-      setLoadingCms(false);
+      fetchCmsArticles("", 1, false);
     }
+  };
+
+  const handleCmsSearch = (e) => {
+    e.preventDefault();
+    fetchCmsArticles(cmsSearchTerm, 1, false);
   };
 
   const selectCmsArticle = (article) => {
@@ -765,6 +783,21 @@ export default function SendZaloPage() {
               <button onClick={() => setShowCmsModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={20} /></button>
             </div>
             
+            <form onSubmit={handleCmsSearch} style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+              <div style={{ position: "relative", flex: 1 }}>
+                <Search size={16} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Tìm kiếm bài viết..." 
+                  value={cmsSearchTerm} 
+                  onChange={(e) => setCmsSearchTerm(e.target.value)}
+                  style={{ paddingLeft: "32px", width: "100%" }}
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={loadingCms} style={{ padding: "8px 16px" }}>Tìm kiếm</button>
+            </form>
+            
             <div style={{ flex: 1, overflowY: "auto" }}>
               {loadingCms ? (
                 <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
@@ -794,6 +827,17 @@ export default function SendZaloPage() {
                       </div>
                     </div>
                   )})}
+                  
+                  {cmsHasMore && (
+                    <button 
+                      onClick={() => fetchCmsArticles(cmsSearchTerm, cmsPage + 1, true)} 
+                      disabled={loadingCms}
+                      className="btn btn-outline" 
+                      style={{ width: "100%", marginTop: "10px", justifyContent: "center", padding: "8px" }}
+                    >
+                      {loadingCms ? "Đang tải..." : "Tải thêm bài viết"}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
