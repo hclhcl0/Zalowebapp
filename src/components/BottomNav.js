@@ -5,7 +5,6 @@ import { LayoutDashboard, Megaphone, Mail, Users, Menu } from "lucide-react";
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: Megaphone,       label: "Truyền Thông", href: "/broadcast" },
   { icon: Mail,            label: "Nội Bộ",       href: "/salary-email" },
   { icon: Users,           label: "Quan Tâm",     href: "/followers" },
 ];

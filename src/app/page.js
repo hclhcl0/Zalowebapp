@@ -151,8 +151,8 @@ export default async function Dashboard() {
 
       {/* Action Buttons Below Banner */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap", justifyContent: "center" }}>
-        <Link href="/broadcast" className="btn btn-primary" style={{ flex: "1", maxWidth: "300px", justifyContent: "center", padding: "12px" }}>
-          <Megaphone size={20} /> Gửi Tin Truyền Thông
+        <Link href="/send-zalo" className="btn btn-primary" style={{ flex: "1", maxWidth: "300px", justifyContent: "center", padding: "12px" }}>
+          <Megaphone size={20} /> Gửi Tin Zalo
         </Link>
         <Link href="/salary-email" className="btn btn-primary" style={{ flex: "1", maxWidth: "300px", justifyContent: "center", padding: "12px", background: "linear-gradient(135deg, #059669, #10b981)" }}>
           <Mail size={20} /> Gửi Tin Nội Bộ

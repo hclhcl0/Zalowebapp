@@ -7,7 +7,6 @@ import { Menu } from "lucide-react";
 const PAGE_TITLES = {
   "/":                    "Dashboard",
   "/followers":           "Người quan tâm OA",
-  "/broadcast":           "Gửi Tin Truyền Thông",
   "/salary-email":        "Gửi Tin Nội Bộ",
   "/miniapp-settings":    "Cấu hình Mini App",
   "/miniapp-users":       "Người dùng Mini App",

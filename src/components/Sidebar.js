@@ -47,7 +47,6 @@ const menuGroups = [
     items: [
       { icon: "Users", label: "Người quan tâm OA", href: "/followers" },
       { icon: "Activity", label: "Nhật ký Hoạt động", href: "/logs" },
-      { icon: "Megaphone", label: "Gửi Tin Truyền Thông", href: "/broadcast" },
       { icon: "MessageSquarePlus", label: "Gửi Zalo", href: "/send-zalo" },
       { icon: "Mail", label: "Gửi Tin Nội Bộ", href: "/salary-email" },
     ],
