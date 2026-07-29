@@ -448,7 +448,7 @@ export default function UserManagementPage() {
                         }}
                         style={{ width: "16px", height: "16px" }}
                       />
-                      <span>{role.label}</span>
+                      <span>{label}</span>
                     </label>
                   ))}
                 </div>
