@@ -83,6 +83,16 @@ export default function SendZaloPage() {
   const [history,           setHistory]           = useState([]);
   const [loadingHistory,    setLoadingHistory]    = useState(false);
 
+  // ─── Carousel State ───
+  const [messageType, setMessageType] = useState("text"); // 'text' | 'list'
+  const [listElements, setListElements] = useState([
+    { title: "", subtitle: "", imageUrl: "", actionType: "oa.open.url", actionValue: "", actionSmsContent: "" }
+  ]);
+  const [uploadingIndex, setUploadingIndex] = useState(null);
+  const [cmsArticles, setCmsArticles] = useState([]);
+  const [showCmsModal, setShowCmsModal] = useState(false);
+  const [loadingCms, setLoadingCms] = useState(false);
+
   const imgInputRef  = useRef(null);
   const vidInputRef  = useRef(null);
   const fileInputRef = useRef(null);
@@ -167,10 +177,78 @@ export default function SendZaloPage() {
     e.target.value = "";
   };
 
+
+  // ─── Carousel Logic ───
+  const handleElementChange = (index, field, value) => {
+    const newElements = [...listElements];
+    newElements[index][field] = value;
+    setListElements(newElements);
+  };
+
+  const addElement = () => {
+    if (listElements.length >= 5) { alert("Tối đa 5 thẻ danh sách theo quy định của Zalo."); return; }
+    setListElements([...listElements, { title: "", subtitle: "", imageUrl: "", actionType: "oa.open.url", actionValue: "", actionSmsContent: "" }]);
+  };
+
+  const removeElement = (index) => {
+    const newElements = [...listElements];
+    newElements.splice(index, 1);
+    setListElements(newElements);
+  };
+
+  const handleImageUpload = async (index, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingIndex(index);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd }).then(r => r.json());
+      if (res.url) handleElementChange(index, "imageUrl", res.url);
+      else throw new Error(res.error || "Upload thất bại");
+    } catch (err) { alert("Lỗi tải ảnh: " + err.message); }
+    setUploadingIndex(null);
+    e.target.value = "";
+  };
+
+  const openCmsModal = async () => {
+    setShowCmsModal(true);
+    if (cmsArticles.length === 0) {
+      setLoadingCms(true);
+      try {
+        const res = await fetch("/api/articles?limit=20").then(r => r.json());
+        if (res.data) setCmsArticles(res.data);
+      } catch (err) { console.error(err); }
+      setLoadingCms(false);
+    }
+  };
+
+  const selectCmsArticle = (article) => {
+    if (listElements.length >= 5) { alert("Tối đa 5 thẻ"); return; }
+    const newEl = {
+      title: article.title || "",
+      subtitle: article.summary || "Bấm xem chi tiết",
+      imageUrl: article.coverUrl || "",
+      actionType: "oa.open.url",
+      actionValue: `https://zcdc.vnos.org/news/${article.id}`,
+      actionSmsContent: ""
+    };
+    if (listElements.length === 1 && !listElements[0].title && !listElements[0].imageUrl) {
+      setListElements([newEl]);
+    } else {
+      setListElements([...listElements, newEl]);
+    }
+    setShowCmsModal(false);
+  };
+
   // ─── Send ─────────────────────────────────────────────────
   const handleSend = async () => {
     const hasAttachments = imageAttachments.length > 0 || videoAttachments.length > 0 || fileAttachments.length > 0;
-    if (!content.trim() && !hasAttachments) { alert("Vui lòng nhập nội dung hoặc thêm đính kèm"); return; }
+    if (messageType === 'text' && !content.trim() && !hasAttachments) { alert("Vui lòng nhập nội dung hoặc thêm đính kèm"); return; }
+    if (messageType === 'list') {
+      const invalid = listElements.some(el => !el.title || !el.imageUrl || !el.actionValue);
+      if (invalid) { alert("Vui lòng điền đủ Tiêu đề, Ảnh bìa và Hành động cho tất cả các thẻ Carousel"); return; }
+    }
     if (scope.includes("list") && selectedIds.length === 0) {
       alert("Vui lòng chọn ít nhất 1 người nhận");
       return;
@@ -189,10 +267,12 @@ export default function SendZaloPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           scope, userIds: scope.includes("list") ? selectedIds : [],
+          messageType,
           title: title.trim(), content: content.trim(), url: url.trim(),
           imageUrls: imageAttachments.map(a => a.url),
           videoUrls: videoAttachments,
           fileAttachments,
+          listElements,
           delay: 300,
         }),
       });
