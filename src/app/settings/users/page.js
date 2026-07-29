@@ -15,12 +15,20 @@ const ROLE_BADGE_STYLE = {
 };
 
 function RoleBadge({ role }) {
-  const label = ROLE_LABELS[role] || role;
-  const style = ROLE_BADGE_STYLE[role] || { backgroundColor: "#f1f5f9", color: "#475569" };
+  if (!role) return null;
+  const roles = role.split(",").map(r => r.trim());
   return (
-    <span style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold", ...style }}>
-      {label}
-    </span>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+      {roles.map(r => {
+        const label = ROLE_LABELS[r] || r;
+        const style = ROLE_BADGE_STYLE[r] || { backgroundColor: "#f1f5f9", color: "#475569" };
+        return (
+          <span key={r} style={{ display: "inline-block", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold", ...style }}>
+            {label}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 
@@ -37,7 +45,7 @@ export default function UserManagementPage() {
   const [formFullName, setFormFullName] = useState("");
   const [formUsername, setFormUsername] = useState("");
   const [formPassword, setFormPassword] = useState("");
-  const [formRole, setFormRole] = useState("staff");
+  const [formRoles, setFormRoles] = useState(["staff"]);
   const [formDepartment, setFormDepartment] = useState("");
   
   const [successMsg, setSuccessMsg] = useState("");
@@ -69,7 +77,7 @@ export default function UserManagementPage() {
     setFormFullName("");
     setFormUsername("");
     setFormPassword("");
-    setFormRole("staff");
+    setFormRoles(["staff"]);
     setFormDepartment("");
     setErrorMsg("");
     setSuccessMsg("");
@@ -81,7 +89,7 @@ export default function UserManagementPage() {
     setFormFullName(user.fullName);
     setFormUsername(user.username);
     setFormPassword(""); // Don't show password
-    setFormRole(user.role);
+    setFormRoles(user.role ? user.role.split(",").map(r => r.trim()) : ["staff"]);
     setFormDepartment(user.department || "");
     setErrorMsg("");
     setSuccessMsg("");
@@ -106,8 +114,8 @@ export default function UserManagementPage() {
       const payload = {
         fullName: formFullName,
         username: formUsername,
-        role: formRole,
-        ...(formRole === "staff" && { department: formDepartment }),
+        role: formRoles.join(","),
+        ...(formRoles.includes("staff") && { department: formDepartment }),
         ...(formPassword && { password: formPassword }),
       };
 
@@ -336,11 +344,7 @@ export default function UserManagementPage() {
                         </div>
                         <div className="mobile-card-meta">
                           <code style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>{u.username}</code>
-                          {u.role === "admin" ? (
-                            <span className="user-badge" style={{ background: "#f3e8ff", color: "#6b21a8", border: "1px solid #d8b4fe", fontSize: "0.65rem", padding: "1px 5px" }}>Admin</span>
-                          ) : (
-                            <span className="user-badge user-badge-staff" style={{ fontSize: "0.65rem", padding: "1px 5px" }}>Nhân viên</span>
-                          )}
+                          <RoleBadge role={u.role} />
                           {u.department && (
                             <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginLeft: "4px" }}>• {u.department}</span>
                           )}
@@ -428,23 +432,35 @@ export default function UserManagementPage() {
               </div>
 
               <div className="form-group">
-                <label className="form-label" htmlFor="user-role">Vai trò</label>
-                <select
-                  id="user-role"
-                  className="form-input"
-                  value={formRole}
-                  onChange={(e) => setFormRole(e.target.value)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <option value="staff">👤 Nhân viên</option>
-                  <option value="admin">👑 Quản trị viên</option>
-                  <option value="broadcaster">📢 Tin truyền thông</option>
-                  <option value="internal_sender">📧 Tin nội bộ</option>
-                  <option value="knowledge_editor">🧠 Kho tri thức AI</option>
-                </select>
+                <label className="form-label" style={{ marginBottom: "8px", display: "block" }}>Vai trò (Có thể chọn nhiều)</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+                  {[
+                    { id: "admin", label: "👑 Quản trị viên" },
+                    { id: "staff", label: "👤 Nhân viên" },
+                    { id: "broadcaster", label: "📢 Tin truyền thông" },
+                    { id: "internal_sender", label: "📧 Tin nội bộ" },
+                    { id: "knowledge_editor", label: "🧠 Kho tri thức AI" },
+                  ].map(role => (
+                    <label key={role.id} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem" }}>
+                      <input 
+                        type="checkbox" 
+                        checked={formRoles.includes(role.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormRoles(prev => [...prev, role.id]);
+                          } else {
+                            setFormRoles(prev => prev.filter(r => r !== role.id));
+                          }
+                        }}
+                        style={{ width: "16px", height: "16px" }}
+                      />
+                      <span>{role.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              {formRole === "staff" && (
+              {formRoles.includes("staff") && (
                 <div className="form-group">
                   <label className="form-label" htmlFor="user-department">Phòng ban (Chuyên môn)</label>
                   <select

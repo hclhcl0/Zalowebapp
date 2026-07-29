@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { isAdmin } from "@/lib/roles";
 import { Plus, Trash2, Eye, EyeOff, AlertCircle } from "lucide-react";
 import WebcqCategoriesPanel from "./WebcqCategoriesPanel";
 import BannerListEditor from "./BannerListEditor";
@@ -1428,6 +1430,21 @@ function SettingsPageContent() {
 }
 
 export default function SettingsPage() {
+  const { data: session, status } = useSession();
+
+  // Guard: kiểm tra quyền
+  if (status === "authenticated" && !isAdmin(session?.user?.role)) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "16px", color: "var(--text-muted)" }}>
+        <div style={{ fontSize: "3rem" }}>🔒</div>
+        <div style={{ fontWeight: 700, fontSize: "1.2rem", color: "var(--text)" }}>Không có quyền truy cập</div>
+        <div style={{ fontSize: "0.9rem", textAlign: "center", maxWidth: 360 }}>
+          Trang này yêu cầu quyền <strong>Quản trị viên</strong>.<br/>Liên hệ Quản trị viên để được cấp quyền.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Suspense fallback={<div style={{ padding: "24px", textAlign: "center", color: "var(--text-muted)" }}>Đang tải cài đặt...</div>}>
       <SettingsPageContent />

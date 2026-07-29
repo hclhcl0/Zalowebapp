@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import bcrypt from "bcryptjs";
+import { isAdmin } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 403 });
     }
 
@@ -41,7 +42,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: "Không có quyền thực hiện" }, { status: 403 });
     }
 
@@ -69,8 +70,8 @@ export async function POST(request) {
         username,
         password: hashedPassword,
         fullName,
-        role, // "admin" | "staff"
-        department: role === "staff" ? department : null,
+        role, // "admin,broadcaster"
+        department: role.includes("staff") ? department : null,
       },
       select: {
         id: true,

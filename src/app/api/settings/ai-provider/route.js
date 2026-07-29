@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: "Không có quyền truy cập" }, { status: 403 });
     }
 
@@ -25,7 +25,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: "Không có quyền thực hiện" }, { status: 403 });
     }
 

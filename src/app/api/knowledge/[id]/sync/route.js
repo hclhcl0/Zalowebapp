@@ -21,7 +21,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ success: false, error: "Tài liệu không tồn tại" }, { status: 404 });
     }
 
-    if (session.user.role === "staff") {
+    if (session.user.role?.includes("staff")) {
       if (doc.category !== session.user.department) {
         return NextResponse.json({ success: false, error: "Không có quyền đồng bộ tài liệu của phòng ban khác" }, { status: 403 });
       }

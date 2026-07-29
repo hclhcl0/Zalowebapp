@@ -32,7 +32,7 @@ export async function GET(request) {
       };
     }
 
-    if (session.user.role === "staff") {
+    if (session.user.role?.includes("staff")) {
       if (!session.user.department) {
         return NextResponse.json({ success: true, data: [], total: 0, page: 1, totalPages: 0 });
       }
@@ -103,7 +103,7 @@ export async function POST(request) {
     let category = formData.get("category");
     let allowedDepartment = formData.get("allowedDepartment");
 
-    if (session.user.role === "staff") {
+    if (session.user.role?.includes("staff")) {
       if (!session.user.department) {
         return NextResponse.json({ success: false, error: "Bạn chưa được phân phòng ban" }, { status: 403 });
       }

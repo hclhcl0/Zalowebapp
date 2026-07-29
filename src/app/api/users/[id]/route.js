@@ -8,13 +8,14 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import bcrypt from "bcryptjs";
+import { isAdmin } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
 export async function PUT(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: "Không có quyền thực hiện" }, { status: 403 });
     }
 
@@ -31,21 +32,18 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Tài khoản không tồn tại" }, { status: 404 });
     }
 
-    // Nếu thay đổi quyền thành "staff" cho chính mình
-    if (session.user.email === existingUser.username && role === "staff") {
-      return NextResponse.json({ error: "Bạn không thể tự hạ quyền của chính mình" }, { status: 400 });
+    // Chặn tự gỡ quyền admin của chính mình
+    if (session.user.email === existingUser.username && role && !isAdmin(role)) {
+      return NextResponse.json({ error: "Bạn không thể tự gỡ quyền admin của chính mình" }, { status: 400 });
     }
 
     const updateData = {};
     if (fullName) updateData.fullName = fullName;
     if (role) {
       updateData.role = role;
-      if (role === "admin") {
-        updateData.department = null; // Admin không cần phòng ban
-      }
     }
-    if (department !== undefined && updateData.role !== "admin" && existingUser.role !== "admin") {
-      updateData.department = department; // Cập nhật phòng ban cho staff
+    if (department !== undefined) {
+      updateData.department = role?.includes("staff") || existingUser.role?.includes("staff") ? department : null;
     }
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
@@ -72,7 +70,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "admin") {
+    if (!session || !isAdmin(session.user.role)) {
       return NextResponse.json({ error: "Không có quyền thực hiện" }, { status: 403 });
     }
 

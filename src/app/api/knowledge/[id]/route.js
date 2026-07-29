@@ -21,7 +21,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ success: false, error: "Tài liệu không tồn tại" }, { status: 404 });
     }
 
-    if (session.user.role === "staff") {
+    if (session.user.role?.includes("staff")) {
       if (doc.category !== session.user.department) {
         return NextResponse.json({ success: false, error: "Không có quyền xoá tài liệu của phòng ban khác" }, { status: 403 });
       }
@@ -61,7 +61,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ success: false, error: "Tài liệu không tồn tại" }, { status: 404 });
     }
 
-    if (session.user.role === "staff") {
+    if (session.user.role?.includes("staff")) {
       if (doc.category !== session.user.department) {
         return NextResponse.json({ success: false, error: "Không có quyền xem tài liệu của phòng ban khác" }, { status: 403 });
       }
@@ -92,7 +92,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ success: false, error: "Tài liệu không tồn tại" }, { status: 404 });
     }
 
-    if (session.user.role === "staff") {
+    if (session.user.role?.includes("staff")) {
       if (doc.category !== session.user.department) {
         return NextResponse.json({ success: false, error: "Không có quyền sửa tài liệu của phòng ban khác" }, { status: 403 });
       }
@@ -105,7 +105,7 @@ export async function PUT(request, { params }) {
     if (title !== undefined) updateData.title = title;
     
     if (category !== undefined) {
-      if (session.user.role === "staff") {
+      if (session.user.role?.includes("staff")) {
         updateData.category = session.user.department;
       } else {
         updateData.category = category;
@@ -113,7 +113,7 @@ export async function PUT(request, { params }) {
     }
     
     if (allowedDepartment !== undefined) {
-      if (session.user.role === "staff") {
+      if (session.user.role?.includes("staff")) {
         updateData.allowedDepartment = session.user.department;
       } else {
         updateData.allowedDepartment = (allowedDepartment === "ALL" || allowedDepartment === "all" || allowedDepartment === "") ? null : allowedDepartment;
