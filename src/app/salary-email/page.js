@@ -301,7 +301,7 @@ export default function SalaryEmailPage() {
         <img 
           src="/images/banner-internal.png" 
           alt="Gửi tin nội bộ" 
-          style={{ width: "100%", maxWidth: "800px", height: "auto", display: "block", objectFit: "contain" }} 
+          style={{ width: "100%", maxWidth: "500px", height: "auto", display: "block", objectFit: "contain" }} 
         />
       </div>
 

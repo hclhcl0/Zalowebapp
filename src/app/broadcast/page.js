@@ -356,7 +356,7 @@ export default function BroadcastPage() {
         <img 
           src="/images/banner-broadcast.png" 
           alt="Gửi tin truyền thông" 
-          style={{ width: "100%", maxWidth: "800px", height: "auto", display: "block", objectFit: "contain" }} 
+          style={{ width: "100%", maxWidth: "500px", height: "auto", display: "block", objectFit: "contain" }} 
         />
       </div>
 

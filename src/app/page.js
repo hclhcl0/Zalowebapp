@@ -145,7 +145,7 @@ export default async function Dashboard() {
         <img 
           src="/images/banner-zcdc-new.png" 
           alt="ZCDC Quản lý Zalo CDC" 
-          style={{ width: "100%", maxWidth: "800px", height: "auto", display: "block", objectFit: "contain" }} 
+          style={{ width: "100%", maxWidth: "500px", height: "auto", display: "block", objectFit: "contain" }} 
         />
       </div>
 
