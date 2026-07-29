@@ -92,6 +92,7 @@ export default function SendZaloPage() {
   const [cmsArticles, setCmsArticles] = useState([]);
   const [showCmsModal, setShowCmsModal] = useState(false);
   const [loadingCms, setLoadingCms] = useState(false);
+  const [cmsUrl, setCmsUrl] = useState("");
 
   const imgInputRef  = useRef(null);
   const vidInputRef  = useRef(null);
@@ -216,8 +217,11 @@ export default function SendZaloPage() {
     if (cmsArticles.length === 0) {
       setLoadingCms(true);
       try {
-        const res = await fetch("/api/articles?limit=20").then(r => r.json());
-        if (res.data) setCmsArticles(res.data);
+        const res = await fetch("/api/payload-articles?limit=20").then(r => r.json());
+        if (res.docs) {
+          setCmsArticles(res.docs);
+          setCmsUrl(res.cmsUrl || "");
+        }
       } catch (err) { console.error(err); }
       setLoadingCms(false);
     }
@@ -225,14 +229,20 @@ export default function SendZaloPage() {
 
   const selectCmsArticle = (article) => {
     if (listElements.length >= 5) { alert("Tối đa 5 thẻ"); return; }
+    
+    const imgPath = article.image?.sizes?.card?.url || article.image?.url || "";
+    const resolvedImg = imgPath.startsWith("/") ? `${cmsUrl}${imgPath}` : imgPath;
+    const articleUrl = cmsUrl ? `${cmsUrl}/bai-viet/${article.slug}` : "";
+
     const newEl = {
-      title: article.title || "",
-      subtitle: article.summary || "Bấm xem chi tiết",
-      imageUrl: article.coverUrl || "",
+      title: (article.title || "").substring(0, 120),
+      subtitle: (article.description || article.title || "Bấm xem chi tiết").substring(0, 120),
+      imageUrl: resolvedImg,
       actionType: "oa.open.url",
-      actionValue: `https://zcdc.vnos.org/news/${article.id}`,
+      actionValue: articleUrl,
       actionSmsContent: ""
     };
+    
     if (listElements.length === 1 && !listElements[0].title && !listElements[0].imageUrl) {
       setListElements([newEl]);
     } else {
@@ -718,19 +728,22 @@ export default function SendZaloPage() {
                 <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Không có bài viết nào</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {cmsArticles.map(article => (
+                  {cmsArticles.map(article => {
+                    const imgPath = article.image?.sizes?.thumbnail?.url || article.image?.url || "";
+                    const resolvedImg = imgPath.startsWith("/") ? `${cmsUrl}${imgPath}` : imgPath;
+                    return (
                     <div key={article.id} onClick={() => selectCmsArticle(article)} style={{ display: "flex", gap: "12px", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--surface)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-                      {article.coverUrl ? (
-                        <img src={article.coverUrl} alt="" style={{ width: "80px", height: "60px", objectFit: "cover", borderRadius: "4px" }} />
+                      {resolvedImg ? (
+                        <img src={resolvedImg} alt="" style={{ width: "80px", height: "60px", objectFit: "cover", borderRadius: "4px" }} />
                       ) : (
                         <div style={{ width: "80px", height: "60px", background: "var(--surface)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>No Image</div>
                       )}
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "4px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{article.title}</div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{article.summary}</div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{article.description}</div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               )}
             </div>
