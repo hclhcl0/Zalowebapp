@@ -75,6 +75,8 @@ export default function SendZaloPage() {
   const [followers,         setFollowers]         = useState([]);
   const [selectedIds,       setSelectedIds]       = useState([]);
   const [searchTerm,        setSearchTerm]        = useState("");
+  const [filterDept,        setFilterDept]        = useState("");
+  const [filterGroup,       setFilterGroup]       = useState("");
   const [loadingRecip,      setLoadingRecip]      = useState(false);
   const [sending,           setSending]           = useState(false);
   const [sendProgress,      setSendProgress]      = useState(0);
@@ -309,13 +311,20 @@ export default function SendZaloPage() {
 
   // ─── Recipient helpers ────────────────────────────────────
     const filtered = followers.filter(f => {
-      if (!searchTerm) return true;
-      const term = searchTerm.toLowerCase();
-      const displayName = (f.displayName || "").toLowerCase();
-      const fullName = (f.fullName || "").toLowerCase();
-      const staffName = (f.staffLink?.staffNameRaw || f.staffLink?.staffName || "").toLowerCase();
-      const phone = (f.phone || "");
-      return displayName.includes(term) || fullName.includes(term) || staffName.includes(term) || phone.includes(term);
+      let matchSearch = true;
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const displayName = (f.displayName || "").toLowerCase();
+        const fullName = (f.fullName || "").toLowerCase();
+        const staffName = (f.staffLink?.staffNameRaw || f.staffLink?.staffName || "").toLowerCase();
+        const phone = (f.phone || "");
+        matchSearch = displayName.includes(term) || fullName.includes(term) || staffName.includes(term) || phone.includes(term);
+      }
+      
+      if (scope === "list_staff" && filterDept && f.department !== filterDept) return false;
+      if (scope === "list_citizen" && filterGroup && f.interestGroup !== filterGroup) return false;
+      
+      return matchSearch;
     });
   const toggleSelect = (id) => setSelectedIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
   const selectAll    = ()   => setSelectedIds(filtered.map(f => f.zaloUserId));
@@ -374,6 +383,30 @@ export default function SendZaloPage() {
                     onChange={e => setSearchTerm(e.target.value)}
                     className="sz-search-input"
                   />
+                  {scope === "list_staff" && (
+                    <select 
+                      value={filterDept} 
+                      onChange={e => setFilterDept(e.target.value)}
+                      style={{ border: "1px solid var(--border)", padding: "4px 8px", borderRadius: 4, fontSize: "0.8rem", color: "var(--text)" }}
+                    >
+                      <option value="">Tất cả phòng ban</option>
+                      {Array.from(new Set(followers.map(f => f.department).filter(Boolean))).map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  )}
+                  {scope === "list_citizen" && (
+                    <select 
+                      value={filterGroup} 
+                      onChange={e => setFilterGroup(e.target.value)}
+                      style={{ border: "1px solid var(--border)", padding: "4px 8px", borderRadius: 4, fontSize: "0.8rem", color: "var(--text)" }}
+                    >
+                      <option value="">Tất cả mục đích</option>
+                      {Array.from(new Set(followers.map(f => f.interestGroup).filter(Boolean))).map(d => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  )}
                   {loadingRecip
                     ? <RefreshCw size={13} style={{ animation: "sz-spin 1s linear infinite", flexShrink: 0 }} />
                     : (
