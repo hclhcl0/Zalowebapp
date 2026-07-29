@@ -699,6 +699,45 @@ export default function SendZaloPage() {
 
       </div>{/* /sz-grid */}
 
+      {/* ── CMS Article Picker Modal ── */}
+      {showCmsModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}>
+          <div className="card" style={{ width: "90%", maxWidth: "600px", background: "white", padding: "20px", maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Chọn bài viết từ Website</h3>
+              <button onClick={() => setShowCmsModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={20} /></button>
+            </div>
+            
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {loadingCms ? (
+                <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                  <RefreshCw size={24} style={{ animation: "sz-spin 1s linear infinite", margin: "0 auto 10px" }} />
+                  <div>Đang tải bài viết...</div>
+                </div>
+              ) : cmsArticles.length === 0 ? (
+                <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Không có bài viết nào</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {cmsArticles.map(article => (
+                    <div key={article.id} onClick={() => selectCmsArticle(article)} style={{ display: "flex", gap: "12px", padding: "10px", border: "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.background = "var(--surface)"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                      {article.coverUrl ? (
+                        <img src={article.coverUrl} alt="" style={{ width: "80px", height: "60px", objectFit: "cover", borderRadius: "4px" }} />
+                      ) : (
+                        <div style={{ width: "80px", height: "60px", background: "var(--surface)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", color: "var(--text-muted)" }}>No Image</div>
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "4px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{article.title}</div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{article.summary}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Responsive Styles ── */}
       <style>{`
         .sz-page { padding: 16px; max-width: 1200px; margin: 0 auto; }
