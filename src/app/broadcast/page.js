@@ -38,6 +38,7 @@ export default function BroadcastPage() {
   const [cmsArticles, setCmsArticles] = useState([]);
   const [cmsLoading, setCmsLoading] = useState(false);
   const [cmsSearch, setCmsSearch] = useState("");
+  const cmsSearchTimeoutRef = useRef(null);
   const [cmsPage, setCmsPage] = useState(1);
   const [cmsTotalPages, setCmsTotalPages] = useState(1);
   const [cmsUrl, setCmsUrl] = useState("");
@@ -74,8 +75,8 @@ export default function BroadcastPage() {
   };
 
   const addArticleFromCms = (article) => {
-    if (listElements.length >= 5) {
-      alert("Zalo chỉ cho phép tối đa 5 thẻ trong tin nhắn danh sách.");
+    if (listElements.length >= 10) {
+      alert("Zalo chỉ cho phép tối đa 10 thẻ trong tin nhắn danh sách.");
       return;
     }
     // Resolve image URL
@@ -184,8 +185,8 @@ export default function BroadcastPage() {
   };
 
   const addElement = () => {
-    if (listElements.length >= 5) {
-      alert("Zalo chỉ cho phép tối đa 5 thẻ trong tin nhắn danh sách.");
+    if (listElements.length >= 10) {
+      alert("Zalo chỉ cho phép tối đa 10 thẻ trong tin nhắn danh sách.");
       return;
     }
     setListElements([...listElements, { title: "", subtitle: "", imageUrl: "", actionType: "oa.open.url", actionValue: "", actionSmsContent: "" }]);
@@ -853,8 +854,22 @@ export default function BroadcastPage() {
                   className="form-input"
                   placeholder="Tìm kiếm bài viết..."
                   value={cmsSearch}
-                  onChange={(e) => setCmsSearch(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { setCmsPage(1); fetchCmsArticles(cmsSearch, 1); } }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCmsSearch(val);
+                    if (cmsSearchTimeoutRef.current) clearTimeout(cmsSearchTimeoutRef.current);
+                    cmsSearchTimeoutRef.current = setTimeout(() => {
+                      setCmsPage(1);
+                      fetchCmsArticles(val, 1);
+                    }, 500);
+                  }}
+                  onKeyDown={(e) => { 
+                    if (e.key === "Enter") { 
+                      if (cmsSearchTimeoutRef.current) clearTimeout(cmsSearchTimeoutRef.current);
+                      setCmsPage(1); 
+                      fetchCmsArticles(cmsSearch, 1); 
+                    } 
+                  }}
                   style={{ flex: 1, padding: "8px 12px" }}
                 />
                 <button type="button" className="btn btn-outline btn-sm"
