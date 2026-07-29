@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { canSendInternal, canBroadcast } from '@/lib/roles';
-import { sendTextMessage, sendImageToUser, sendFileAsLink, sendVideoLink } from '@/lib/zalo';
+import { sendTextMessage, sendImageToUser, sendFileAsLink, sendVideoLink, sendListMessage } from '@/lib/zalo';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,18 +25,23 @@ export async function POST(request) {
     const {
       scope = 'all_staff',
       userIds = [],
+      messageType = 'text',
       title = '',
       content = '',
       url = '',
       imageUrls = [],    // string[]
       videoUrls = [],    // [{ name, url }]
       fileAttachments = [], // [{ name, url }]
+      listElements = [], // [{ title, subtitle, imageUrl, actionType, actionValue, actionSmsContent }]
       delay = 300,       // ms giữa mỗi lần gởi
     } = body;
 
     const hasAttachments = imageUrls.length > 0 || videoUrls.length > 0 || fileAttachments.length > 0;
-    if (!content?.trim() && !hasAttachments) {
+    if (messageType === 'text' && !content?.trim() && !hasAttachments) {
       return NextResponse.json({ error: 'Nội dung tin nhắn và đính kèm không được cùng trống' }, { status: 400 });
+    }
+    if (messageType === 'list' && (!listElements || listElements.length === 0)) {
+      return NextResponse.json({ error: 'Danh sách Carousel không được để trống' }, { status: 400 });
     }
 
     // ── Xác định danh sách ZaloUserID ──
@@ -95,36 +100,42 @@ export async function POST(request) {
 
     for (const userId of targetUserIds) {
       try {
-        // 1. GỜi tin văn bản chính (nếu có nội dung)
-        if (mainText) {
-          const textRes = await sendTextMessage(userId, mainText);
-          if (textRes.error && textRes.error !== 0) throw new Error(textRes.message || 'Lỗi gởi text');
-        }
-
-        // 2. GỜi từng ảnh kèm theo
-        for (const imgUrl of imageUrls) {
-          if (imgUrl) {
-            const absUrl = imgUrl.startsWith('/') ? `${process.env.NEXTAUTH_URL || 'https://zcdc.ksbtdanang.vn'}${imgUrl}` : imgUrl;
-            await sendImageToUser(userId, absUrl);
-            await new Promise(r => setTimeout(r, 200));
+        if (messageType === 'list') {
+          // Gởi tin danh sách Carousel
+          const res = await sendListMessage(userId, listElements);
+          if (res.error !== 0) throw new Error(res.message || 'Lỗi gởi Carousel');
+        } else {
+          // 1. Gởi tin văn bản chính (nếu có nội dung)
+          if (mainText) {
+            const textRes = await sendTextMessage(userId, mainText);
+            if (textRes.error && textRes.error !== 0) throw new Error(textRes.message || 'Lỗi gởi text');
           }
-        }
 
-        // 3. GỜi video (dưới dạng link)
-        for (const vid of videoUrls) {
-          if (vid?.url) {
-            const absUrl = vid.url.startsWith('/') ? `${process.env.NEXTAUTH_URL || 'https://zcdc.ksbtdanang.vn'}${vid.url}` : vid.url;
-            await sendVideoLink(userId, vid.name || 'Video', absUrl);
-            await new Promise(r => setTimeout(r, 200));
+          // 2. Gởi từng ảnh kèm theo
+          for (const imgUrl of imageUrls) {
+            if (imgUrl) {
+              const absUrl = imgUrl.startsWith('/') ? `${process.env.NEXTAUTH_URL || 'https://zcdc.ksbtdanang.vn'}${imgUrl}` : imgUrl;
+              await sendImageToUser(userId, absUrl);
+              await new Promise(r => setTimeout(r, 200));
+            }
           }
-        }
 
-        // 4. GỜi file (dưới dạng link)
-        for (const file of fileAttachments) {
-          if (file?.url) {
-            const absUrl = file.url.startsWith('/') ? `${process.env.NEXTAUTH_URL || 'https://zcdc.ksbtdanang.vn'}${file.url}` : file.url;
-            await sendFileAsLink(userId, file.name || 'Tài liệu', absUrl);
-            await new Promise(r => setTimeout(r, 200));
+          // 3. Gởi video (dưới dạng link)
+          for (const vid of videoUrls) {
+            if (vid?.url) {
+              const absUrl = vid.url.startsWith('/') ? `${process.env.NEXTAUTH_URL || 'https://zcdc.ksbtdanang.vn'}${vid.url}` : vid.url;
+              await sendVideoLink(userId, vid.name || 'Video', absUrl);
+              await new Promise(r => setTimeout(r, 200));
+            }
+          }
+
+          // 4. Gởi file (dưới dạng link)
+          for (const file of fileAttachments) {
+            if (file?.url) {
+              const absUrl = file.url.startsWith('/') ? `${process.env.NEXTAUTH_URL || 'https://zcdc.ksbtdanang.vn'}${file.url}` : file.url;
+              await sendFileAsLink(userId, file.name || 'Tài liệu', absUrl);
+              await new Promise(r => setTimeout(r, 200));
+            }
           }
         }
 

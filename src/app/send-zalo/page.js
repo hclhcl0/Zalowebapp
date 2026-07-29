@@ -320,9 +320,31 @@ export default function SendZaloPage() {
             )}
           </div>
 
-          {/* Compose */}
+          {/* Type Toggle */}
           <div className="card sz-card">
-            <div className="sz-card-title">✏️ Soạn tin nhắn</div>
+            <div className="sz-card-title">📨 Loại tin nhắn</div>
+            <div style={{ display: "flex", background: "var(--border)", padding: "4px", borderRadius: "8px", gap: "4px" }}>
+              <button
+                type="button"
+                onClick={() => setMessageType("text")}
+                style={{ flex: 1, padding: "8px", border: "none", borderRadius: "6px", background: messageType === "text" ? "white" : "transparent", fontWeight: messageType === "text" ? 600 : 400, boxShadow: messageType === "text" ? "0 1px 3px rgba(0,0,0,0.1)" : "none", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                📄 Văn bản & File
+              </button>
+              <button
+                type="button"
+                onClick={() => setMessageType("list")}
+                style={{ flex: 1, padding: "8px", border: "none", borderRadius: "6px", background: messageType === "list" ? "white" : "transparent", fontWeight: messageType === "list" ? 600 : 400, boxShadow: messageType === "list" ? "0 1px 3px rgba(0,0,0,0.1)" : "none", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                📑 Danh sách Carousel
+              </button>
+            </div>
+          </div>
+
+          {/* Compose Text */}
+          {messageType === "text" && (
+            <div className="card sz-card">
+              <div className="sz-card-title">✏️ Soạn tin nhắn</div>
             <input
               type="text"
               className="form-input"
@@ -350,8 +372,10 @@ export default function SendZaloPage() {
               style={{ marginTop: 10 }}
             />
           </div>
+          )}
 
-          {/* Attachments */}
+          {/* Attachments for Text */}
+          {messageType === "text" && (
           <div className="card sz-card">
             <div className="sz-card-title">📎 Đính kèm</div>
 
@@ -408,13 +432,73 @@ export default function SendZaloPage() {
                 ))}
               </div>
             )}
-
-            {imageAttachments.length === 0 && videoAttachments.length === 0 && fileAttachments.length === 0 && (
-              <div style={{ color: "var(--text-muted)", fontSize: "0.78rem", fontStyle: "italic", marginTop: 4 }}>
-                Chưa có đính kèm — tối đa 5 ảnh, 3 video, 5 file
-              </div>
-            )}
           </div>
+          )}
+
+          {/* Carousel Builder */}
+          {messageType === "list" && (
+            <div className="card sz-card" style={{ background: "#f8fafc" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700 }}>Thẻ danh sách (Tối đa 5 thẻ)</h4>
+                <button type="button" onClick={openCmsModal} className="btn" style={{ background: "white", border: "1px solid var(--border)", padding: "4px 8px", fontSize: "0.75rem", color: "var(--primary)" }}>
+                  📰 Thêm bài Website
+                </button>
+              </div>
+              
+              {listElements.map((el, index) => (
+                <div key={index} style={{ background: "white", padding: "12px", borderRadius: "6px", border: "1px solid var(--border)", marginBottom: "12px" }}>
+                  <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "12px", display: "flex", justifyContent: "space-between" }}>
+                    <span>Thẻ {index + 1}</span>
+                    {listElements.length > 1 && (
+                      <button type="button" onClick={() => removeElement(index)} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem" }}>Xóa</button>
+                    )}
+                  </div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: "0.75rem", marginBottom: 2 }}>Tiêu đề</label>
+                      <input type="text" className="form-input" style={{ padding: "6px 10px", fontSize: "0.8rem" }} value={el.title} onChange={(e) => handleElementChange(index, "title", e.target.value)} required />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: "0.75rem", marginBottom: 2 }}>Phụ đề (Mô tả)</label>
+                      <input type="text" className="form-input" style={{ padding: "6px 10px", fontSize: "0.8rem" }} value={el.subtitle || ""} placeholder="Bấm xem chi tiết..." onChange={(e) => handleElementChange(index, "subtitle", e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: "0.75rem", marginBottom: 2 }}>Ảnh bìa (URL)</label>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <input type="text" className="form-input" style={{ padding: "6px 10px", flex: 1, fontSize: "0.8rem" }} value={el.imageUrl} placeholder="Link/Tải ảnh lên" onChange={(e) => handleElementChange(index, "imageUrl", e.target.value)} required />
+                        <label htmlFor={`file-upload-zalo-${index}`} style={{ display: "flex", alignItems: "center", cursor: "pointer", padding: "0 10px", border: "1px solid var(--border)", borderRadius: "4px", background: "#f1f5f9", fontSize: "0.75rem", whiteSpace: "nowrap", margin: 0 }}>
+                          {uploadingIndex === index ? "⏳..." : "📁 Tải ảnh"}
+                        </label>
+                        <input type="file" id={`file-upload-zalo-${index}`} accept="image/*" style={{ display: "none" }} onChange={(e) => handleImageUpload(index, e)} />
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <div style={{ flex: 1 }}>
+                        <label className="form-label" style={{ fontSize: "0.75rem", marginBottom: 2 }}>Hành động</label>
+                        <select className="form-input" style={{ padding: "6px 10px", fontSize: "0.8rem" }} value={el.actionType} onChange={(e) => handleElementChange(index, "actionType", e.target.value)}>
+                          <option value="oa.open.url">Mở link web</option>
+                          <option value="oa.query.show">Gởi tin đến OA</option>
+                          <option value="oa.open.phone">Gọi điện</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label className="form-label" style={{ fontSize: "0.75rem", marginBottom: 2 }}>Giá trị</label>
+                        <input type="text" className="form-input" style={{ padding: "6px 10px", fontSize: "0.8rem" }} value={el.actionValue} placeholder={el.actionType === "oa.open.url" ? "https://..." : "090..."} onChange={(e) => handleElementChange(index, "actionValue", e.target.value)} required />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {listElements.length < 5 && (
+                <button type="button" onClick={addElement} className="btn" style={{ width: "100%", background: "white", border: "1px dashed var(--primary)", color: "var(--primary)", padding: "8px", fontSize: "0.8rem" }}>
+                  + Thêm thẻ Carousel mới
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Send */}
           <div className="card sz-card">
@@ -430,7 +514,7 @@ export default function SendZaloPage() {
             <button
               type="button"
               onClick={handleSend}
-              disabled={sending || !content.trim()}
+              disabled={sending || (messageType === 'text' && !content.trim())}
               className="btn btn-primary sz-send-btn"
             >
               {sending
