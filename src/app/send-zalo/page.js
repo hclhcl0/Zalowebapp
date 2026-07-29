@@ -308,11 +308,15 @@ export default function SendZaloPage() {
   };
 
   // ─── Recipient helpers ────────────────────────────────────
-  const filtered = followers.filter(f =>
-    !searchTerm ||
-    (f.displayName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (f.phone || "").includes(searchTerm)
-  );
+    const filtered = followers.filter(f => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      const displayName = (f.displayName || "").toLowerCase();
+      const fullName = (f.fullName || "").toLowerCase();
+      const staffName = (f.staffLink?.staffNameRaw || f.staffLink?.staffName || "").toLowerCase();
+      const phone = (f.phone || "");
+      return displayName.includes(term) || fullName.includes(term) || staffName.includes(term) || phone.includes(term);
+    });
   const toggleSelect = (id) => setSelectedIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
   const selectAll    = ()   => setSelectedIds(filtered.map(f => f.zaloUserId));
   const clearAll     = ()   => setSelectedIds([]);
@@ -398,7 +402,14 @@ export default function SendZaloPage() {
                           : <div className="sz-avatar sz-avatar-fallback">{(f.displayName || "?")[0].toUpperCase()}</div>
                         }
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="sz-recip-name">{f.displayName || f.fullName || f.zaloUserId}</div>
+                          <div className="sz-recip-name">
+                            {f.userType === "staff" && f.staffLink
+                              ? `${f.staffLink.staffNameRaw} (${f.displayName || 'Zalo'})`
+                              : f.fullName
+                                ? `${f.fullName} (${f.displayName || 'Zalo'})`
+                                : f.displayName || f.zaloUserId
+                            }
+                          </div>
                           {f.phone && <div className="sz-recip-phone">{f.phone}</div>}
                         </div>
                       </label>
