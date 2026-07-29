@@ -181,7 +181,7 @@ export default function SendZaloPage() {
   // ─── Carousel Logic ───
   const handleElementChange = (index, field, value) => {
     const newElements = [...listElements];
-    newElements[index][field] = value;
+    newElements[index] = { ...newElements[index], [field]: value };
     setListElements(newElements);
   };
 
