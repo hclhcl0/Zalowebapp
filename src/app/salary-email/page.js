@@ -56,7 +56,8 @@ const normalizeName = (n) => {
     const phone = (f.phone || "").toLowerCase();
     const userId = (f.zaloUserId || "").toLowerCase();
     const staffNameRaw = (f.staffLink?.staffNameRaw || "").toLowerCase();
-    return name.includes(term) || phone.includes(term) || userId.includes(term) || staffNameRaw.includes(term);
+    const fullName = (f.fullName || "").toLowerCase();
+    return name.includes(term) || phone.includes(term) || userId.includes(term) || staffNameRaw.includes(term) || fullName.includes(term);
   });
 
   return (
@@ -99,8 +100,8 @@ const normalizeName = (n) => {
       >
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "90%" }}>
           {selectedFollower ? (
-            selectedFollower.staffLink?.staffNameRaw ? (
-              `${selectedFollower.staffLink.staffNameRaw} (Zalo: ${selectedFollower.displayName})`
+            (selectedFollower.staffLink?.staffNameRaw || selectedFollower.fullName) ? (
+              `${selectedFollower.staffLink?.staffNameRaw || selectedFollower.fullName} (Zalo: ${selectedFollower.displayName})`
             ) : (
               `${selectedFollower.displayName} ${selectedFollower.phone ? `(${selectedFollower.phone})` : ""}`
             )
@@ -206,8 +207,8 @@ const normalizeName = (n) => {
                     minHeight: "32px"
                   }}
                 >
-                  {f.staffLink?.staffNameRaw ? (
-                    `${f.staffLink.staffNameRaw} (Zalo: ${f.displayName})`
+                  {(f.staffLink?.staffNameRaw || f.fullName) ? (
+                    `${f.staffLink?.staffNameRaw || f.fullName} (Zalo: ${f.displayName})`
                   ) : (
                     `${f.displayName} ${f.phone ? `(${f.phone})` : ""}`
                   )}
@@ -1374,11 +1375,11 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                 if (nameVal) {
                   const normR = normalizeName(nameVal);
                   if (normR) {
-                    // Ưu tiên tìm trong staffLink (tên thật đã đăng ký)
+                    // Ưu tiên tìm trong staffLink (tên thật đã đăng ký) hoặc fullName (của khách hàng)
                     matchedFollower = followers.find(f => 
-                      f.staffLink && 
-                      (normalizeName(f.staffLink.staffNameRaw) === normR || 
-                       normalizeName(f.staffLink.staffName) === normR)
+                      (f.staffLink && normalizeName(f.staffLink.staffNameRaw) === normR) ||
+                      (f.staffLink && normalizeName(f.staffLink.staffName) === normR) ||
+                      (f.fullName && normalizeName(f.fullName) === normR)
                     );
                     // Nếu không thấy, tìm theo displayName (tên hiển thị Zalo)
                     if (!matchedFollower) {
