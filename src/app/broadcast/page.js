@@ -75,8 +75,8 @@ export default function BroadcastPage() {
   };
 
   const addArticleFromCms = (article) => {
-    if (listElements.length >= 10) {
-      alert("Zalo chỉ cho phép tối đa 10 thẻ trong tin nhắn danh sách.");
+    if (listElements.length >= 5) {
+      alert("Zalo chỉ cho phép tối đa 5 thẻ trong tin nhắn danh sách.");
       return;
     }
     // Resolve image URL
@@ -185,8 +185,8 @@ export default function BroadcastPage() {
   };
 
   const addElement = () => {
-    if (listElements.length >= 10) {
-      alert("Zalo chỉ cho phép tối đa 10 thẻ trong tin nhắn danh sách.");
+    if (listElements.length >= 5) {
+      alert("Zalo chỉ cho phép tối đa 5 thẻ trong tin nhắn danh sách.");
       return;
     }
     setListElements([...listElements, { title: "", subtitle: "", imageUrl: "", actionType: "oa.open.url", actionValue: "", actionSmsContent: "" }]);
