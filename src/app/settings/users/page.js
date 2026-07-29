@@ -434,22 +434,16 @@ export default function UserManagementPage() {
               <div className="form-group">
                 <label className="form-label" style={{ marginBottom: "8px", display: "block" }}>Vai trò (Có thể chọn nhiều)</label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
-                  {[
-                    { id: "admin", label: "👑 Quản trị viên" },
-                    { id: "staff", label: "👤 Nhân viên" },
-                    { id: "broadcaster", label: "📢 Tin truyền thông" },
-                    { id: "internal_sender", label: "📧 Tin nội bộ" },
-                    { id: "knowledge_editor", label: "🧠 Kho tri thức AI" },
-                  ].map(role => (
-                    <label key={role.id} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem" }}>
+                  {Object.entries(ROLE_LABELS).map(([id, label]) => (
+                    <label key={id} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem" }}>
                       <input 
                         type="checkbox" 
-                        checked={formRoles.includes(role.id)}
+                        checked={formRoles.includes(id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setFormRoles(prev => [...prev, role.id]);
+                            setFormRoles(prev => [...prev, id]);
                           } else {
-                            setFormRoles(prev => prev.filter(r => r !== role.id));
+                            setFormRoles(prev => prev.filter(r => r !== id));
                           }
                         }}
                         style={{ width: "16px", height: "16px" }}
