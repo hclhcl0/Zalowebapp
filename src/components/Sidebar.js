@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { canManageMiniApp, isAdmin } from "@/lib/roles";
 import { 
   LayoutDashboard, Users, Megaphone, Mail, 
   Newspaper, CalendarDays, AlertTriangle, 
@@ -218,7 +219,11 @@ export default function Sidebar() {
         {menuGroups
           .filter(group => {
             // Chỉ hiển thị nhóm "Hệ thống" cho tài khoản Quản trị viên (admin)
-            if (group.title === "Hệ thống" && session?.user?.role !== "admin") {
+            if (group.title === "Hệ thống" && !isAdmin(session?.user?.role)) {
+              return false;
+            }
+            // Chỉ hiển thị nhóm "Zalo Mini App" cho admin hoặc miniapp_manager
+            if (group.title === "📱 Zalo Mini App" && !isAdmin(session?.user?.role) && !canManageMiniApp(session?.user?.role)) {
               return false;
             }
             return true;

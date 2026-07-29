@@ -2,12 +2,15 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { isAdmin, canManageMiniApp } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session || (!isAdmin(session.user.role) && !canManageMiniApp(session.user.role))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  }
 
   const resolvedParams = await params;
   const id = parseInt(resolvedParams.id);
@@ -31,7 +34,9 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!session || (!isAdmin(session.user.role) && !canManageMiniApp(session.user.role))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  }
 
   const resolvedParams = await params;
   const id = parseInt(resolvedParams.id);

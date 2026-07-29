@@ -13,6 +13,7 @@ export const ROLES = {
   BROADCASTER:      "broadcaster",      // Gởi tin truyền thông (Broadcast OA)
   INTERNAL_SENDER:  "internal_sender",  // Gởi tin nội bộ (Salary/Tax Email)
   KNOWLEDGE_EDITOR: "knowledge_editor", // Quản lý kho tri thức AI
+  MINIAPP_MANAGER:  "miniapp_manager",  // Quản lý cấu hình Zalo Mini App
 };
 
 // ============================================================
@@ -24,6 +25,7 @@ export const ROLE_LABELS = {
   broadcaster:      "📢 Tin truyền thông",
   internal_sender:  "📧 Gửi Zalo/Email",
   knowledge_editor: "🧠 Kho tri thức AI",
+  miniapp_manager:  "📱 Quản lý Mini App",
 };
 
 // ============================================================
@@ -35,6 +37,7 @@ export const ROLE_DESCRIPTIONS = {
   broadcaster:      "Soạn và gởi tin truyền thông Zalo OA",
   internal_sender:  "Gởi tin cá nhân hóa (Zalo/Email) cho danh sách",
   knowledge_editor: "Thêm, sửa, xóa tài liệu trong kho tri thức AI",
+  miniapp_manager:  "Quản lý cài đặt, nội dung, bảng giá cho Zalo Mini App",
 };
 
 // ============================================================
@@ -66,6 +69,11 @@ export function canSendInternal(roleString) {
 /** Kiểm tra có quyền quản lý Kho tri thức AI không */
 export function canEditKnowledge(roleString) {
   return hasRole(roleString, ROLES.KNOWLEDGE_EDITOR);
+}
+
+/** Kiểm tra có quyền quản lý Mini App không */
+export function canManageMiniApp(roleString) {
+  return hasRole(roleString, ROLES.MINIAPP_MANAGER);
 }
 
 /** Kiểm tra có phải Admin không */

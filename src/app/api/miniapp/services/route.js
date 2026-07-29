@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isAdmin, canManageMiniApp } from "@/lib/roles";
 
 export const dynamic = 'force-dynamic';
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 });
 }
+
+
 
 export async function GET(req) {
   try {
