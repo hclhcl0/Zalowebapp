@@ -219,10 +219,12 @@ function removeVietnameseTones(str) {
   return str;
 }
 
-function retrieveRelevantKnowledge(question, chunks) {
+function retrieveRelevantKnowledge(question, chunks, userName = "") {
   if (!chunks || chunks.length === 0) return "";
   
-  const normalizedQ = removeVietnameseTones(question).toLowerCase();
+  // Thêm tên của người dùng vào câu hỏi để tăng điểm cho chunk có chứa tên họ
+  const queryToSearch = userName ? `${question} ${userName}` : question;
+  const normalizedQ = removeVietnameseTones(queryToSearch).toLowerCase();
   const keywords = normalizedQ.split(/\s+/).filter(w => w.length > 1);
   
   if (keywords.length === 0) return "";
@@ -348,7 +350,7 @@ async function prepareAIContext(userId, question) {
     return userDept === docDept; // Nhân viên thường phải khớp phòng ban
   });
 
-  const knowledgeText = retrieveRelevantKnowledge(question, filteredChunks);
+  const knowledgeText = retrieveRelevantKnowledge(question, filteredChunks, userProfile.displayName);
   
   // Ghi đè categoryList dựa theo quyền hạn
   let categoryList = "";
@@ -395,9 +397,10 @@ Nếu câu hỏi về nhân viên KHÔNG thuộc đơn vị "${dept}", hãy từ
   } else {
     // Nhân viên thường / Người dân: Chỉ xem bản thân
     privacyRule = `🚨 QUY TẮC BẢO MẬT TỐI CAO (BẮT BUỘC TUÂN THỦ):
-Nếu người dùng hỏi thông tin cá nhân (lương, thưởng, hệ số, xếp loại, điểm số...) của MỘT NGƯỜI KHÁC (tên không giống với "${userProfile.displayName}"), bạn PHẢI TỪ CHỐI NGAY LẬP TỨC.
+Nếu người dùng hỏi thông tin cá nhân (lương, thưởng, hệ số, xếp loại, điểm số...) của MỘT NGƯỜI KHÁC (tên không khớp hoặc không giống với "${userProfile.displayName}" - không phân biệt hoa thường/dấu), bạn PHẢI TỪ CHỐI NGAY LẬP TỨC.
 Câu trả lời duy nhất được phép là: "Xin lỗi, vì lý do bảo mật dữ liệu nội bộ, tôi chỉ có thể cung cấp thông tin cá nhân cho chính chủ."
-Bạn KHÔNG ĐƯỢC PHÉP tiết lộ dữ liệu cá nhân của người khác dưới bất kỳ hình thức nào. Nếu là CÔNG DÂN, chỉ cung cấp thông tin y tế công cộng.`;
+Bạn KHÔNG ĐƯỢC PHÉP tiết lộ dữ liệu cá nhân của người khác dưới bất kỳ hình thức nào. Nếu là CÔNG DÂN, chỉ cung cấp thông tin y tế công cộng.
+Lưu ý: Nếu người dùng xưng "tôi", "mình", "em", "cháu", "anh", "chị", "bác"... hãy ngầm hiểu họ chính là "${userProfile.displayName}" và tra cứu thông tin của "${userProfile.displayName}" để trả lời.`;
   }
 
   const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng). Vai trò của bạn là hỗ trợ, giải đáp thắc mắc cho người dân và cán bộ của CDC Đà Nẵng.
