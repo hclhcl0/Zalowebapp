@@ -492,7 +492,7 @@ ${driveSection}`;
 // ============================================================
 // HÀM XỬ LÝ CHÍNH
 // ============================================================
-export async function askAI(userId, question) {
+export async function askAI(userId, question, appUserId) {
   const now = Date.now();
   if (!cachedProvider || now - providerCacheTime > PROVIDER_CACHE_TTL) {
     try {

@@ -72,7 +72,7 @@ export async function POST(request) {
       try {
         switch (event_name) {
           case "user_send_text":
-            await handleTextMessage(senderId, message?.text);
+            await handleTextMessage(senderId, message?.text, body.user_id_by_app);
             break;
 
           case "follow":
@@ -99,13 +99,21 @@ export async function POST(request) {
 // ============================================================
 // Xử lý: Tin nhắn văn bản — Chuyển toàn bộ qua Gemini AI
 // ============================================================
-async function handleTextMessage(userId, text) {
+async function handleTextMessage(userId, text, appUserId) {
   if (!userId || !text) return;
   const trimmedText = text.trim();
   if (!trimmedText) return;
 
   // Đảm bảo người dùng ĐÃ QUAN TÂM (có trong DB nhờ sự kiện follow hoặc đồng bộ)
-  let follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
+  let follower = await prisma.follower.findFirst({
+    where: {
+      OR: [
+        { zaloUserId: userId },
+        ...(appUserId ? [{ zaloUserId: appUserId }] : [])
+      ]
+    },
+    orderBy: { userType: 'desc' } // Ưu tiên bản ghi 'staff' nếu có 2 bản ghi
+  });
 
   if (!follower) {
     // Nếu chưa có trong DB, thử lấy profile xem họ đã thực sự quan tâm chưa
@@ -367,7 +375,7 @@ async function handleTextMessage(userId, text) {
 
     console.log(`[AI] Xử lý câu hỏi từ ${userId}: "${trimmedText.substring(0, 100)}"`);
     const { askAI } = await import("@/lib/gemini");
-    const aiReply = await askAI(userId, trimmedText);
+    const aiReply = await askAI(userId, trimmedText, appUserId);
     await sendTextMessage(userId, aiReply);
     console.log(`[Gemini] Đã trả lời ${userId} (${aiReply.length} ký tự)`);
     
