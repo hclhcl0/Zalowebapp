@@ -150,10 +150,60 @@ export async function GET(request) {
       },
     });
 
+    // ----------------------------------------------------------------------
+    // TỰ ĐỘNG GỘP TRÙNG LẶP SĐT (Self-healing)
+    // ----------------------------------------------------------------------
+    const phoneGroups = {};
+    const duplicateIdsToDelete = [];
+
+    for (const link of recentLinks) {
+      if (!link.phone) {
+        phoneGroups[`id_${link.id}`] = [link]; // Khác key với SĐT
+      } else {
+        const cleanPhone = link.phone.replace(/\D/g, "");
+        const phoneKey = cleanPhone.startsWith("84") ? "0" + cleanPhone.substring(2) : cleanPhone;
+        if (!phoneGroups[phoneKey]) phoneGroups[phoneKey] = [];
+        phoneGroups[phoneKey].push(link);
+      }
+    }
+
+    const dedupedLinks = [];
+    for (const key in phoneGroups) {
+      const group = phoneGroups[key];
+      if (group.length > 1) {
+        // Sắp xếp giảm dần theo thời gian đăng ký (cái mới nhất ở index 0)
+        group.sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt));
+        dedupedLinks.push(group[0]);
+        // Các ID còn lại đưa vào diện cần xóa
+        for (let i = 1; i < group.length; i++) {
+          duplicateIdsToDelete.push(group[i].id);
+        }
+      } else {
+        dedupedLinks.push(group[0]);
+      }
+    }
+
+    // Chạy ngầm việc xóa các bản ghi thừa
+    if (duplicateIdsToDelete.length > 0) {
+      (async () => {
+        try {
+          console.log(`[Self-Healing] Deleting ${duplicateIdsToDelete.length} duplicate StaffZaloLinks...`);
+          await prisma.staffZaloLink.deleteMany({
+            where: { id: { in: duplicateIdsToDelete } }
+          });
+        } catch (e) {
+          console.error("[Self-Healing Error]", e);
+        }
+      })();
+    }
+
+    // Sắp xếp lại theo thời gian đăng ký (mới nhất lên đầu)
+    dedupedLinks.sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt));
+
     // Lấy thêm displayName từ Follower
     const followerMap = {};
-    if (recentLinks.length > 0) {
-      const ids = recentLinks.map((l) => l.zaloUserId);
+    if (dedupedLinks.length > 0) {
+      const ids = dedupedLinks.map((l) => l.zaloUserId);
       const followers = await prisma.follower.findMany({
         where: { zaloUserId: { in: ids } },
         select: { zaloUserId: true, displayName: true, avatarUrl: true, accessLevel: true },
@@ -161,7 +211,7 @@ export async function GET(request) {
       followers.forEach((f) => { followerMap[f.zaloUserId] = f; });
     }
 
-    const links = recentLinks.map((l) => ({
+    const links = dedupedLinks.map((l) => ({
       ...l,
       displayName: followerMap[l.zaloUserId]?.displayName || "",
       avatarUrl: followerMap[l.zaloUserId]?.avatarUrl || "",
@@ -170,8 +220,8 @@ export async function GET(request) {
 
     return NextResponse.json({
       totalFollowers,
-      totalRegistered,
-      unregistered: totalFollowers - totalRegistered,
+      totalRegistered: dedupedLinks.length, // Cập nhật lại tổng sau khi gộp
+      unregistered: Math.max(0, totalFollowers - dedupedLinks.length),
       links,
     });
   } catch (err) {
