@@ -295,7 +295,7 @@ async function prepareAIContext(userId, question) {
   let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
   let customPrompt = "";
   let footerMsg = "(Địa chỉ: {address} - Hotline: {hotline})"; // Default
-  let userProfile = { displayName: "Bạn", role: "CÔNG DÂN", accessLevel: "basic", department: null };
+  let userProfile = { displayName: "Bạn", zaloName: "Bạn", role: "CÔNG DÂN", accessLevel: "basic", department: null };
 
   const h = settings.find(s => s.key === "hotline_main");
   if (h?.value) hotline = h.value;
@@ -311,7 +311,8 @@ async function prepareAIContext(userId, question) {
   
   // Lấy thông tin người dùng + cấp độ truy cập
   if (follower) {
-    userProfile.displayName = follower.fullName || follower.displayName || "Bạn";
+    userProfile.zaloName = follower.fullName || follower.displayName || "Bạn";
+    userProfile.displayName = userProfile.zaloName;
     userProfile.accessLevel = follower.accessLevel || "basic";
     userProfile.department = follower.department || null;
     if (follower.userType === "staff") userProfile.role = "NHÂN VIÊN CỦA CDC (CÁN BỘ NỘI BỘ)";
@@ -322,7 +323,7 @@ async function prepareAIContext(userId, question) {
     try {
       const staffLink = await prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } });
       if (staffLink?.staffNameRaw) {
-        userProfile.displayName = staffLink.staffNameRaw;
+        userProfile.displayName = staffLink.staffNameRaw; // Tên thật dùng để tra cứu
         if (!userProfile.department && staffLink.department) userProfile.department = staffLink.department;
       }
     } catch (e) {}
@@ -406,7 +407,8 @@ Lưu ý: Nếu người dùng xưng "tôi", "mình", "em", "cháu", "anh", "ch�
   const systemInstruction = `Bạn là Trợ lý AI chính thức của Trung tâm Kiểm soát bệnh tật TP. Đà Nẵng (CDC Đà Nẵng). Vai trò của bạn là hỗ trợ, giải đáp thắc mắc cho người dân và cán bộ của CDC Đà Nẵng.
 
 THÔNG TIN NGƯỜI ĐANG TRÒ CHUYỆN:
-- Tên đang trò chuyện: ${userProfile.displayName}
+- Tên Zalo hiển thị: ${userProfile.zaloName}
+- Tên thật (Nếu là CBNV): ${userProfile.displayName !== userProfile.zaloName ? userProfile.displayName : "Chưa xác định"}
 - Phân loại: ${userProfile.role}
 - Đơn vị: ${userProfile.department || "Chưa xác định"}
 - Cấp truy cập: ${userProfile.accessLevel}
