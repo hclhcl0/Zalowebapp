@@ -144,18 +144,84 @@ async function handleTextMessage(userId, text, appUserId) {
     }
   }
 
-  // Cập nhật profile Zalo mới nhất cho người đã quan tâm
+  // Cập nhật profile Zalo mới nhất cho người đã quan tâm & TỰ ĐỘNG CHUYỂN CÁN BỘ nếu trùng Tên Zalo
   try {
     const { getUserProfile } = await import("@/lib/zalo");
     const profile = await getUserProfile(userId);
-    if (profile?.data) {
-      follower = await prisma.follower.update({
-        where: { zaloUserId: userId },
-        data: {
-          displayName: profile.data.display_name || follower.displayName,
-          avatarUrl: profile.data.avatar || follower.avatarUrl,
+    if (profile?.data && profile.data.display_name) {
+      const newName = profile.data.display_name.trim();
+      const lowerName = newName.toLowerCase();
+
+      // Kiềm tra xem Tên Zalo có trùng với Tên Zalo hoặc Tên thật của Cán bộ nào không
+      let isStaffMatch = false;
+      let matchedStaffInfo = null;
+
+      // 1. Kiểm tra với các bản ghi Follower là staff
+      const existingStaffFollower = await prisma.follower.findFirst({
+        where: {
+          userType: "staff",
+          displayName: { mode: "insensitive", equals: newName }
         }
       });
+
+      if (existingStaffFollower) {
+        isStaffMatch = true;
+        matchedStaffInfo = {
+          department: existingStaffFollower.department,
+          phone: existingStaffFollower.phone
+        };
+      } else {
+        // 2. Kiểm tra với bảng StaffZaloLink
+        const existingStaffLink = await prisma.staffZaloLink.findFirst({
+          where: {
+            OR: [
+              { staffNameRaw: { mode: "insensitive", equals: newName } },
+              { staffName: { mode: "insensitive", equals: lowerName } }
+            ]
+          }
+        });
+        if (existingStaffLink) {
+          isStaffMatch = true;
+          matchedStaffInfo = {
+            department: existingStaffLink.department,
+            phone: existingStaffLink.phone,
+            staffNameRaw: existingStaffLink.staffNameRaw
+          };
+        }
+      }
+
+      follower = await prisma.follower.update({
+        where: { id: follower.id },
+        data: {
+          displayName: newName,
+          ...(profile.data.avatar && { avatarUrl: profile.data.avatar }),
+          ...(isStaffMatch && {
+            userType: "staff",
+            ...(matchedStaffInfo?.department && { department: matchedStaffInfo.department }),
+            ...(matchedStaffInfo?.phone && { phone: matchedStaffInfo.phone })
+          })
+        }
+      });
+
+      // Nếu khớp Tên Zalo Cán bộ -> Tự động gắn ZaloID mới vào StaffZaloLink
+      if (isStaffMatch) {
+        try {
+          await prisma.staffZaloLink.upsert({
+            where: { zaloUserId: follower.zaloUserId },
+            create: {
+              zaloUserId: follower.zaloUserId,
+              staffNameRaw: matchedStaffInfo?.staffNameRaw || newName,
+              staffName: lowerName,
+              department: matchedStaffInfo?.department || null,
+              phone: matchedStaffInfo?.phone || null
+            },
+            update: {
+              department: matchedStaffInfo?.department || undefined,
+              phone: matchedStaffInfo?.phone || undefined
+            }
+          });
+        } catch (e) {}
+      }
     }
   } catch (e) {
     console.error("[ZALO WEBHOOK] Lỗi cập nhật profile:", e.message);
