@@ -39,6 +39,8 @@ export async function GET(request) {
         )
         .map(link => link.zaloUserId);
 
+      // Build danh sách OR nhưng đảm bảo không trả về duplicate rows
+      // (khi tên Zalo và tên thật trong StaffZaloLink đều khớp cùng 1 zaloUserId)
       whereClause.AND.push({
         OR: [
           { displayName: { contains: query, mode: "insensitive" } },
@@ -84,6 +86,7 @@ export async function GET(request) {
       orderBy: { followedAt: "desc" },
       skip,
       take: limit,
+      distinct: ["id"],
     });
 
     const staffLinkMap = {};
