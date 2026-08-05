@@ -268,13 +268,6 @@ export default function FollowersPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [importingExcel, setImportingExcel] = useState(false);
   const fileInputRef = useRef(null);
-
-  // ── Mời quan tâm state ──
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [invitePhones, setInvitePhones] = useState("");
-  const [inviteMessage, setInviteMessage] = useState("Xin chào,\n\nSở Y tế / CDC Đà Nẵng trân trọng kính mời bạn nhấn Quan tâm trang Zalo OA để nhận thông tin y tế nhanh chóng và chính xác nhất.");
-  const [inviting, setInviting] = useState(false);
-  const [inviteResult, setInviteResult] = useState(null);
   
   // ── Sửa liên kết nhân viên state ──
   const [editingLink, setEditingLink] = useState(null);
@@ -486,28 +479,6 @@ export default function FollowersPage() {
     } finally {
       setImportingExcel(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const handleInviteSubmit = async () => {
-    if (!invitePhones.trim() || !inviteMessage.trim()) return;
-    setInviting(true);
-    setInviteResult(null);
-    try {
-      const phones = invitePhones.split('\n').map(p => p.trim()).filter(p => p);
-      const res = await fetch("/api/followers/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phones, messageText: inviteMessage })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gửi lời mời thất bại");
-      setInviteResult(data);
-    } catch (error) {
-      setInviteResult({ error: error.message });
-      alert("Lỗi: " + error.message);
-    } finally {
-      setInviting(false);
     }
   };
 
@@ -1379,13 +1350,6 @@ export default function FollowersPage() {
                     <div style={{ width: 14, height: 14, border: "2px solid #bfdbfe", borderTopColor: "#2563eb", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
                   ) : "📤 Nhập Excel"}
                 </button>
-                <button
-                  className="btn btn-sm"
-                  onClick={() => setInviteModalOpen(true)}
-                  style={{ background: "white", color: "#d97706", border: "1px solid #fde68a", display: "flex", alignItems: "center", gap: "6px" }}
-                >
-                  👋 Mời Quan Tâm
-                </button>
                 {regStats?.links?.length > 0 && (
                   <button className="btn btn-sm" onClick={handleExportExcel}
                     style={{ background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", display: "flex", alignItems: "center", gap: "6px" }}>
@@ -1639,80 +1603,6 @@ export default function FollowersPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL: Mời Quan Tâm (qua số điện thoại) ── */}
-      {inviteModalOpen && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, backdropFilter: "blur(4px)" }}>
-          <div style={{ background: "white", borderRadius: "var(--radius-lg)", width: "90%", maxWidth: "500px", padding: "28px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", animation: "slideInUp 0.3s ease" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: 0 }}>👋 Mời Quan Tâm (Qua SĐT)</h3>
-              <button type="button" onClick={() => { setInviteModalOpen(false); setInviteResult(null); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "1.2rem" }}>✕</button>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div style={{ padding: "12px", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: "8px", color: "#92400e", fontSize: "0.85rem" }}>
-                <strong>Lưu ý:</strong> Dán danh sách SĐT, hệ thống sẽ tự đối chiếu và <strong>bỏ qua các SĐT đã được lưu</strong>. Số còn lại sẽ nhận được 1 tin nhắn mời (kèm nút Mở OA).
-              </div>
-
-              <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>Nội dung tin nhắn (Tùy chỉnh)</label>
-                <textarea 
-                  className="form-input" 
-                  rows={4}
-                  value={inviteMessage}
-                  onChange={e => setInviteMessage(e.target.value)} 
-                  style={{ padding: "12px", fontFamily: "inherit", width: "100%", boxSizing: "border-box" }} 
-                />
-              </div>
-
-              <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>Danh sách SĐT (Mỗi số 1 dòng)</label>
-                <textarea 
-                  className="form-input" 
-                  placeholder="0912345678&#10;0987654321..." 
-                  rows={5}
-                  value={invitePhones}
-                  onChange={e => setInvitePhones(e.target.value)} 
-                  style={{ padding: "12px", fontFamily: "monospace", width: "100%", boxSizing: "border-box" }} 
-                />
-              </div>
-
-              {inviteResult && (
-                <div style={{ padding: "12px", background: inviteResult.error ? "#fef2f2" : "#f0fdf4", border: `1px solid ${inviteResult.error ? "#fca5a5" : "#bbf7d0"}`, borderRadius: "8px", fontSize: "0.85rem", color: inviteResult.error ? "#991b1b" : "#166534" }}>
-                  {inviteResult.error ? (
-                    <div><strong>Lỗi:</strong> {inviteResult.error}</div>
-                  ) : (
-                    <div>
-                      <strong>Kết quả gửi:</strong><br/>
-                      - Số nhận vào: {inviteResult.totalReceived}<br/>
-                      - Số hợp lệ: {inviteResult.valid}<br/>
-                      - Đã bỏ qua (đã quan tâm): {inviteResult.skipped}<br/>
-                      - Gửi thành công: {inviteResult.successCount}<br/>
-                      - Lỗi không gửi được: {inviteResult.errorCount}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button type="button" className="btn btn-outline" style={{ flex: 1, height: "40px" }}
-                  onClick={() => { setInviteModalOpen(false); setInviteResult(null); }}>Đóng</button>
-                <button 
-                  type="button" 
-                  className="btn btn-primary" 
-                  onClick={handleInviteSubmit}
-                  disabled={inviting || !invitePhones.trim() || !inviteMessage.trim()}
-                  style={{ flex: 1, height: "40px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
-                >
-                  {inviting
-                    ? <><div className="spinner" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />Đang gửi...</>
-                    : "Gửi Lời Mời"}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}

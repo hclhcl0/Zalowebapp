@@ -12,7 +12,7 @@ const ZALO_OA_API  = "https://openapi.zalo.me/v2.0/oa";
 const ZALO_ZNS_API = "https://business.openapi.zalo.me/message/template";
 
 // Lấy Access Token từ database
-export async function getAccessToken() {
+async function getAccessToken() {
   const config = await prisma.systemConfig.findUnique({
     where: { key: "zalo_access_token" },
   });
