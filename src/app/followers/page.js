@@ -986,6 +986,19 @@ export default function FollowersPage() {
                                 <div style={{ width: 10, height: 10, border: "1.5px solid #93c5fd", borderTop: "1.5px solid #1d4ed8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
                               ) : "📨 Gửi ĐK"}
                             </button>
+                            <button
+                              className="btn btn-outline btn-sm"
+                              onClick={() => handleDeleteFollower(f)}
+                              disabled={deletingId === f.id}
+                              title="Xóa khách hàng"
+                              style={{
+                                padding: "4px 10px", height: "30px", fontSize: "0.78rem",
+                                color: "var(--error)", borderColor: "var(--error)",
+                                opacity: deletingId === f.id ? 0.6 : 1
+                              }}
+                            >
+                              {deletingId === f.id ? "..." : "🗑️"}
+                            </button>
                           </div>
                           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                         </td>
@@ -1052,6 +1065,12 @@ export default function FollowersPage() {
                           {sendingSingle === f.zaloUserId
                             ? <div style={{ width: 12, height: 12, border: "1.5px solid #93c5fd", borderTop: "1.5px solid #1d4ed8", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
                             : "📨 Gửi ĐK"}
+                        </button>
+                        <button className="mobile-card-action-btn" 
+                          style={{ color: "var(--error)" }}
+                          onClick={() => handleDeleteFollower(f)}
+                          disabled={deletingId === f.id}>
+                          {deletingId === f.id ? "..." : "🗑️"}
                         </button>
                       </div>
                     </div>
