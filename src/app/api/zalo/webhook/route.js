@@ -136,14 +136,25 @@ async function handleTextMessage(userId, text) {
 
   // Lệnh đặc biệt: Đặt lại hội thoại
   if (lowerText === "reset" || lowerText === "bắt đầu lại" || lowerText === "bắt đầu") {
-    const { clearUserHistory } = await import("@/lib/gemini");
-    clearUserHistory(userId);
+    // Xóa lịch sử hội thoại trong DB để AI không bị ảnh hưởng bởi context cũ
+    try {
+      await prisma.messageLog.deleteMany({ where: { zaloUserId: userId } });
+      console.log(`[RESET] Đã xóa lịch sử hội thoại của ${userId}`);
+    } catch (e) {
+      console.error("[RESET] Lỗi xóa lịch sử:", e.message);
+    }
 
+    // Lấy tên hiển thị ưu tiên: StaffZaloLink > follower.displayName
     let displayName = "bạn";
     try {
-      const follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
-      if (follower?.displayName) {
-        displayName = follower.displayName;
+      const [follower, staffLink] = await Promise.all([
+        prisma.follower.findUnique({ where: { zaloUserId: userId } }),
+        prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } })
+      ]);
+      if (staffLink?.staffNameRaw) {
+        displayName = staffLink.staffNameRaw;
+      } else if (follower?.fullName || follower?.displayName) {
+        displayName = follower.fullName || follower.displayName;
       }
     } catch (e) {}
 
