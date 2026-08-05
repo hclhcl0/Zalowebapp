@@ -321,7 +321,14 @@ async function prepareAIContext(userId, question) {
   // Nếu là nhân viên, thử lấy tên thật từ bảng StaffZaloLink
   if (userProfile.role.includes("NHÂN VIÊN")) {
     try {
-      const staffLink = await prisma.staffZaloLink.findUnique({ where: { zaloUserId: userId } });
+      const staffLink = await prisma.staffZaloLink.findFirst({
+        where: {
+          OR: [
+            { zaloUserId: userId },
+            ...(follower?.zaloUserId ? [{ zaloUserId: follower.zaloUserId }] : [])
+          ]
+        }
+      });
       if (staffLink?.staffNameRaw) {
         userProfile.displayName = staffLink.staffNameRaw; // Tên thật dùng để tra cứu
         if (!userProfile.department && staffLink.department) userProfile.department = staffLink.department;
