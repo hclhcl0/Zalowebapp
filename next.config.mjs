@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   // Không bundle các package Node.js native vào server bundle
   serverExternalPackages: ["pdf-parse"],
 
