@@ -104,22 +104,28 @@ async function handleTextMessage(userId, text) {
   const trimmedText = text.trim();
   if (!trimmedText) return;
 
-  // Đảm bảo người dùng có trong DB (cập nhật profile Zalo)
+  // Đảm bảo người dùng ĐÃ QUAN TÂM (có trong DB nhờ sự kiện follow hoặc đồng bộ)
+  let follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
+
+  if (!follower) {
+    // Nếu chưa quan tâm, từ chối và yêu cầu quan tâm
+    const replyMsg = "Chào bạn, để sử dụng tính năng Trợ lý AI y tế và nhận các thông báo sức khỏe từ CDC Đà Nẵng, vui lòng nhấn nút QUAN TÂM trang Zalo OA nhé!";
+    const { sendTextMessage } = await import("@/lib/zalo");
+    await sendTextMessage(userId, replyMsg);
+    return;
+  }
+
+  // Cập nhật profile Zalo mới nhất cho người đã quan tâm
   try {
     const { getUserProfile } = await import("@/lib/zalo");
     const profile = await getUserProfile(userId);
     if (profile?.data) {
-      await prisma.follower.upsert({
+      follower = await prisma.follower.update({
         where: { zaloUserId: userId },
-        update: {
-          displayName: profile.data.display_name,
-          avatarUrl: profile.data.avatar,
-        },
-        create: {
-          zaloUserId: userId,
-          displayName: profile.data.display_name || "Người dùng Zalo",
-          avatarUrl: profile.data.avatar || null,
-        },
+        data: {
+          displayName: profile.data.display_name || follower.displayName,
+          avatarUrl: profile.data.avatar || follower.avatarUrl,
+        }
       });
     }
   } catch (e) {
