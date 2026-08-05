@@ -127,56 +127,39 @@ export async function GET(request) {
       return s;
     };
 
-    const nameAvatarMap = new Map();
-    const phoneMap = new Map();
+    // Map để lưu record đại diện cho mỗi group
+    const finalMap = new Map(); // key = phone || name+avatar
 
     for (const f of enrichedFollowers) {
       const phoneKey = cleanPhone(f.phone);
       const nameKey = `${f.displayName}|${f.avatarUrl || "no-avatar"}`;
       
-      const existingByPhone = phoneKey ? phoneMap.get(phoneKey) : null;
-      const existingByName = nameAvatarMap.get(nameKey);
-      const existing = existingByPhone || existingByName;
-
-      if (existing) {
-        // Ưu tiên giữ lại bản ghi có thông tin Cán bộ (staffLink) hoặc ngày cập nhật mới nhất
+      // Xác định record này thuộc về 'group' nào đã tồn tại chưa?
+      let existingKey = null;
+      if (phoneKey && finalMap.has(phoneKey)) {
+        existingKey = phoneKey;
+      } else if (finalMap.has(nameKey)) {
+        existingKey = nameKey;
+      }
+      
+      const targetKey = existingKey || (phoneKey || nameKey); // ưu tiên dùng phoneKey làm key nhóm
+      
+      if (finalMap.has(targetKey)) {
+        const existing = finalMap.get(targetKey);
+        // Ưu tiên giữ lại bản ghi có thông tin Cán bộ (staffLink), userType staff, hoặc ngày cập nhật mới nhất
         if (f.staffLink && !existing.staffLink) {
-          if (phoneKey) phoneMap.set(phoneKey, f);
-          nameAvatarMap.set(nameKey, f);
+          finalMap.set(targetKey, f);
         } else if (f.userType === 'staff' && existing.userType !== 'staff') {
-          if (phoneKey) phoneMap.set(phoneKey, f);
-          nameAvatarMap.set(nameKey, f);
-        } else if (new Date(f.followedAt || 0) > new Date(existing.followedAt || 0)) {
-          if (phoneKey) phoneMap.set(phoneKey, f);
-          nameAvatarMap.set(nameKey, f);
+          finalMap.set(targetKey, f);
+        } else if (new Date(f.followedAt || 0) > new Date(existing.followedAt || 0) && (!existing.staffLink || f.staffLink)) {
+          finalMap.set(targetKey, f);
         }
       } else {
-        if (phoneKey) phoneMap.set(phoneKey, f);
-        nameAvatarMap.set(nameKey, f);
+        finalMap.set(targetKey, f);
       }
     }
 
-    // Lấy danh sách duy nhất theo id sau khi gộp
-    const dedupedSet = new Set();
-    const finalGroupedFollowers = [];
-    
-    // Ưu tiên từ phoneMap
-    phoneMap.forEach(f => {
-      if (!dedupedSet.has(f.id)) {
-        dedupedSet.add(f.id);
-        finalGroupedFollowers.push(f);
-      }
-    });
-
-    // Thêm các bản ghi còn lại từ nameAvatarMap
-    nameAvatarMap.forEach(f => {
-      if (!dedupedSet.has(f.id)) {
-        dedupedSet.add(f.id);
-        finalGroupedFollowers.push(f);
-      }
-    });
-
-    enrichedFollowers = finalGroupedFollowers;
+    enrichedFollowers = Array.from(finalMap.values());
 
     // Tự động sửa chữa dữ liệu (Self-healing) bất đồng bộ đối với các bản ghi bị lệch userType
     const mismatchedUserIds = staffZaloUserIds.filter(uid => {
