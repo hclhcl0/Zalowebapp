@@ -159,6 +159,7 @@ export async function POST() {
     // ─── 3. Tìm Follower chưa link, thử khớp theo tên Zalo với StaffZaloLink ─
     const currentLinks = await prisma.staffZaloLink.findMany();
     const linkedIds = new Set(currentLinks.map((l) => l.zaloUserId));
+    const activeFollowerIds = new Set(allFollowers.map(f => f.zaloUserId));
 
     for (const follower of allFollowers) {
       if (linkedIds.has(follower.zaloUserId)) continue;
@@ -166,7 +167,7 @@ export async function POST() {
       const followerName = removeDiacritics(follower.displayName);
 
       const nameMatch = currentLinks.find(
-        (l) => removeDiacritics(l.staffNameRaw) === followerName && !linkedIds.has(l.zaloUserId)
+        (l) => removeDiacritics(l.staffNameRaw) === followerName && !activeFollowerIds.has(l.zaloUserId)
       );
 
       if (nameMatch && !follower.phone) {
