@@ -420,7 +420,7 @@ export default function FollowersPage() {
         "Phòng / Khoa / Bộ phận": link.department || "Chưa chọn",
         "Số điện thoại": link.phone || "Chưa đăng ký",
         "Tên Zalo hiển thị": link.displayName || "—",
-        "Zalo User ID (zaloUserId)": link.zaloUserId,
+        "Zalo User ID (zaloUserId)": link.zaloUserId ? `'${link.zaloUserId}` : "",
         "Ngày đăng ký": new Date(link.registeredAt).toLocaleDateString("vi-VN") + " " + new Date(link.registeredAt).toLocaleTimeString("vi-VN"),
       }));
 

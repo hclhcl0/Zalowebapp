@@ -75,13 +75,24 @@ export async function POST(request) {
 
       const phone = idxPhone !== -1 ? cleanPhone(row[idxPhone]) : null;
       const dept = idxDept !== -1 ? String(row[idxDept]).trim() : null;
-      let targetZaloId = idxZalo !== -1 ? String(row[idxZalo]).trim() : null;
+      let targetZaloId = null;
+      if (idxZalo !== -1) {
+        let rawZalo = String(row[idxZalo]).trim();
+        if (rawZalo.startsWith("'")) rawZalo = rawZalo.substring(1);
+        if (rawZalo) targetZaloId = rawZalo;
+      }
 
       // Logic tìm Zalo ID từ Followers
+      // Bỏ qua targetZaloId nếu nó bị Excel làm tròn (hỏng số) và không tồn tại trong Follower
+      if (targetZaloId) {
+        const exists = allFollowers.some(f => f.zaloUserId === targetZaloId);
+        if (!exists) targetZaloId = null;
+      }
+
       if (!targetZaloId) {
         let match = null;
         if (phone) {
-          // Ưu tiên tìm theo SĐT
+          // Đầu tiên tìm theo SĐT
           match = allFollowers.find(f => cleanPhone(f.phone) === phone);
         }
         if (!match) {
