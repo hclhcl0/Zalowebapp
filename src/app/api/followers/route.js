@@ -89,23 +89,19 @@ export async function GET(request) {
 
     // Loại bỏ duplicate theo id (xảy ra khi OR match cả displayName lẫn staffLink.zaloUserId)
     const seenIds = new Set();
-    const dedupedFollowers = allMatchedFollowers.filter(f => {
+    const uniqueFollowers = allMatchedFollowers.filter(f => {
       if (seenIds.has(f.id)) return false;
       seenIds.add(f.id);
       return true;
     });
-
-    // Phân trang thủ công sau khi dedup
-    total = dedupedFollowers.length;
-    const followers = dedupedFollowers.slice(skip, skip + limit);
 
     const staffLinkMap = {};
     allStaffLinks.forEach((link) => {
       staffLinkMap[link.zaloUserId] = link;
     });
 
-    // Đính kèm staffLink và chuẩn hóa hiển thị đồng bộ
-    let enrichedFollowers = followers.map((f) => {
+    // Đính kèm staffLink và chuẩn hóa hiển thị đồng bộ cho TẤT CẢ bản ghi
+    let enrichedAllFollowers = uniqueFollowers.map((f) => {
       const staffLink = staffLinkMap[f.zaloUserId] || null;
       return {
         ...f,
@@ -117,8 +113,7 @@ export async function GET(request) {
     });
 
     // ----------------------------------------------------------------------
-    // TỰ ĐỘNG GỘP TRÙNG LẶP (Deduplicate) ĐỂ GIAO DIỆN CHỈ CÓ "1 TÊN DUY NHẤT"
-    // Gộp các tài khoản bị tách làm 2 (do khác biệt SĐT, Zalo Mini App ID và OA ID)
+    // TỰ ĐỘNG GỘP TRÙNG LẶP (Deduplicate) TRÊN TOÀN BỘ DỮ LIỆU TRƯỚC KHI PHÂN TRANG
     // ----------------------------------------------------------------------
     const cleanPhone = (p) => {
       if (!p) return "";
@@ -127,14 +122,12 @@ export async function GET(request) {
       return s;
     };
 
-    // Map để lưu record đại diện cho mỗi group
     const finalMap = new Map(); // key = phone || name+avatar
 
-    for (const f of enrichedFollowers) {
+    for (const f of enrichedAllFollowers) {
       const phoneKey = cleanPhone(f.phone);
       const nameKey = `${f.displayName}|${f.avatarUrl || "no-avatar"}`;
       
-      // Xác định record này thuộc về 'group' nào đã tồn tại chưa?
       let existingKey = null;
       if (phoneKey && finalMap.has(phoneKey)) {
         existingKey = phoneKey;
@@ -142,7 +135,7 @@ export async function GET(request) {
         existingKey = nameKey;
       }
       
-      const targetKey = existingKey || (phoneKey || nameKey); // ưu tiên dùng phoneKey làm key nhóm
+      const targetKey = existingKey || (phoneKey || nameKey);
       
       if (finalMap.has(targetKey)) {
         const existing = finalMap.get(targetKey);
@@ -159,11 +152,15 @@ export async function GET(request) {
       }
     }
 
-    enrichedFollowers = Array.from(finalMap.values());
+    const finalGroupedFollowers = Array.from(finalMap.values());
+
+    // Phân trang thủ công sau khi đã gộp
+    total = finalGroupedFollowers.length;
+    const enrichedFollowers = finalGroupedFollowers.slice(skip, skip + limit);
 
     // Tự động sửa chữa dữ liệu (Self-healing) bất đồng bộ đối với các bản ghi bị lệch userType
     const mismatchedUserIds = staffZaloUserIds.filter(uid => {
-      const found = followers.find(f => f.zaloUserId === uid);
+      const found = enrichedFollowers.find(f => f.zaloUserId === uid);
       return found && found.userType !== "staff";
     });
 
