@@ -350,6 +350,11 @@ async function prepareAIContext(userId, question) {
     if (!docDept || docDept === "all" || docDept === "tất cả" || docDept === "tất cả cơ quan") {
       return true;
     }
+
+    // Nếu tài liệu dành riêng cho Cán bộ / Chỉ nhân viên / Nội bộ cơ quan
+    if (docDept.includes("nhân viên") || docDept.includes("cán bộ") || docDept.includes("nội bộ")) {
+      return isStaffUser;
+    }
     
     // Nếu tài liệu bị giới hạn phòng ban cụ thể
     if (!isStaffUser) return false; // Người dân không được xem
