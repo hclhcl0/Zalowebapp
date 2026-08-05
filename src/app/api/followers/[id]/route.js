@@ -92,3 +92,40 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+export async function DELETE(request, { params }) {
+  try {
+    const resolvedParams = await params;
+    const id = parseInt(resolvedParams.id);
+    
+    // Xóa Follower khỏi CSDL (các bảng có onDelete: Cascade như MiniAppSession sẽ tự động bị xóa)
+    // Cần update Appointment và TestResult để tránh lỗi khóa ngoại
+    await prisma.appointment.updateMany({
+      where: { followerId: id },
+      data: { followerId: null }
+    });
+    
+    await prisma.testResult.updateMany({
+      where: { followerId: id },
+      data: { followerId: null }
+    });
+
+    const deleted = await prisma.follower.delete({
+      where: { id }
+    });
+
+    // Nếu người này là staff, xóa staff link tương ứng
+    await prisma.staffZaloLink.deleteMany({
+      where: { zaloUserId: deleted.zaloUserId }
+    });
+    
+    // Xóa lịch sử tin nhắn
+    await prisma.messageLog.deleteMany({
+      where: { zaloUserId: deleted.zaloUserId }
+    });
+
+    return NextResponse.json({ success: true, message: "Đã xóa thành công" });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

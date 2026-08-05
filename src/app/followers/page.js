@@ -345,6 +345,22 @@ export default function FollowersPage() {
     }
   };
 
+  const handleDeleteFollower = async (f) => {
+    if (!confirm(`Bạn có chắc muốn xóa khách hàng ${f.fullName || f.displayName}? Hành động này sẽ xóa toàn bộ lịch sử tin nhắn và thông tin của khách hàng này.`)) return;
+    setDeletingId(f.id);
+    try {
+      const res = await fetch(`/api/followers/${f.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Lỗi khi xóa");
+      showToast("✅ Đã xóa khách hàng thành công!");
+      fetchFollowers();
+    } catch (err) {
+      alert("Lỗi: " + err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const fetchRegStats = useCallback(async () => {
     setRegLoading(true);
     try {
