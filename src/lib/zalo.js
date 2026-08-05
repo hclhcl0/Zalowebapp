@@ -760,8 +760,8 @@ export function htmlToZaloBody(html) {
         body.push({ type: "text", content: cleanHtmlForZalo(buffer) });
         buffer = "";
       }
-      // Thêm block banner (Zalo dùng photo_url, không phải imageid)
-      body.push({ type: "text", content: `<a href="${imgMatch[1]}">[Xem ảnh]</a>` });
+      // Thêm block image theo chuẩn Zalo Article API
+      body.push({ type: "image", url: imgMatch[1], caption: "" });
     } else {
       buffer += part;
     }
