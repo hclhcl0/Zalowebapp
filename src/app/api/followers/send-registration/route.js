@@ -173,11 +173,41 @@ export async function GET(request) {
       if (group.length > 1) {
         // Sắp xếp giảm dần theo thời gian đăng ký (cái mới nhất ở index 0)
         group.sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt));
-        dedupedLinks.push(group[0]);
-        // Các ID còn lại đưa vào diện cần xóa
+        
+        // Gộp thông tin: ưu tiên tên dài hơn (tên đầy đủ) và các trường bị thiếu
+        const bestRecord = { ...group[0] };
         for (let i = 1; i < group.length; i++) {
+          if (group[i].staffNameRaw && (!bestRecord.staffNameRaw || group[i].staffNameRaw.length > bestRecord.staffNameRaw.length)) {
+            bestRecord.staffNameRaw = group[i].staffNameRaw;
+          }
+          if (group[i].staffName && (!bestRecord.staffName || group[i].staffName.length > bestRecord.staffName.length)) {
+            bestRecord.staffName = group[i].staffName;
+          }
+          if (!bestRecord.department && group[i].department) {
+            bestRecord.department = group[i].department;
+          }
           duplicateIdsToDelete.push(group[i].id);
         }
+        
+        // Cập nhật lại bản ghi giữ lại trong database nếu có thay đổi
+        if (bestRecord.staffNameRaw !== group[0].staffNameRaw || bestRecord.department !== group[0].department) {
+          (async () => {
+            try {
+              await prisma.staffZaloLink.update({
+                where: { id: bestRecord.id },
+                data: {
+                  staffNameRaw: bestRecord.staffNameRaw,
+                  staffName: bestRecord.staffName,
+                  department: bestRecord.department
+                }
+              });
+            } catch (e) {
+              console.error("[Self-Healing Update Error]", e);
+            }
+          })();
+        }
+        
+        dedupedLinks.push(bestRecord);
       } else {
         dedupedLinks.push(group[0]);
       }
