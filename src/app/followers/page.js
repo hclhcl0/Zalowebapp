@@ -489,6 +489,28 @@ export default function FollowersPage() {
     }
   };
 
+  const handleInviteSubmit = async () => {
+    if (!invitePhones.trim() || !inviteMessage.trim()) return;
+    setInviting(true);
+    setInviteResult(null);
+    try {
+      const phones = invitePhones.split('\n').map(p => p.trim()).filter(p => p);
+      const res = await fetch("/api/followers/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phones, messageText: inviteMessage })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gửi lời mời thất bại");
+      setInviteResult(data);
+    } catch (error) {
+      setInviteResult({ error: error.message });
+      alert("Lỗi: " + error.message);
+    } finally {
+      setInviting(false);
+    }
+  };
+
   const handleSyncFollowers = async () => {
     setSyncing(true);
     try {
