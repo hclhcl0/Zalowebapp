@@ -106,20 +106,44 @@ export async function POST(request) {
 
     // Kiểm tra tên đã được dùng bởi người khác chưa
     const nameConflicts = await prisma.staffZaloLink.findMany({ where: { staffName } });
+    
+    // Lưu các record cũ cần xóa nếu người dùng chuyển sang tài khoản Zalo mới
+    const oldLinksToDelete = [];
+    
     const trueConflict = nameConflicts.find(c => {
       if (c.zaloUserId === uid) return false; // chính mình đang cập nhật lại → không phải conflict
       // Nếu có SĐT của cả 2 → so sánh SĐT để phân biệt
       const existingPhone = cleanPhone(c.phone);
       if (registrantPhone && existingPhone) {
-        return registrantPhone === existingPhone; // chỉ block nếu cả tên + SĐT trùng
+        if (registrantPhone === existingPhone) {
+          // Trùng cả tên và SĐT -> Nhân viên đổi tài khoản Zalo. Cho phép ghi đè (xóa link cũ)
+          oldLinksToDelete.push(c.id);
+          return false; 
+        }
+        return false; // Khác SĐT -> là người trùng tên, cho phép tạo mới
       }
-      // Không có SĐT để phân biệt → coi là trùng, cảnh báo nhưng vẫn cho đăng ký
-      return false;
+      // Không có SĐT để phân biệt → coi là trùng, cảnh báo để tránh cướp danh tính
+      return true;
     });
+
     if (trueConflict) {
       return NextResponse.json({
-        error: `Tên "${staffNameRaw}" và số điện thoại này đã được đăng ký bởi một tài khoản Zalo khác. Nếu đây là lỗi, hãy liên hệ Phòng Kế Hoạch - Nghiệp vụ.`
+        error: `Tên "${staffNameRaw}" đã được đăng ký. Vui lòng nhập số điện thoại để hệ thống xác thực nếu bạn đổi tài khoản Zalo, hoặc liên hệ quản trị viên.`
       }, { status: 409 });
+    }
+
+    // Xóa các liên kết cũ (chuyển nhà sang ID Zalo mới)
+    if (oldLinksToDelete.length > 0) {
+      await prisma.staffZaloLink.deleteMany({
+        where: { id: { in: oldLinksToDelete } }
+      });
+      // Đồng thời cập nhật follower cũ thành citizen để họ mất quyền staff
+      for (const oldLink of nameConflicts.filter(c => oldLinksToDelete.includes(c.id))) {
+        await prisma.follower.updateMany({
+          where: { zaloUserId: oldLink.zaloUserId },
+          data: { userType: 'citizen', department: null }
+        });
+      }
     }
 
     // Upsert vào StaffZaloLink
