@@ -108,11 +108,32 @@ async function handleTextMessage(userId, text) {
   let follower = await prisma.follower.findUnique({ where: { zaloUserId: userId } });
 
   if (!follower) {
-    // Nếu chưa quan tâm, từ chối và yêu cầu quan tâm
-    const replyMsg = "Chào bạn, để sử dụng tính năng Trợ lý AI y tế và nhận các thông báo sức khỏe từ CDC Đà Nẵng, vui lòng nhấn nút QUAN TÂM trang Zalo OA nhé!";
-    const { sendTextMessage } = await import("@/lib/zalo");
-    await sendTextMessage(userId, replyMsg);
-    return;
+    // Nếu chưa có trong DB, thử lấy profile xem họ đã thực sự quan tâm chưa
+    try {
+      const { getUserProfile } = await import("@/lib/zalo");
+      const profile = await getUserProfile(userId);
+      if (profile?.error === 0 && profile?.data) {
+        // Đã quan tâm Zalo OA nhưng chưa có trong DB -> Tự động tạo lại
+        follower = await prisma.follower.create({
+          data: {
+            zaloUserId: userId,
+            displayName: profile.data.display_name || "Người dùng Zalo",
+            avatarUrl: profile.data.avatar || null,
+            userType: "citizen",
+            followedAt: new Date()
+          }
+        });
+      } else {
+        // Nếu thực sự chưa quan tâm, từ chối và yêu cầu quan tâm
+        const replyMsg = "Chào bạn, để sử dụng tính năng Trợ lý AI y tế và nhận các thông báo sức khỏe từ CDC Đà Nẵng, vui lòng nhấn nút QUAN TÂM trang Zalo OA nhé!";
+        const { sendTextMessage } = await import("@/lib/zalo");
+        await sendTextMessage(userId, replyMsg);
+        return;
+      }
+    } catch (e) {
+      console.error("[ZALO WEBHOOK] Lỗi kiểm tra profile:", e.message);
+      return;
+    }
   }
 
   // Cập nhật profile Zalo mới nhất cho người đã quan tâm

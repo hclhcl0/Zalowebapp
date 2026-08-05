@@ -105,7 +105,7 @@ export async function GET(request) {
     });
 
     // Đính kèm staffLink và chuẩn hóa hiển thị đồng bộ
-    const enrichedFollowers = followers.map((f) => {
+    let enrichedFollowers = followers.map((f) => {
       const staffLink = staffLinkMap[f.zaloUserId] || null;
       return {
         ...f,
@@ -115,6 +115,29 @@ export async function GET(request) {
         staffLink,
       };
     });
+
+    // ----------------------------------------------------------------------
+    // TỰ ĐỘNG GỘP TRÙNG LẶP (Deduplicate) ĐỂ GIAO DIỆN CHỈ CÓ "1 TÊN DUY NHẤT"
+    // Gộp các tài khoản bị tách làm 2 (do khác biệt Zalo Mini App ID và OA ID)
+    // ----------------------------------------------------------------------
+    const finalFollowers = [];
+    const nameAvatarMap = new Map();
+    for (const f of enrichedFollowers) {
+      // Nhóm theo tên và avatar (nếu không có avatar thì chỉ nhóm theo tên)
+      const key = `${f.displayName}|${f.avatarUrl || "no-avatar"}`;
+      if (nameAvatarMap.has(key)) {
+        const existing = nameAvatarMap.get(key);
+        // Ưu tiên giữ lại bản ghi 'staff' hoặc có số điện thoại
+        if (f.userType === 'staff' && existing.userType !== 'staff') {
+          nameAvatarMap.set(key, f);
+        } else if (f.phone && !existing.phone && existing.userType !== 'staff') {
+          nameAvatarMap.set(key, f);
+        }
+      } else {
+        nameAvatarMap.set(key, f);
+      }
+    }
+    enrichedFollowers = Array.from(nameAvatarMap.values());
 
     // Tự động sửa chữa dữ liệu (Self-healing) bất đồng bộ đối với các bản ghi bị lệch userType
     const mismatchedUserIds = staffZaloUserIds.filter(uid => {
