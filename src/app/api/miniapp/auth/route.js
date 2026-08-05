@@ -32,14 +32,21 @@ export async function POST(request) {
       return NextResponse.json({ error: "Token không hợp lệ" }, { status: 401 });
     }
 
-    // Upsert follower (tạo hoặc cập nhật)
+    // Kiểm tra xem zaloUserId này đã đăng ký nhân viên chưa
+    const staffLink = await prisma.staffZaloLink.findUnique({
+      where: { zaloUserId: zaloData.id },
+    });
+
+    // Upsert follower — KHÔNG ghi đè userType/department nếu đã là staff
     const follower = await prisma.follower.upsert({
       where: { zaloUserId: zaloData.id },
       create: {
         zaloUserId: zaloData.id,
         displayName: zaloData.name || null,
         avatarUrl: zaloData.picture?.data?.url || null,
-        userType: "citizen",
+        // Nếu đã có trong StaffZaloLink → tạo ngay là staff, không phải citizen
+        userType: staffLink ? "staff" : "citizen",
+        department: staffLink?.department || null,
         accessLevel: "basic",
         totalVisits: 1,
         lastSeenAt: new Date(),
@@ -49,6 +56,11 @@ export async function POST(request) {
         avatarUrl: zaloData.picture?.data?.url || undefined,
         lastSeenAt: new Date(),
         totalVisits: { increment: 1 },
+        // Nếu đang là citizen nhưng thực ra là staff → nâng cấp lên staff
+        ...(staffLink ? {
+          userType: "staff",
+          department: staffLink.department || undefined,
+        } : {}),
       },
     });
 
