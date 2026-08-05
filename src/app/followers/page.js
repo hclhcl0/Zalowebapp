@@ -348,7 +348,7 @@ export default function FollowersPage() {
   const fetchRegStats = useCallback(async () => {
     setRegLoading(true);
     try {
-      const res = await fetch("/api/followers/send-registration");
+      const res = await fetch("/api/followers/send-registration?all=true");
       const json = await res.json();
       if (!json.error) setRegStats(json);
     } catch (e) { console.error(e); }
