@@ -6,14 +6,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // 1. Lấy tất cả thông tin Cán bộ hiện có để đối chiếu Tên Zalo
+    // 1. Lấy danh sách thông tin Cán bộ để làm chuẩn so sánh
     const staffFollowers = await prisma.follower.findMany({
       where: { userType: "staff" },
       select: { zaloUserId: true, displayName: true, department: true, phone: true }
     });
     const staffLinks = await prisma.staffZaloLink.findMany();
 
-    // Map chứa tất cả Tên Zalo của Cán bộ (viết thường để so sánh)
     const staffZaloNameMap = new Map();
 
     staffFollowers.forEach(s => {
@@ -36,66 +35,55 @@ export async function GET() {
       }
     });
 
-    // 2. Tìm danh sách tài khoản chưa có tên Zalo đầy đủ
-    const followers = await prisma.follower.findMany({
-      where: {
-        OR: [
-          { displayName: "Người dùng Zalo" },
-          { displayName: null }
-        ]
-      },
-      take: 150
+    // 2. Lấy TẤT CẢ các tài khoản đang mang nhãn 'citizen' (Khách hàng)
+    const citizenFollowers = await prisma.follower.findMany({
+      where: { userType: "citizen" }
     });
-
-    if (followers.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: "Tất cả tài khoản đã có tên Zalo đầy đủ!",
-        updatedCount: 0,
-        convertedStaffCount: 0
-      });
-    }
 
     let updatedCount = 0;
     let convertedStaffCount = 0;
     const updatedList = [];
 
-    for (const f of followers) {
+    for (const f of citizenFollowers) {
       try {
-        const profile = await getUserProfile(f.zaloUserId);
-        if (profile?.error === 0 && profile?.data?.display_name) {
-          const newName = profile.data.display_name.trim();
-          const newAvatar = profile.data.avatar || null;
-          const lowerName = newName.toLowerCase();
+        let currentName = f.displayName ? f.displayName.trim() : "";
+        let currentAvatar = f.avatarUrl || null;
 
-          // Kiểm tra xem Tên Zalo này có trùng với Tên Zalo của Cán bộ nào không
+        // Nếu tài khoản bị thiếu tên Zalo (đang là 'Người dùng Zalo' hoặc null) -> Gọi API Zalo lấy tên
+        if (!currentName || currentName === "Người dùng Zalo") {
+          const profile = await getUserProfile(f.zaloUserId);
+          if (profile?.error === 0 && profile?.data?.display_name) {
+            currentName = profile.data.display_name.trim();
+            currentAvatar = profile.data.avatar || currentAvatar;
+            updatedCount++;
+          }
+        }
+
+        if (currentName && currentName !== "Người dùng Zalo") {
+          const lowerName = currentName.toLowerCase();
           const matchedStaff = staffZaloNameMap.get(lowerName);
-          const isStaffMatch = !!matchedStaff;
 
-          const updateData = {
-            displayName: newName,
-            ...(newAvatar && { avatarUrl: newAvatar }),
-            ...(isStaffMatch && {
-              userType: "staff",
-              ...(matchedStaff.department && { department: matchedStaff.department }),
-              ...(matchedStaff.phone && { phone: matchedStaff.phone })
-            })
-          };
-
-          await prisma.follower.update({
-            where: { id: f.id },
-            data: updateData
-          });
-
-          // Nếu trùng tên Zalo với Cán bộ -> Cập nhật/Tạo liên kết StaffZaloLink cho ZaloID mới này
-          if (isStaffMatch) {
+          // Nếu Tên Zalo khớp với Tên Zalo hoặc Tên thật của Cán bộ nào đó
+          if (matchedStaff) {
             convertedStaffCount++;
+            await prisma.follower.update({
+              where: { id: f.id },
+              data: {
+                displayName: currentName,
+                ...(currentAvatar && { avatarUrl: currentAvatar }),
+                userType: "staff",
+                ...(matchedStaff.department && { department: matchedStaff.department }),
+                ...(matchedStaff.phone && { phone: matchedStaff.phone })
+              }
+            });
+
+            // Cập nhật/Tạo bản ghi liên kết Cán bộ trong StaffZaloLink
             try {
               await prisma.staffZaloLink.upsert({
                 where: { zaloUserId: f.zaloUserId },
                 create: {
                   zaloUserId: f.zaloUserId,
-                  staffNameRaw: matchedStaff.staffNameRaw || newName,
+                  staffNameRaw: matchedStaff.staffNameRaw || currentName,
                   staffName: matchedStaff.staffName || lowerName,
                   department: matchedStaff.department || null,
                   phone: matchedStaff.phone || null
@@ -105,28 +93,41 @@ export async function GET() {
                   phone: matchedStaff.phone || undefined
                 }
               });
-            } catch (linkErr) {
-              console.error("[Sync Staff Link Error]", linkErr.message);
-            }
-          }
+            } catch (e) {}
 
-          updatedCount++;
-          updatedList.push({
-            id: f.id,
-            zaloUserId: f.zaloUserId,
-            displayName: newName,
-            convertedToStaff: isStaffMatch
-          });
+            updatedList.push({
+              id: f.id,
+              zaloUserId: f.zaloUserId,
+              displayName: currentName,
+              status: "Đã tự động chuyển sang Cán bộ (Staff)"
+            });
+          } else if (f.displayName !== currentName) {
+            // Cập nhật tên Zalo mới cho khách hàng thường
+            await prisma.follower.update({
+              where: { id: f.id },
+              data: {
+                displayName: currentName,
+                ...(currentAvatar && { avatarUrl: currentAvatar })
+              }
+            });
+            updatedList.push({
+              id: f.id,
+              zaloUserId: f.zaloUserId,
+              displayName: currentName,
+              status: "Đã cập nhật Tên Zalo"
+            });
+          }
         }
-      } catch (e) {
-        console.error(`[Sync Names] Lỗi ID ${f.id}:`, e.message);
+      } catch (err) {
+        console.error(`[Sync Scan Error] ID ${f.id}:`, err.message);
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `Đã cập nhật tên Zalo cho ${updatedCount} tài khoản! Trong đó đã tự động chuyển ${convertedStaffCount} tài khoản trùng tên Zalo sang Cán bộ (Staff).`,
-      updatedCount,
+      message: `Đã quét xong toàn bộ ${citizenFollowers.length} tài khoản Khách hàng! Tự động phát hiện và chuyển ${convertedStaffCount} tài khoản trùng tên Zalo sang Cán bộ (Staff).`,
+      totalScanned: citizenFollowers.length,
+      fetchedNamesFromZaloCount: updatedCount,
       convertedStaffCount,
       updatedList
     });
