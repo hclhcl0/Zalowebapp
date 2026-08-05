@@ -74,20 +74,30 @@ export async function GET(request) {
       whereClause.AND.push({ interestGroup });
     }
 
-    // Lấy tổng số lượng để tính phân trang
-    const total = await prisma.follower.count({ where: whereClause });
+    // total sẽ được tính sau khi dedup (xem bên dưới)
+    let total = 0;
 
-    const followers = await prisma.follower.findMany({
+    // Lấy tất cả khớp (không giới hạn trang trước) để dedup, rồi mới phân trang
+    const allMatchedFollowers = await prisma.follower.findMany({
       where: whereClause,
       include: {
         appointments: true,
         testResults: true,
       },
       orderBy: { followedAt: "desc" },
-      skip,
-      take: limit,
-      distinct: ["id"],
     });
+
+    // Loại bỏ duplicate theo id (xảy ra khi OR match cả displayName lẫn staffLink.zaloUserId)
+    const seenIds = new Set();
+    const dedupedFollowers = allMatchedFollowers.filter(f => {
+      if (seenIds.has(f.id)) return false;
+      seenIds.add(f.id);
+      return true;
+    });
+
+    // Phân trang thủ công sau khi dedup
+    total = dedupedFollowers.length;
+    const followers = dedupedFollowers.slice(skip, skip + limit);
 
     const staffLinkMap = {};
     allStaffLinks.forEach((link) => {
