@@ -25,6 +25,9 @@ ENV PRISMA_GENERATE_DATAPROXY=true
 # Generate prisma client before build
 RUN npx prisma generate
 
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 RUN npm run build
 
 # Production image, copy all the files and run next
