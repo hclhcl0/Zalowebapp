@@ -18,6 +18,21 @@ function formatRelativeTime(date) {
 }
 
 export default async function Dashboard() {
+  // Auto-heal: Khôi phục lại userType="citizen" cho những Follower bị mất liên kết (do bị xóa trùng lặp)
+  const allStaffLinks = await prisma.staffZaloLink.findMany({ select: { zaloUserId: true } });
+  const staffZaloIds = allStaffLinks.map(l => l.zaloUserId).filter(Boolean);
+  
+  await prisma.follower.updateMany({
+    where: {
+      userType: "staff",
+      NOT: { zaloUserId: { in: staffZaloIds } }
+    },
+    data: {
+      userType: "citizen",
+      department: null
+    }
+  });
+
   const totalFollowers = await prisma.follower.count();
 
   // Cán bộ liên kết: lấy từ bảng StaffZaloLink (chính xác hơn userType)
