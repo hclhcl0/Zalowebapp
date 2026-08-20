@@ -14,22 +14,33 @@ export const authOptions = {
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
 
-        const admin = await prisma.admin.findUnique({
-          where: { username: credentials.username },
-        });
+        try {
+          const admin = await prisma.admin.findUnique({
+            where: { username: credentials.username },
+          });
 
-        if (!admin) return null;
+          if (!admin) {
+            console.log("DB check: Khong tim thay username:", credentials.username);
+            return null;
+          }
 
-        const isValid = await bcrypt.compare(credentials.password, admin.password);
-        if (!isValid) return null;
+          const isValid = await bcrypt.compare(credentials.password, admin.password);
+          if (!isValid) {
+            console.log("DB check: Sai mat khau cho:", credentials.username);
+            return null;
+          }
 
-        return {
-          id: String(admin.id),
-          name: admin.fullName,
-          email: admin.username,
-          role: admin.role,
-          department: admin.department,
-        };
+          return {
+            id: String(admin.id),
+            name: admin.fullName,
+            email: admin.username,
+            role: admin.role,
+            department: admin.department,
+          };
+        } catch (error) {
+          console.error("LỖI KẾT NỐI DATABASE TRONG LÚC ĐĂNG NHẬP:", error);
+          return null;
+        }
       },
     }),
   ],
