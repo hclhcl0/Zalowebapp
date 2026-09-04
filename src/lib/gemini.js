@@ -369,6 +369,11 @@ async function prepareAIContext(userId, question) {
     return userDept === docDept; // Nhân viên thường phải khớp phòng ban
   });
 
+  // DEBUG LOG - XÓA SAU KHI SỬA XONG
+  console.log(`[AI DEBUG] userId=${userId} | role=${userProfile.role} | dept=${userProfile.department} | isStaff=${isStaffUser} | isAdmin=${isAdminUser}`);
+  console.log(`[AI DEBUG] Total chunks=${knowledgeChunks.length} | After filter=${filteredChunks.length}`);
+  console.log(`[AI DEBUG] Chunks filtered in: ${filteredChunks.map(c => `"${c.title}"(${c.allowedDepartment})`).join(", ")}`);
+
   const knowledgeText = retrieveRelevantKnowledge(question, filteredChunks, userProfile.displayName);
   
   // Ghi đè categoryList dựa theo quyền hạn
