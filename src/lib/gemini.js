@@ -233,9 +233,13 @@ function retrieveRelevantKnowledge(question, chunks, userName = "") {
   const scoredChunks = chunks.map(chunk => {
     let score = 0;
     for (const kw of keywords) {
-      // Basic keyword counting
-      const count = chunk.normalized.split(kw).length - 1;
-      score += count;
+      // Title/category match = 5x weight (ưu tiên tài liệu có tiêu đề khớp từ khóa)
+      const titleNorm = removeVietnameseTones(chunk.title + " " + chunk.category).toLowerCase();
+      const titleCount = titleNorm.split(kw).length - 1;
+      score += titleCount * 5;
+      // Content match = 1x weight
+      const contentCount = chunk.normalized.split(kw).length - 1;
+      score += contentCount;
     }
     return { ...chunk, score };
   });
@@ -243,13 +247,11 @@ function retrieveRelevantKnowledge(question, chunks, userName = "") {
   // Sort by score descending
   scoredChunks.sort((a, b) => b.score - a.score);
 
-  // Take top 3 relevant chunks that have at least score > 0
-  const topChunks = scoredChunks.filter(c => c.score > 0).slice(0, 3);
+  // Take top 5 relevant chunks that have at least score > 0
+  const topChunks = scoredChunks.filter(c => c.score > 0).slice(0, 5);
   
-  // If no chunks matched any keywords, we can optionally return all chunks (fallback)
-  // or return an empty string. Let's return top 3 chunks anyway if score > 0, 
-  // else if everything is 0, we just return the first 3 chunks as fallback to avoid AI knowing nothing.
-  const selectedChunks = topChunks.length > 0 ? topChunks : chunks.slice(0, 3);
+  // Fallback: nếu không chunk nào score > 0, lấy 5 đầu tiên
+  const selectedChunks = topChunks.length > 0 ? topChunks : chunks.slice(0, 5);
   
   let combinedText = "";
   for (const chunk of selectedChunks) {
