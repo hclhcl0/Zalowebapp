@@ -252,6 +252,9 @@ function retrieveRelevantKnowledge(question, chunks, userName = "") {
   
   // Fallback: nếu không chunk nào score > 0, lấy 5 đầu tiên
   const selectedChunks = topChunks.length > 0 ? topChunks : chunks.slice(0, 5);
+
+  // DEBUG LOG - XÓA SAU KHI SỬA XONG
+  console.log(`[AI DEBUG SCORE] Top chunks selected: ${selectedChunks.map(c => `"${c.title}"(score=${c.score})`).join(", ")}`);
   
   let combinedText = "";
   for (const chunk of selectedChunks) {
