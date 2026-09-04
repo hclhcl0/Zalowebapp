@@ -352,7 +352,13 @@ async function prepareAIContext(userId, question) {
     }
 
     // Nếu tài liệu dành riêng cho Cán bộ / Chỉ nhân viên / Nội bộ cơ quan
-    if (docDept.includes("nhân viên") || docDept.includes("cán bộ") || docDept.includes("nội bộ")) {
+    if (
+      docDept === "staff_only" ||
+      docDept === "staff" ||
+      docDept.includes("nhân viên") ||
+      docDept.includes("cán bộ") ||
+      docDept.includes("nội bộ")
+    ) {
       return isStaffUser;
     }
     
