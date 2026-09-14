@@ -7,15 +7,17 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-const WEBCQ_API = "https://ecdc.vnos.org";
-
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Lấy toàn bộ categories từ ecdc
-    const res = await fetch(`${WEBCQ_API}/api/categories?limit=100&depth=0`, {
+    const cmsConfig = await prisma.systemConfig.findUnique({ where: { key: "payload_cms_url" } })
+      || await prisma.systemConfig.findUnique({ where: { key: "cms_url" } });
+    const cmsUrl = cmsConfig?.value?.trim() || process.env.CMS_URL || "https://ksbtdanang.vn";
+
+    // Lấy toàn bộ categories từ CMS
+    const res = await fetch(`${cmsUrl}/api/categories?limit=100&depth=0`, {
       next: { revalidate: 60 },
     });
     const json = await res.json();

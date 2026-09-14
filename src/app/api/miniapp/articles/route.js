@@ -21,8 +21,9 @@ export async function GET(request) {
     const category = searchParams.get("category") || "";
 
     // Lấy URL CMS từ SystemConfig hoặc env
-    const cmsCfg = await prisma.systemConfig.findUnique({ where: { key: "cms_url" } });
-    const cmsUrl = cmsCfg?.value || process.env.CMS_URL || "https://ecdc.vnos.org";
+    const cmsCfg = await prisma.systemConfig.findUnique({ where: { key: "payload_cms_url" } })
+      || await prisma.systemConfig.findUnique({ where: { key: "cms_url" } });
+    const cmsUrl = cmsCfg?.value?.trim() || process.env.CMS_URL || "https://ksbtdanang.vn";
 
     // Gọi Payload CMS REST API
     const params = new URLSearchParams({

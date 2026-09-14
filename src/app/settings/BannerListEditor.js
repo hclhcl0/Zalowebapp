@@ -127,7 +127,7 @@ export default function BannerListEditor({ value, onChange }) {
                   className="form-input" 
                   value={item.link} 
                   onChange={(e) => handleUpdate(index, 'link', e.target.value)}
-                  placeholder="Ví dụ: https://ecdc.vnos.org/ hoặc /services"
+                  placeholder="Ví dụ: https://ksbtdanang.vn/ hoặc /services"
                 />
               </div>
             </div>

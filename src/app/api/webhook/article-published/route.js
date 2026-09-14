@@ -37,7 +37,7 @@ export const dynamic = "force-dynamic";
 // Xử lý nặng trong background (không block response)
 async function processArticleSync({ title, slug, description, htmlContent, imageUrl }) {
   const cmsConfig = await prisma.systemConfig.findUnique({ where: { key: "payload_cms_url" } });
-  const cmsUrl = cmsConfig?.value?.trim() || "https://ecdc.vnos.org";
+  const cmsUrl = cmsConfig?.value?.trim() || "https://ksbtdanang.vn";
 
   const patternConfig = await prisma.systemConfig.findUnique({ where: { key: "payload_article_url_pattern" } });
   const pattern = patternConfig?.value?.trim() || "";

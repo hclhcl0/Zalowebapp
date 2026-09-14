@@ -252,9 +252,6 @@ function retrieveRelevantKnowledge(question, chunks, userName = "") {
   
   // Fallback: nếu không chunk nào score > 0, lấy 5 đầu tiên
   const selectedChunks = topChunks.length > 0 ? topChunks : chunks.slice(0, 5);
-
-  // DEBUG LOG - XÓA SAU KHI SỬA XONG
-  console.log(`[AI DEBUG SCORE] Top chunks selected: ${selectedChunks.map(c => `"${c.title}"(score=${c.score})`).join(", ")}`);
   
   let combinedText = "";
   for (const chunk of selectedChunks) {
@@ -299,7 +296,7 @@ async function prepareAIContext(userId, question) {
   let hotline = "1900988975";
   let address = "118 Lê Đình Lý, Phường Thanh Khê Đông, Quận Thanh Khê, Thành phố Đà Nẵng";
   let customPrompt = "";
-  let footerMsg = "(Địa chỉ: {address} - Hotline: {hotline})"; // Default
+  let footerMsg = ""; // Mặc định không có footer
   let userProfile = { displayName: "Bạn", zaloName: "Bạn", role: "CÔNG DÂN", accessLevel: "basic", department: null };
 
   const h = settings.find(s => s.key === "hotline_main");
@@ -373,11 +370,6 @@ async function prepareAIContext(userId, question) {
     
     return userDept === docDept; // Nhân viên thường phải khớp phòng ban
   });
-
-  // DEBUG LOG - XÓA SAU KHI SỬA XONG
-  console.log(`[AI DEBUG] userId=${userId} | role=${userProfile.role} | dept=${userProfile.department} | isStaff=${isStaffUser} | isAdmin=${isAdminUser}`);
-  console.log(`[AI DEBUG] Total chunks=${knowledgeChunks.length} | After filter=${filteredChunks.length}`);
-  console.log(`[AI DEBUG] Chunks filtered in: ${filteredChunks.map(c => `"${c.title}"(${c.allowedDepartment})`).join(", ")}`);
 
   const knowledgeText = retrieveRelevantKnowledge(question, filteredChunks, userProfile.displayName);
   
