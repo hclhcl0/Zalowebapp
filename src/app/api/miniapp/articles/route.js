@@ -17,6 +17,7 @@ export async function GET(request) {
     const page     = parseInt(searchParams.get("page")     || "1");
     const limit    = parseInt(searchParams.get("limit")    || "10");
     const search   = searchParams.get("search")   || "";
+    const id       = searchParams.get("id")       || "";
     const category = searchParams.get("category") || "";
 
     // Lấy URL CMS từ SystemConfig hoặc env
@@ -31,6 +32,10 @@ export async function GET(request) {
       "sort":  "-createdAt",
       "depth": "1",
     });
+
+    if (id) {
+      params.set("where[id][equals]", id);
+    }
 
     if (search) {
       params.set("where[or][0][title][contains]", search);
