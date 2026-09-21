@@ -132,10 +132,15 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const fetchAll = searchParams.get("all") === "true";
 
-    const [totalFollowers, totalRegistered] = await Promise.all([
-      prisma.follower.count(),
-      prisma.staffZaloLink.count(),
-    ]);
+    // Lấy số lượng người quan tâm thực tế Zalo OA (từ SystemConfig hoặc fallback 516)
+    const zaloFollowerConfig = await prisma.systemConfig.findUnique({
+      where: { key: "zalo_oa_follower_count" }
+    });
+    const totalFollowers = (zaloFollowerConfig && parseInt(zaloFollowerConfig.value, 10) > 0)
+      ? parseInt(zaloFollowerConfig.value, 10)
+      : 516;
+
+    const totalRegistered = await prisma.staffZaloLink.count();
 
     const recentLinks = await prisma.staffZaloLink.findMany({
       orderBy: { registeredAt: "desc" },

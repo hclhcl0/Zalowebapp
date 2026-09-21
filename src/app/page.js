@@ -70,13 +70,8 @@ export default async function Dashboard() {
       NOT: { fullName: null }
     }
   });
-  // Số lượng Followers chưa khai báo thông tin
-  const totalUnregistered = await prisma.follower.count({
-    where: {
-      userType: "citizen",
-      fullName: null
-    }
-  });
+  // Số lượng Người dân / Khách hàng còn lại theo dõi OA (516 - 340 Cán bộ - Khách đã định danh = 176)
+  const totalUnregistered = Math.max(0, totalFollowers - totalStaff - totalCitizens);
 
   const classificationStatsRaw = await prisma.follower.groupBy({
     by: ['interestGroup'],
@@ -232,12 +227,12 @@ export default async function Dashboard() {
           <div className="stat-icon purple" style={{ background: "#eff6ff" }}><Stethoscope size={24} color="#3b82f6" /></div>
         </div>
 
-        {/* Card 4: Unregistered */}
+        {/* Card 4: Unregistered / Citizens */}
         <div className="stat-card">
           <div className="stat-info">
-            <div className="stat-label">Chưa phân loại</div>
+            <div className="stat-label">Người dân theo dõi OA</div>
             <div className="stat-value">{totalUnregistered.toLocaleString("vi-VN")}</div>
-            <div className="stat-change" style={{ color: "var(--warning)" }}>Chưa khai báo thông tin</div>
+            <div className="stat-change" style={{ color: "var(--warning)" }}>Khách hàng xem tin tức (chưa định danh)</div>
           </div>
           <div className="stat-icon yellow"><Clock size={24} color="#d97706" /></div>
         </div>
