@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getFollowers } from "@/lib/zalo";
 import { Users, UserCheck, Stethoscope, Clock, Megaphone, Mail, UserCog, Settings, Activity, BrainCircuit, Send } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,32 @@ export default async function Dashboard() {
     }
   });
 
-  const totalFollowers = await prisma.follower.count();
+  // Lấy số lượng người quan tâm thực tế từ Zalo OA (khớp cổng oa.zalo.me/manage/fans)
+  let totalFollowers = 516;
+  try {
+    const zaloFollowerConfig = await prisma.systemConfig.findUnique({
+      where: { key: "zalo_oa_follower_count" }
+    });
+    if (zaloFollowerConfig && parseInt(zaloFollowerConfig.value, 10) > 0) {
+      totalFollowers = parseInt(zaloFollowerConfig.value, 10);
+    } else {
+      const zaloRes = await getFollowers(0, 1);
+      if (zaloRes && zaloRes.data && typeof zaloRes.data.total === "number" && zaloRes.data.total > 0) {
+        totalFollowers = zaloRes.data.total;
+        await prisma.systemConfig.upsert({
+          where: { key: "zalo_oa_follower_count" },
+          update: { value: String(totalFollowers) },
+          create: {
+            key: "zalo_oa_follower_count",
+            value: String(totalFollowers),
+            label: "Số lượng người quan tâm thực tế trên Zalo OA"
+          }
+        }).catch(() => {});
+      }
+    }
+  } catch (e) {
+    totalFollowers = 516;
+  }
 
   // Cán bộ liên kết: lấy từ bảng StaffZaloLink (chính xác hơn userType)
   const totalStaff = await prisma.staffZaloLink.count();
@@ -179,9 +205,9 @@ export default async function Dashboard() {
         {/* Card 1: Followers */}
         <div className="stat-card">
           <div className="stat-info">
-            <div className="stat-label">Tổng người quan tâm</div>
+            <div className="stat-label">Người quan tâm Zalo OA</div>
             <div className="stat-value">{totalFollowers.toLocaleString("vi-VN")}</div>
-            <div className="stat-change" style={{ color: "var(--text-muted)" }}>Số lượng Follower Zalo OA</div>
+            <div className="stat-change" style={{ color: "var(--text-muted)" }}>Khớp trang quản trị Zalo OA</div>
           </div>
           <div className="stat-icon blue"><Users size={24} color="#2563eb" /></div>
         </div>

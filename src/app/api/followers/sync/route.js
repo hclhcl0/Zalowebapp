@@ -43,6 +43,19 @@ export async function POST() {
       }
     }
 
+    // Lưu số lượng người quan tâm thực tế Zalo OA vào SystemConfig để Dashboard hiển thị chuẩn 100%
+    if (followersList.length > 0) {
+      await prisma.systemConfig.upsert({
+        where: { key: "zalo_oa_follower_count" },
+        update: { value: String(followersList.length) },
+        create: {
+          key: "zalo_oa_follower_count",
+          value: String(followersList.length),
+          label: "Số lượng người quan tâm thực tế trên Zalo OA"
+        }
+      }).catch(() => {});
+    }
+
     let newCount = 0;
     let updateCount = 0;
 
