@@ -205,14 +205,25 @@ export async function POST() {
       }
     }
 
-    // 3. Xóa các follower trong DB nhưng không còn trong danh sách Zalo (đã unfollow)
+    // 3. Xóa các follower NGƯỜI DÂN trong DB nhưng không còn trong danh sách Zalo (đã unfollow)
+    // KHÔNG xóa nhân viên/cán bộ (staff) vì họ có thể được import Excel hoặc tạo thủ công
     const zaloUserIdSet = new Set(followersList.map(f => String(f.user_id)).filter(Boolean));
     let removedCount = 0;
 
     if (zaloUserIdSet.size > 0) {
-      // Chỉ xóa nếu đã kéo được toàn bộ danh sách Zalo (tránh xóa nhầm khi lấy thiếu trang)
-      const dbFollowers = await prisma.follower.findMany({ select: { id: true, zaloUserId: true } });
-      const toDelete = dbFollowers.filter(f => !zaloUserIdSet.has(f.zaloUserId));
+      // Lấy tất cả zaloUserId của nhân viên đã liên kết (bảo vệ không xóa nhầm)
+      const staffLinks = await prisma.staffZaloLink.findMany({ select: { zaloUserId: true } });
+      const staffIdSet = new Set(staffLinks.map(l => l.zaloUserId).filter(Boolean));
+
+      // Chỉ xét follower citizen không còn trong danh sách Zalo
+      const dbFollowers = await prisma.follower.findMany({
+        select: { id: true, zaloUserId: true, userType: true }
+      });
+      const toDelete = dbFollowers.filter(f =>
+        !zaloUserIdSet.has(f.zaloUserId) &&   // không có trên Zalo
+        f.userType !== "staff" &&             // không phải nhân viên theo userType
+        !staffIdSet.has(f.zaloUserId)         // không có trong bảng StaffZaloLink
+      );
 
       if (toDelete.length > 0) {
         const toDeleteIds = toDelete.map(f => f.id);
