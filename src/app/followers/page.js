@@ -268,6 +268,8 @@ export default function FollowersPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [importingExcel, setImportingExcel] = useState(false);
   const fileInputRef = useRef(null);
+  const [importingCitizenExcel, setImportingCitizenExcel] = useState(false);
+  const citizenFileInputRef = useRef(null);
   
   // ── Sửa liên kết nhân viên state ──
   const [editingLink, setEditingLink] = useState(null);
@@ -479,6 +481,86 @@ export default function FollowersPage() {
     } finally {
       setImportingExcel(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleExportCitizensExcel = async () => {
+    try {
+      showToast("Đang chuẩn bị dữ liệu khách hàng...", "info");
+      const res = await fetch("/api/followers/export-citizens");
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error || "Lỗi tải dữ liệu khách hàng");
+
+      const citizens = json.data;
+      if (!citizens || citizens.length === 0) {
+        alert("Chưa có dữ liệu khách hàng để xuất!");
+        return;
+      }
+
+      const exportData = citizens.map((c, index) => ({
+        "STT": index + 1,
+        "Họ và Tên": c.fullName || "",
+        "Số điện thoại": c.phone || "",
+        "Số CCCD / CMND": c.cccd || "",
+        "Ngày sinh": c.dob || "",
+        "Nhóm quan tâm": c.interestGroup || "",
+        "Tên Zalo hiển thị": c.displayName || "—",
+        "Zalo User ID": c.zaloUserId ? `'${c.zaloUserId}` : "",
+        "Ngày quan tâm": c.followedAt ? new Date(c.followedAt).toLocaleDateString("vi-VN") : "",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      worksheet["!cols"] = [
+        { wch: 6 },   // STT
+        { wch: 25 },  // Họ và Tên
+        { wch: 15 },  // SĐT
+        { wch: 18 },  // CCCD
+        { wch: 15 },  // Ngày sinh
+        { wch: 22 },  // Nhóm quan tâm
+        { wch: 22 },  // Tên Zalo
+        { wch: 28 },  // Zalo ID
+        { wch: 16 },  // Ngày quan tâm
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Khach_Hang_CDC");
+
+      const fileName = `Danh_Sach_Khach_Hang_Dang_Ky_Zalo_CDC_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      showToast("📥 Xuất file Excel Khách hàng thành công!");
+    } catch (err) {
+      console.error("Lỗi xuất Excel Khách hàng:", err);
+      alert("Đã xảy ra lỗi khi xuất file: " + err.message);
+    }
+  };
+
+  const handleImportCitizensExcel = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportingCitizenExcel(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/followers/import-citizens", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Nhập Excel thất bại");
+
+      let msg = `🎉 Cập nhật thành công thông tin cho ${json.successCount} khách hàng!`;
+      if (json.errors && json.errors.length > 0) {
+        msg += "\n\nChi tiết (tối đa 10 dòng):\n" + json.errors.join("\n");
+      }
+      alert(msg);
+      fetchFollowers();
+    } catch (err) {
+      alert("Lỗi: " + err.message);
+    } finally {
+      setImportingCitizenExcel(false);
+      if (citizenFileInputRef.current) citizenFileInputRef.current.value = "";
     }
   };
 
@@ -737,19 +819,47 @@ export default function FollowersPage() {
           <p className="page-desc">Danh sách người dân đã nhấn quan tâm và công cụ đăng ký liên kết nhân viên.</p>
         </div>
         {activeTab === "followers" && (
-          <button
-            className="btn btn-outline"
-            onClick={handleSyncFollowers}
-            disabled={syncing || loading}
-            style={{ display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            {syncing ? (
-              <>
-                <div className="spinner" style={{ width: "14px", height: "14px", border: "1.5px solid var(--text-muted)", borderTopColor: "var(--primary)" }} />
-                Đang đồng bộ...
-              </>
-            ) : "🔄 Đồng bộ"}
-          </button>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              ref={citizenFileInputRef}
+              style={{ display: "none" }}
+              onChange={handleImportCitizensExcel}
+            />
+            <button
+              className="btn btn-sm"
+              onClick={() => citizenFileInputRef.current?.click()}
+              disabled={importingCitizenExcel}
+              style={{ background: "white", color: "#2563eb", border: "1px solid #bfdbfe", display: "flex", alignItems: "center", gap: "6px" }}
+              title="Nạp dữ liệu khách hàng từ file Excel để sao lưu / khôi phục"
+            >
+              {importingCitizenExcel ? (
+                <div style={{ width: 14, height: 14, border: "2px solid #bfdbfe", borderTopColor: "#2563eb", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+              ) : "📤 Nhập Excel Khách hàng"}
+            </button>
+            <button
+              className="btn btn-sm"
+              onClick={handleExportCitizensExcel}
+              style={{ background: "linear-gradient(135deg, #059669, #10b981)", color: "white", border: "none", display: "flex", alignItems: "center", gap: "6px" }}
+              title="Xuất danh sách khách hàng ra file Excel để lưu trữ dự phòng"
+            >
+              📥 Xuất Excel Khách hàng
+            </button>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={handleSyncFollowers}
+              disabled={syncing || loading}
+              style={{ display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              {syncing ? (
+                <>
+                  <div className="spinner" style={{ width: "14px", height: "14px", border: "1.5px solid var(--text-muted)", borderTopColor: "var(--primary)" }} />
+                  Đang đồng bộ...
+                </>
+              ) : "🔄 Đồng bộ Zalo"}
+            </button>
+          </div>
         )}
       </div>
 
