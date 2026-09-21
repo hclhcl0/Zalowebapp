@@ -489,7 +489,7 @@ export default function FollowersPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Đồng bộ thất bại");
       
-      alert(`🎉 Đồng bộ hoàn tất!\n- Tổng số người quan tâm từ Zalo: ${json.summary.totalFromZalo}\n- Thêm mới vào DB: ${json.summary.newAdded}\n- Cập nhật thông tin: ${json.summary.updated}`);
+      alert(`🎉 Đồng bộ hoàn tất!\n- Tổng số người quan tâm từ Zalo: ${json.summary.totalFromZalo}\n- Thêm mới vào DB: ${json.summary.newAdded}\n- Cập nhật thông tin: ${json.summary.updated}\n- Đã xóa (bỏ quan tâm): ${json.summary.removed || 0}`);
       fetchFollowers(); // reload list
     } catch (err) {
       alert("Lỗi đồng bộ: " + err.message);

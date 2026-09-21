@@ -205,12 +205,29 @@ export async function POST() {
       }
     }
 
+    // 3. Xóa các follower trong DB nhưng không còn trong danh sách Zalo (đã unfollow)
+    const zaloUserIdSet = new Set(followersList.map(f => String(f.user_id)).filter(Boolean));
+    let removedCount = 0;
+
+    if (zaloUserIdSet.size > 0) {
+      // Chỉ xóa nếu đã kéo được toàn bộ danh sách Zalo (tránh xóa nhầm khi lấy thiếu trang)
+      const dbFollowers = await prisma.follower.findMany({ select: { id: true, zaloUserId: true } });
+      const toDelete = dbFollowers.filter(f => !zaloUserIdSet.has(f.zaloUserId));
+
+      if (toDelete.length > 0) {
+        const toDeleteIds = toDelete.map(f => f.id);
+        await prisma.follower.deleteMany({ where: { id: { in: toDeleteIds } } });
+        removedCount = toDelete.length;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       summary: {
         totalFromZalo: followersList.length,
         newAdded: newCount,
         updated: updateCount,
+        removed: removedCount,
       },
     });
   } catch (err) {
