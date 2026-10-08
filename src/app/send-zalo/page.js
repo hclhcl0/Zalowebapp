@@ -5,6 +5,7 @@ import { canSendInternal, canBroadcast } from "@/lib/roles";
 import {
   MessageSquarePlus, Send, Image, FileVideo, FileText,
   Clock, CheckCircle, XCircle, Search, RefreshCw, X,
+  Users, AlertCircle, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 // ─── Constants ───────────────────────────────────────────────
@@ -42,6 +43,149 @@ function ProgressBar({ value }) {
         width: `${value}%`, height: "100%",
         transition: "width 0.4s ease", borderRadius: 99,
       }} />
+    </div>
+  );
+}
+
+// ─── History Row (Desktop table) ─────────────────────────────
+function HistoryRow({ log }) {
+  const [expanded, setExpanded] = useState(false);
+  const label = SCOPE_OPTIONS.find(s => s.value === log.scope)?.label || log.scope || "—";
+  const failedUsers = log.failedUsers ? (() => { try { return JSON.parse(log.failedUsers); } catch { return []; } })() : [];
+  const rate = log.totalTargets > 0 ? Math.round((log.successCount / log.totalTargets) * 100) : 0;
+  const isAllOk = log.failCount === 0;
+
+  return (
+    <>
+      <tr style={{ borderBottom: expanded ? "none" : "1px solid var(--border)", fontSize: "0.82rem", background: expanded ? "var(--surface)" : "transparent" }}>
+        <td style={{ padding: "10px 14px", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+          {new Date(log.sentAt).toLocaleString("vi-VN")}
+        </td>
+        <td style={{ padding: "10px 14px" }}>
+          <div style={{ fontWeight: 600, fontSize: "0.82rem" }}>{log.sentByName}</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>@{log.sentBy}</div>
+        </td>
+        <td style={{ padding: "10px 14px", color: "var(--primary)", fontWeight: 600 }}>{label}</td>
+        <td style={{ padding: "10px 14px" }}>
+          <div style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", fontSize: "0.8rem" }}>
+            {log.title && <strong>{log.title}: </strong>}{log.content || "—"}
+          </div>
+          {(() => {
+            let att = {};
+            try { att = JSON.parse(log.attachments || "{}"); } catch {}
+            return (
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
+                {log.messageType === "list" && <span className="sz-badge blue">📑 Carousel</span>}
+                {att.imageUrls?.length > 0 && <span className="sz-badge blue"><Image size={9} /> {att.imageUrls.length} ảnh</span>}
+                {att.videoUrls?.length > 0 && <span className="sz-badge yellow"><FileVideo size={9} /> {att.videoUrls.length} video</span>}
+                {att.fileAttachments?.length > 0 && <span className="sz-badge purple"><FileText size={9} /> {att.fileAttachments.length} file</span>}
+              </div>
+            );
+          })()}
+        </td>
+        <td style={{ padding: "10px 14px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 3,
+                padding: "2px 8px", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700,
+                background: isAllOk ? "#dcfce7" : rate >= 80 ? "#fef9c3" : "#fee2e2",
+                color: isAllOk ? "#166534" : rate >= 80 ? "#854d0e" : "#991b1b",
+              }}>
+                {isAllOk ? <CheckCircle size={9} /> : <AlertCircle size={9} />}
+                {log.successCount}/{log.totalTargets}
+              </span>
+            </div>
+            {log.failCount > 0 && (
+              <button
+                onClick={() => setExpanded(p => !p)}
+                style={{ display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", color: "#991b1b", fontSize: "0.7rem", fontWeight: 600, padding: 0 }}
+              >
+                {expanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                {log.failCount} thất bại
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+      {expanded && failedUsers.length > 0 && (
+        <tr style={{ borderBottom: "1px solid var(--border)" }}>
+          <td colSpan={5} style={{ padding: "0 14px 12px 14px", background: "#fff5f5" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#991b1b", marginBottom: 6, paddingTop: 8 }}>
+              ❌ Chi tiết người nhận thất bại:
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 180, overflowY: "auto" }}>
+              {failedUsers.map((u, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.75rem", padding: "4px 0", borderBottom: i < failedUsers.length - 1 ? "1px dashed #fecaca" : "none" }}>
+                  <span style={{ fontWeight: 600, minWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.displayName}</span>
+                  <span style={{ color: "#991b1b" }}>→ {u.reason}</span>
+                  {u.errorCode && <span style={{ color: "var(--text-muted)", marginLeft: "auto", flexShrink: 0, fontSize: "0.68rem" }}>mã: {u.errorCode}</span>}
+                </div>
+              ))}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+// ─── History Card (Mobile) ────────────────────────────────────
+function HistoryCard({ log }) {
+  const [expanded, setExpanded] = useState(false);
+  const label = SCOPE_OPTIONS.find(s => s.value === log.scope)?.label || log.scope || "—";
+  const failedUsers = log.failedUsers ? (() => { try { return JSON.parse(log.failedUsers); } catch { return []; } })() : [];
+  const isAllOk = log.failCount === 0;
+
+  return (
+    <div className="sz-hist-card">
+      <div className="sz-hist-card-row">
+        <span className="sz-hist-scope">{label}</span>
+        <span className="sz-hist-time">{new Date(log.sentAt).toLocaleString("vi-VN")}</span>
+      </div>
+      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginBottom: 4 }}>
+        👤 {log.sentByName} (@{log.sentBy})
+      </div>
+      <div className="sz-hist-content">{log.title && <strong>{log.title}: </strong>}{log.content || "—"}</div>
+      {(() => {
+        let att = {};
+        try { att = JSON.parse(log.attachments || "{}"); } catch {}
+        return (
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 4 }}>
+            {log.messageType === "list" && <span className="sz-badge blue">📑 Carousel</span>}
+            {att.imageUrls?.length > 0 && <span className="sz-badge blue"><Image size={9} /> {att.imageUrls.length} ảnh</span>}
+            {att.videoUrls?.length > 0 && <span className="sz-badge yellow"><FileVideo size={9} /> {att.videoUrls.length} video</span>}
+            {att.fileAttachments?.length > 0 && <span className="sz-badge purple"><FileText size={9} /> {att.fileAttachments.length} file</span>}
+          </div>
+        );
+      })()}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: 3,
+          padding: "2px 8px", borderRadius: 99, fontSize: "0.72rem", fontWeight: 700,
+          background: isAllOk ? "#dcfce7" : "#fee2e2",
+          color: isAllOk ? "#166534" : "#991b1b",
+        }}>
+          {isAllOk ? <CheckCircle size={9} /> : <AlertCircle size={9} />}
+          {log.successCount}/{log.totalTargets} thành công
+        </span>
+        {log.failCount > 0 && (
+          <button onClick={() => setExpanded(p => !p)} style={{ display: "flex", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", color: "#991b1b", fontSize: "0.72rem", fontWeight: 600, padding: 0 }}>
+            {expanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+            {log.failCount} thất bại
+          </button>
+        )}
+      </div>
+      {expanded && failedUsers.length > 0 && (
+        <div style={{ marginTop: 8, background: "#fff5f5", borderRadius: 6, padding: "8px 10px" }}>
+          {failedUsers.map((u, i) => (
+            <div key={i} style={{ fontSize: "0.72rem", padding: "3px 0", borderBottom: i < failedUsers.length - 1 ? "1px dashed #fecaca" : "none" }}>
+              <strong>{u.displayName}</strong>: <span style={{ color: "#991b1b" }}>{u.reason}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -681,91 +825,52 @@ export default function SendZaloPage() {
 
         </div>{/* /left */}
 
-        {/* ── RIGHT col: History ── */}
+        {/* ── RIGHT col: Nhật ký gởi tin ── */}
         <div className="sz-right">
           <div className="card" style={{ padding: 0, height: "100%" }}>
             <div className="sz-hist-header">
               <div style={{ display: "flex", alignItems: "center", gap: 7, fontWeight: 700 }}>
-                <Clock size={16} color="var(--primary)" /> Lịch sử gởi tin
+                <Clock size={16} color="var(--primary)" /> Nhật ký gởi tin
               </div>
               <button onClick={loadHistory} className="btn btn-ghost btn-sm" style={{ display: "flex", gap: 5, alignItems: "center" }}>
                 <RefreshCw size={13} /> Làm mới
               </button>
             </div>
 
-            {/* Mobile: cards / Desktop: table */}
             {loadingHistory ? (
               <div className="sz-empty" style={{ padding: 40 }}>
                 <RefreshCw size={18} style={{ animation: "sz-spin 1s linear infinite" }} />
                 <span style={{ marginTop: 8 }}>Đang tải...</span>
               </div>
             ) : history.length === 0 ? (
-              <div className="sz-empty" style={{ padding: 40 }}>Chưa có lịch sử gởi tin.</div>
+              <div className="sz-empty" style={{ padding: 40 }}>Chưa có nhật ký gởi tin.</div>
             ) : (
               <>
                 {/* Desktop table */}
                 <div className="sz-hist-table">
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
-                      <tr style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", fontSize: "0.75rem", textTransform: "uppercase", color: "var(--text-muted)" }}>
+                      <tr style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)", fontSize: "0.72rem", textTransform: "uppercase", color: "var(--text-muted)" }}>
                         <th style={{ padding: "10px 14px", textAlign: "left" }}>Thời gian</th>
-                        <th style={{ padding: "10px 14px", textAlign: "left" }}>Nội dung</th>
+                        <th style={{ padding: "10px 14px", textAlign: "left" }}>Người gởi</th>
                         <th style={{ padding: "10px 14px", textAlign: "left" }}>Phạm vi</th>
-                        <th style={{ padding: "10px 14px", textAlign: "left" }}>Đính kèm</th>
+                        <th style={{ padding: "10px 14px", textAlign: "left" }}>Nội dung</th>
+                        <th style={{ padding: "10px 14px", textAlign: "left" }}>Kết quả</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {history.map(log => {
-                        let p = {};
-                        try { p = JSON.parse(log.rawPayload || "{}"); } catch (_) {}
-                        const label = SCOPE_OPTIONS.find(s => s.value === p.scope)?.label || p.scope || "—";
-                        return (
-                          <tr key={log.id} style={{ borderBottom: "1px solid var(--border)", fontSize: "0.83rem" }}>
-                            <td style={{ padding: "10px 14px", color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-                              {new Date(log.receivedAt).toLocaleString("vi-VN")}
-                            </td>
-                            <td style={{ padding: "10px 14px", fontWeight: 500 }}>
-                              <div style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                                {log.content || "—"}
-                              </div>
-                            </td>
-                            <td style={{ padding: "10px 14px", color: "var(--primary)", fontWeight: 600 }}>{label}</td>
-                            <td style={{ padding: "10px 14px" }}>
-                              <div style={{ display: "flex", gap: 5 }}>
-                                {p.imageUrls?.length > 0     && <span className="sz-badge blue"><Image size={9} /> {p.imageUrls.length}</span>}
-                                {p.videoUrls?.length > 0     && <span className="sz-badge yellow"><FileVideo size={9} /> {p.videoUrls.length}</span>}
-                                {p.fileAttachments?.length > 0 && <span className="sz-badge purple"><FileText size={9} /> {p.fileAttachments.length}</span>}
-                                {!p.imageUrls?.length && !p.videoUrls?.length && !p.fileAttachments?.length && <span style={{ color: "var(--text-muted)" }}>—</span>}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {history.map(log => (
+                        <HistoryRow key={log.id} log={log} />
+                      ))}
                     </tbody>
                   </table>
                 </div>
 
                 {/* Mobile cards */}
                 <div className="sz-hist-cards">
-                  {history.map(log => {
-                    let p = {};
-                    try { p = JSON.parse(log.rawPayload || "{}"); } catch (_) {}
-                    const label = SCOPE_OPTIONS.find(s => s.value === p.scope)?.label || p.scope || "—";
-                    return (
-                      <div key={log.id} className="sz-hist-card">
-                        <div className="sz-hist-card-row">
-                          <span className="sz-hist-scope">{label}</span>
-                          <span className="sz-hist-time">{new Date(log.receivedAt).toLocaleString("vi-VN")}</span>
-                        </div>
-                        <div className="sz-hist-content">{log.content || "—"}</div>
-                        <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 6 }}>
-                          {p.imageUrls?.length > 0      && <span className="sz-badge blue"><Image size={9} /> {p.imageUrls.length} ảnh</span>}
-                          {p.videoUrls?.length > 0      && <span className="sz-badge yellow"><FileVideo size={9} /> {p.videoUrls.length} video</span>}
-                          {p.fileAttachments?.length > 0 && <span className="sz-badge purple"><FileText size={9} /> {p.fileAttachments.length} file</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {history.map(log => (
+                    <HistoryCard key={log.id} log={log} />
+                  ))}
                 </div>
               </>
             )}

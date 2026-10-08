@@ -182,3 +182,26 @@ model GroqApiKey {
   usageCount  Int      @default(0)
   usageTokens Int      @default(0)
 }
+
+// ============================================================
+// NHẬT KÝ GỞI TIN NỘI BỘ
+// Mỗi lần bấm "Gởi tin" = 1 bản ghi BroadcastLog
+// ============================================================
+model BroadcastLog {
+  id            Int      @id @default(autoincrement())
+  sentBy        String   // username admin gởi (vd: "admin", "khnv01")
+  sentByName    String   // tên đầy đủ (vd: "Kế hoạch - Nghiệp vụ")
+  scope         String   // "all_staff" | "list_staff" | "all_citizen" | "list_citizen" | "all"
+  messageType   String   @default("text") // "text" | "list"
+  title         String?  // Tiêu đề tin
+  content       String?  // Nội dung đầy đủ
+  attachments   String?  // JSON: { imageUrls, videoUrls, fileAttachments }
+  totalTargets  Int      // Số người cần gởi
+  successCount  Int      @default(0) // Số gởi thành công
+  failCount     Int      @default(0) // Số gởi thất bại
+  failedUsers   String?  // JSON: [{ userId, displayName, errorCode, reason }]
+  sentAt        DateTime @default(now())
+
+  @@index([sentAt])
+  @@index([sentBy])
+}
