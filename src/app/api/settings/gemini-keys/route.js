@@ -64,12 +64,13 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Thiếu tên gợi nhớ hoặc API Key" }, { status: 400 });
     }
 
-    if (!apiKey.startsWith("AIza")) {
-      return NextResponse.json({ success: false, error: "API Key không hợp lệ (phải bắt đầu bằng AIza)" }, { status: 400 });
+    const trimmedKey = apiKey.trim();
+    if (!trimmedKey.startsWith("AIza") && !trimmedKey.startsWith("AQ.")) {
+      return NextResponse.json({ success: false, error: "API Key không hợp lệ (phải bắt đầu bằng AIza hoặc AQ.)" }, { status: 400 });
     }
 
     const newKey = await prisma.geminiApiKey.create({
-      data: { label: label.trim(), apiKey: apiKey.trim(), isActive: true },
+      data: { label: label.trim(), apiKey: trimmedKey, isActive: true },
     });
 
     clearApiKeyCache();

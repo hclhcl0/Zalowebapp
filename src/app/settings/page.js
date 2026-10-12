@@ -1140,12 +1140,12 @@ function SettingsPageContent() {
                         />
                       </div>
                       <div>
-                        <label className="form-label" style={{ fontSize: "0.78rem" }}>API Key (bắt đầu bằng AIza...)</label>
+                        <label className="form-label" style={{ fontSize: "0.78rem" }}>API Key (bắt đầu bằng AIza... hoặc AQ....)</label>
                         <div style={{ position: "relative" }}>
                           <input
                             type={showNewGeminiKey ? "text" : "password"}
                             className="form-input"
-                            placeholder="AIzaSy..."
+                            placeholder="AIzaSy... hoặc AQ.Ab8..."
                             value={newGeminiKey}
                             onChange={(e) => setNewGeminiKey(e.target.value)}
                             style={{ paddingRight: "44px", fontFamily: "monospace" }}

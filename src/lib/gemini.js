@@ -488,8 +488,9 @@ async function askGemini(userId, question, contextOverride) {
     }
   }
 
-  // Model duy nhất: Gemini 3.1 Flash Lite (15 RPM, 500 RPD/key)
+  // Model Gemini: Ưu tiên Gemini 3.5 Flash Lite và Gemini 3.1 Flash Lite
   const geminiModels = [
+    "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite"
   ];
 
