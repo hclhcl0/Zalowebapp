@@ -115,6 +115,13 @@ function blacklistKey(apiKey) {
   console.warn(`[KeyPool] Key bị blacklist 5 phút: ...${apiKey.slice(-6)}`);
 }
 
+function disableInvalidKey(apiKey) {
+  // An invalid/revoked key cannot recover by retrying. Keep it disabled for
+  // this process; a deployment after replacing the environment key resets it.
+  keyBlacklist.set(apiKey, Number.POSITIVE_INFINITY);
+  console.error("[KeyPool] Đã vô hiệu hóa một Gemini API key không hợp lệ.");
+}
+
 let geminiKeyPool = [];
 let geminiKeyPoolTime = 0;
 let geminiCurrentIndex = 0;
@@ -522,7 +529,12 @@ async function askGemini(userId, question, contextOverride) {
       const isRateLimit = errMsg.includes("429") || errMsg.includes("resource_exhausted") || errMsg.includes("quota");
       const isUnavailable = errMsg.includes("503") || errMsg.includes("unavailable") || errMsg.includes("high demand") || errMsg.includes("overloaded");
       const isNotFound = errMsg.includes("404") || errMsg.includes("not found") || errMsg.includes("model");
+      const isInvalidKey = errMsg.includes("api key not valid") || errMsg.includes("api_key_invalid") || errMsg.includes("invalid api key");
 
+      if (isInvalidKey) {
+        disableInvalidKey(apiKey);
+        continue;
+      }
       if (isRateLimit) {
         blacklistKey(apiKey); // Chỉ blacklist khi thật sự rate-limit (429)
         continue;
@@ -536,8 +548,9 @@ async function askGemini(userId, question, contextOverride) {
   console.warn("[AI Router] Toàn bộ Gemini key thất bại, thử Groq...");
   try {
     return await askGroq(userId, question, ctx);
-  } catch {
-    return `Hệ thống AI đang xử lý lượng lớn yêu cầu. Vui lòng thử lại sau vài phút hoặc gọi hotline ${hotline}.`;
+  } catch (fallbackError) {
+    console.error("[AI Router] Không có nhà cung cấp AI khả dụng:", fallbackError.message);
+    return `Hệ thống AI đang tạm thời không khả dụng. Vui lòng thử lại sau hoặc gọi hotline ${hotline}.`;
   }
 }
 

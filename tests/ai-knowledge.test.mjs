@@ -86,3 +86,33 @@ test("OA model receives permitted schedule content and no internal document", as
   assert.ok(!capturedPrompt.includes("PRIVATE_TEST_MARKER"));
   assert.ok(capturedPrompt.includes("LỊCH DỊCH VỤ"));
 });
+
+test("invalid Gemini key falls back without exposing provider error details", async () => {
+  const prisma = {
+    aiKnowledge: { findMany: async () => [schedule] },
+    systemConfig: { findMany: async () => [], findUnique: async () => null },
+    follower: { findUnique: async () => ({ userType: "citizen", fullName: "Khách kiểm thử" }) },
+    messageLog: { findMany: async () => [] },
+    geminiApiKey: { findMany: async () => [{ apiKey: "invalid-test-key" }] },
+    groqApiKey: { findMany: async () => [] },
+  };
+  class InvalidKeyGoogleGenAI {
+    models = { generateContent: async () => {
+      throw new Error('{"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT"}}');
+    } };
+  }
+  const context = vm.createContext({ console, process: { env: {} }, Buffer });
+  const modules = {
+    "@/lib/prisma": new vm.SyntheticModule(["prisma"], function () { this.setExport("prisma", prisma); }, { context }),
+    "@google/genai": new vm.SyntheticModule(["GoogleGenAI"], function () { this.setExport("GoogleGenAI", InvalidKeyGoogleGenAI); }, { context }),
+    "groq-sdk": new vm.SyntheticModule(["default"], function () { this.setExport("default", class {}); }, { context }),
+    "./aiKnowledge.mjs": new vm.SourceTextModule(await readFile(new URL("../src/lib/aiKnowledge.mjs", import.meta.url), "utf8"), { context }),
+  };
+  const ai = new vm.SourceTextModule(await readFile(new URL("../src/lib/gemini.js", import.meta.url), "utf8"), { context });
+  await ai.link(specifier => modules[specifier]);
+  await ai.evaluate();
+  const answer = await ai.namespace.askAI("test-user", "Lịch tiêm chủng");
+  assert.match(answer, /tạm thời không khả dụng/);
+  assert.ok(!answer.includes("API key"));
+  assert.ok(!answer.includes("INVALID_ARGUMENT"));
+});

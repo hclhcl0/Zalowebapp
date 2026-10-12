@@ -460,7 +460,7 @@ async function handleTextMessage(userId, text, appUserId) {
       console.error("[ZALO WEBHOOK DB ERROR - OUTBOUND]", dbErr.message);
     }
   } catch (err) {
-    console.error("[Gemini] Lỗi khi gọi AI:", err.message);
+    console.error("[AI] Lỗi khi gọi nhà cung cấp AI:", err.message);
     // Fallback thân thiện khi AI lỗi
     let hotline = "1900988975";
     try {
@@ -469,7 +469,7 @@ async function handleTextMessage(userId, text, appUserId) {
     } catch(e) {}
     await sendTextMessage(
       userId,
-      `Xin lỗi, hệ thống đang gặp sự cố nhỏ (Chi tiết: ${err.message}). Vui lòng thử lại sau hoặc liên hệ trực tiếp CDC Đà Nẵng qua hotline ${hotline} để được hỗ trợ nhanh nhất.`
+      `Xin lỗi, hệ thống AI đang tạm thời không khả dụng. Vui lòng thử lại sau hoặc liên hệ trực tiếp CDC Đà Nẵng qua hotline ${hotline} để được hỗ trợ nhanh nhất.`
     );
   }
 }

@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { clearGroqKeyCache } from "@/lib/gemini";
+import { isAdmin } from "@/lib/roles";
 
 export const dynamic = "force-dynamic";
 
