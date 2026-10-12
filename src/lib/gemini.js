@@ -6,6 +6,7 @@
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { prisma } from "@/lib/prisma";
+import { canReadKnowledge, retrieveRelevantKnowledge } from "./aiKnowledge.mjs";
 
 // ============================================================
 // CACHE KIẾN THỨC (30 phút)
@@ -183,8 +184,7 @@ export async function loadKnowledgeBase() {
         title: doc.title,
         category: doc.category,
         content: doc.content,
-        allowedDepartment: doc.allowedDepartment || null,
-        normalized: removeVietnameseTones(doc.title + " " + doc.category + " " + doc.content).toLowerCase()
+        allowedDepartment: doc.allowedDepartment || null
       });
     }
     
@@ -199,66 +199,6 @@ export async function loadKnowledgeBase() {
 export function clearKnowledgeCache() {
   knowledgeBaseCache = null;
   knowledgeCacheTime = 0;
-}
-
-function removeVietnameseTones(str) {
-  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
-  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
-  str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
-  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
-  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
-  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
-  str = str.replace(/đ/g,"d");
-  str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
-  str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
-  str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
-  str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
-  str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
-  str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
-  str = str.replace(/Đ/g, "D");
-  return str;
-}
-
-function retrieveRelevantKnowledge(question, chunks, userName = "") {
-  if (!chunks || chunks.length === 0) return "";
-  
-  // Thêm tên của người dùng vào câu hỏi để tăng điểm cho chunk có chứa tên họ
-  const queryToSearch = userName ? `${question} ${userName}` : question;
-  const normalizedQ = removeVietnameseTones(queryToSearch).toLowerCase();
-  const keywords = normalizedQ.split(/\s+/).filter(w => w.length > 1);
-  
-  if (keywords.length === 0) return "";
-
-  // Score each chunk based on keyword frequency
-  const scoredChunks = chunks.map(chunk => {
-    let score = 0;
-    for (const kw of keywords) {
-      // Title/category match = 5x weight (ưu tiên tài liệu có tiêu đề khớp từ khóa)
-      const titleNorm = removeVietnameseTones(chunk.title + " " + chunk.category).toLowerCase();
-      const titleCount = titleNorm.split(kw).length - 1;
-      score += titleCount * 5;
-      // Content match = 1x weight
-      const contentCount = chunk.normalized.split(kw).length - 1;
-      score += contentCount;
-    }
-    return { ...chunk, score };
-  });
-
-  // Sort by score descending
-  scoredChunks.sort((a, b) => b.score - a.score);
-
-  // Take top 5 relevant chunks that have at least score > 0
-  const topChunks = scoredChunks.filter(c => c.score > 0).slice(0, 5);
-  
-  // Fallback: nếu không chunk nào score > 0, lấy 5 đầu tiên
-  const selectedChunks = topChunks.length > 0 ? topChunks : chunks.slice(0, 5);
-  
-  let combinedText = "";
-  for (const chunk of selectedChunks) {
-    combinedText += `\n\n[CHUYÊN MÔN: ${chunk.category.toUpperCase()}]\n--- Tài liệu: ${chunk.title} ---\n${chunk.content}`;
-  }
-  
-  return combinedText;
 }
 
 function stripMarkdown(text) {
@@ -341,35 +281,11 @@ async function prepareAIContext(userId, question) {
   // ============================================================
   // LỌC KHO TRI THỨC THEO PHÒNG BAN ĐƯỢC PHÉP XEM
   // ============================================================
-  const userDept = userProfile.department ? userProfile.department.trim().toLowerCase() : null;
-  const isStaffUser = userProfile.role.includes("NHÂN VIÊN");
-  const isAdminUser = userProfile.accessLevel === "admin" || userProfile.accessLevel === "hr";
-
-  const filteredChunks = knowledgeChunks.filter(chunk => {
-    const docDept = chunk.allowedDepartment ? chunk.allowedDepartment.trim().toLowerCase() : "";
-    
-    // Nếu tài liệu mở cho tất cả phòng ban/mọi đối tượng
-    if (!docDept || docDept === "all" || docDept === "tất cả" || docDept === "tất cả cơ quan") {
-      return true;
-    }
-
-    // Nếu tài liệu dành riêng cho Cán bộ / Chỉ nhân viên / Nội bộ cơ quan
-    if (
-      docDept === "staff_only" ||
-      docDept === "staff" ||
-      docDept.includes("nhân viên") ||
-      docDept.includes("cán bộ") ||
-      docDept.includes("nội bộ")
-    ) {
-      return isStaffUser;
-    }
-    
-    // Nếu tài liệu bị giới hạn phòng ban cụ thể
-    if (!isStaffUser) return false; // Người dân không được xem
-    if (isAdminUser) return true; // Admin/HR xem được hết
-    
-    return userDept === docDept; // Nhân viên thường phải khớp phòng ban
-  });
+  const filteredChunks = knowledgeChunks.filter(chunk => canReadKnowledge(chunk, {
+    isStaff: userProfile.role.includes("NHÂN VIÊN"),
+    accessLevel: userProfile.accessLevel,
+    department: userProfile.department,
+  }));
 
   const knowledgeText = retrieveRelevantKnowledge(question, filteredChunks, userProfile.displayName);
   
@@ -458,6 +374,8 @@ KHÔNG viết dính liền thành 1 đoạn văn lộn xộn.
 13. XƯNG HÔ: LUÔN ưu tiên gọi người dùng bằng "Tên để xưng hô", KHÔNG dùng Tên Zalo gốc trừ khi được hỏi cụ thể.
 14. KHI NGƯỜI DÙNG HỎI "TÔI LÀ AI" / "BẠN BIẾT TÔI LÀ AI KHÔNG": Hãy trả lời rõ ràng bằng tên thật của họ. Ví dụ: "Bạn là ${userProfile.displayName} - ${userProfile.role === "CÔNG DÂN" ? "khách hàng của CDC Đà Nẵng" : "cán bộ " + (userProfile.department || "CDC Đà Nẵng")}." KHÔNG nói "bạn là người dùng" hay mô tả chung chung. TUYỆT ĐỐI không dùng Tên Zalo gốc (${userProfile.zaloName}) khi trả lời câu này.
 15. YÊU CẦU XÁC THỰC CÁN BỘ: Nếu người dùng hỏi các thông tin nội bộ (như lương, tài liệu nội bộ, lịch trực...) MÀ hệ thống đang nhận diện họ ở Phân loại "CÔNG DÂN", HÃY TỪ CHỐI cung cấp và hướng dẫn họ: "Hệ thống đang nhận diện bạn là Khách hàng. Nếu bạn là cán bộ nhân viên của CDC Đà Nẵng nhưng đang dùng thiết bị hoặc tài khoản Zalo mới, vui lòng xác thực lại danh tính bằng cách nhấn vào link sau để đồng bộ quyền nội bộ: https://zcdc.ksbtdanang.vn/register?uid=${userId}"
+
+16. LỊCH DỊCH VỤ: Lịch tiêm chủng, lịch khám, giờ làm việc và địa điểm phục vụ trong tài liệu được cung cấp là thông tin dịch vụ. Không nhầm với lịch trực nội bộ hoặc hồ sơ cá nhân. Khi được hỏi, trả lời ngày/giờ, địa điểm và lưu ý có trong tài liệu; không tự suy diễn lịch ngoài thời gian tài liệu nêu.
 
 QUY TẮC BỔ SUNG TỪ ADMIN (ƯU TIÊN CAO):
 ${customPrompt}

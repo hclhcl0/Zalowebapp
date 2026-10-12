@@ -11,7 +11,6 @@
 import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendTextMessage } from "@/lib/zalo";
-import { askGemini } from "@/lib/gemini";
 
 export const dynamic = "force-dynamic";
 
