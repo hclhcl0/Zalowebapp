@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Megaphone, Mail, Users, Menu } from "lucide-react";
+import { LayoutDashboard, Megaphone, MessageSquareText, Users, Menu } from "lucide-react";
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: Mail,            label: "Nội Bộ",       href: "/salary-email" },
-  { icon: Users,           label: "Quan Tâm",     href: "/followers" },
+  { icon: LayoutDashboard,    label: "Dashboard", href: "/" },
+  { icon: MessageSquareText,  label: "Nội Bộ",    href: "/salary-email" },
+  { icon: Users,              label: "Quan Tâm",  href: "/followers" },
 ];
 
 export default function BottomNav({ onMenuOpen }) {

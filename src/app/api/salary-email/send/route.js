@@ -71,13 +71,10 @@ export async function POST(req) {
   if (!canSendInternal(session.user.role)) return NextResponse.json({ error: "Bạn không có quyền gởi tin nội bộ. Liên hệ Quản trị viên để được cấp quyền 'Tin nội bộ'." }, { status: 403 });
 
   const body = await req.json();
-  const { records, accounts, subject, batchSize = 10, batchDelayMs = 2000, customMessage, channel = "email" } = body;
+  const { records, accounts, subject, batchSize = 10, batchDelayMs = 2000, customMessage, channel = "zalo" } = body;
 
   if (!records?.length) return new Response("Không có dữ liệu nhân viên.", { status: 400 });
-  
-  if (channel !== "zalo" && !accounts?.length) {
-    return new Response("Cần ít nhất 1 tài khoản Gmail để gửi email.", { status: 400 });
-  }
+
 
   // Lấy clientId và clientSecret từ DB để dùng cho OAuth2
   let senderName = "CDC Đà Nẵng - Phòng TCHC";

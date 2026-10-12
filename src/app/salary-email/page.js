@@ -287,13 +287,11 @@ export default function SalaryEmailPage() {
 
   return (
     <div>
-      {/* Removed HEADER because banner is present */}
+      {/* Status Badge */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
-        {accounts.length > 0 && (
-          <span className="badge badge-approved" style={{ padding: "8px 12px", gap: "6px", height: "36px", display: "inline-flex", alignItems: "center" }}>
-            <Zap className="w-3.5 h-3.5 fill-current" /> {accounts.length} Gmail Pool
-          </span>
-        )}
+        <span className="badge badge-approved" style={{ padding: "8px 12px", gap: "6px", height: "36px", display: "inline-flex", alignItems: "center" }}>
+          <CheckCircle className="w-3.5 h-3.5 text-current" /> 💬 100% Gửi qua Zalo OA
+        </span>
       </div>
 
       {/* Internal Banner */}
@@ -314,58 +312,58 @@ export default function SalaryEmailPage() {
         {/* Right side config panel: Settings Card */}
         <div className="space-y-6">
           <div className="card" style={{ padding: "20px" }}>
-              <div className="card-header" style={{ marginBottom: "16px" }}>
-                <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>🔑 Gmail Account Pool</span>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div style={{
-                  background: accounts.length > 0 ? "#f0fdf4" : "#fef2f2",
-                  border: `1px solid ${accounts.length > 0 ? "#bbf7d0" : "#fecaca"}`,
-                  color: accounts.length > 0 ? "#15803d" : "#dc2626",
-                  borderRadius: "var(--radius)",
-                  padding: "12px",
-                  fontSize: "0.8rem",
-                  lineHeight: "1.5",
-                  display: "flex",
-                  gap: "8px"
-                }}>
-                  <AlertCircle className="w-4 h-4 shrink-0 text-current mt-0.5" />
-                  <div>
-                    <strong>{accounts.length > 0 ? `Đang hoạt động (${accounts.length} Gmail)` : "Chưa cấu hình"}</strong>
-                    <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                      {accounts.length > 0 
-                        ? "Tài khoản Gmail được luân phiên tự động để gửi thông tin nội bộ cơ quan."
-                        : "Vui lòng thêm tài khoản Gmail để bắt đầu thực hiện chiến dịch."}
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.8rem", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--text-muted)" }}>Số lượng Gmail:</span>
-                    <span style={{ fontWeight: 600 }}>{accounts.length}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--text-muted)" }}>Số email mỗi đợt:</span>
-                    <span style={{ fontWeight: 600 }}>{batchSize} email</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "var(--text-muted)" }}>Thời gian giãn cách:</span>
-                    <span style={{ fontWeight: 600 }}>{delayMs / 1000} giây</span>
-                  </div>
-                </div>
-
-                <a 
-                  href="/settings?tab=gmail_pool" 
-                  className="btn btn-primary"
-                  style={{ width: "100%", justifyContent: "center", textDecoration: "none", display: "inline-flex", gap: "8px" }}
-                >
-                  <Settings2 className="w-4 h-4" /> Cấu hình Gmail &amp; Tốc độ
-                </a>
+            <div className="card-header" style={{ marginBottom: "16px" }}>
+              <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>💬 Kênh gửi Zalo OA Nội Bộ</span>
               </div>
             </div>
+            <div className="space-y-4">
+              <div style={{
+                background: "#f0fdf4",
+                border: "1px solid #bbf7d0",
+                color: "#15803d",
+                borderRadius: "var(--radius)",
+                padding: "12px",
+                fontSize: "0.8rem",
+                lineHeight: "1.5",
+                display: "flex",
+                gap: "8px"
+              }}>
+                <CheckCircle className="w-4 h-4 shrink-0 text-current mt-0.5" />
+                <div>
+                  <strong>Zalo OA đang kết nối trực tiếp</strong>
+                  <p style={{ margin: "4px 0 0", color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                    Thông báo nội bộ được gửi trực tiếp vào tin nhắn Zalo cá nhân của cán bộ nhân viên, bảo mật và tức thời.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.8rem", background: "var(--bg)", padding: "12px", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-muted)" }}>Phương thức gửi:</span>
+                  <span style={{ fontWeight: 600, color: "var(--primary)" }}>Zalo Official Account</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-muted)" }}>Người quan tâm OA:</span>
+                  <span style={{ fontWeight: 600 }}>{followers.length} người</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-muted)" }}>Cán bộ đã liên kết:</span>
+                  <span style={{ fontWeight: 600, color: "#16a34a" }}>
+                    {followers.filter(f => f.userType === "staff" || f.staffLink).length} cán bộ
+                  </span>
+                </div>
+              </div>
+
+              <a 
+                href="/followers?filter=staff" 
+                className="btn btn-outline"
+                style={{ width: "100%", justifyContent: "center", textDecoration: "none", display: "inline-flex", gap: "8px" }}
+              >
+                <Users className="w-4 h-4" /> Danh sách Cán bộ Zalo
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -392,7 +390,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
   const [isDrag, setIsDrag] = useState(false);
   const [page, setPage] = useState(0);
 
-  const [channel, setChannel] = useState("email");
+  const channel = "zalo";
   const [subject, setSubject] = useState("Thông báo thông báo nội bộ Quý I/2026 - CDC Đà Nẵng");
   const [customMessage, setCustomMessage] = useState("");
 
@@ -506,7 +504,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
 
   const startSend = async () => {
     const selectedRecords = records.filter((r) => r.selected && r.status !== "success");
-    if (!selectedRecords.length || (channel !== "zalo" && !accounts.length) || isSending) return;
+    if (!selectedRecords.length || isSending) return;
     setIsSending(true);
     setIsDone(false);
     setProg({ sent: 0, total: selectedRecords.length, success: 0, failed: 0, results: [] });
@@ -613,7 +611,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
   const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
   const pageRows = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const selectedCount = records.filter((r) => r.selected && r.status !== "success").length;
-  const canSend = selectedCount > 0 && (channel === "zalo" || accounts.length > 0) && !isSending;
+  const canSend = selectedCount > 0 && !isSending;
 
   const toggleSelectAll = (checked) => {
     setRecords((prev) => prev.map((r) => ({ ...r, selected: checked })));
@@ -884,51 +882,28 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
         <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
           <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold" }}>2</span>
-            <span>Cấu hình gửi thông báo nội bộ (Email & Zalo OA)</span>
+            <span>Cấu hình gửi thông báo nội bộ (Zalo OA)</span>
           </div>
         </div>
         <div className="space-y-4">
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600 }}>Kênh gửi thông báo</label>
-            <div style={{ display: "flex", gap: "16px", marginTop: "6px", flexWrap: "wrap" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                <input 
-                  type="radio" 
-                  name="channel-salary" 
-                  value="email" 
-                  checked={channel === "email"} 
-                  onChange={() => setChannel("email")} 
-                  style={{ cursor: "pointer" }}
-                />
-                📧 Chỉ gửi Gmail
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                <input 
-                  type="radio" 
-                  name="channel-salary" 
-                  value="zalo" 
-                  checked={channel === "zalo"} 
-                  onChange={() => setChannel("zalo")} 
-                  style={{ cursor: "pointer" }}
-                />
-                💬 Chỉ gửi Zalo OA
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                <input 
-                  type="radio" 
-                  name="channel-salary" 
-                  value="both" 
-                  checked={channel === "both"} 
-                  onChange={() => setChannel("both")} 
-                  style={{ cursor: "pointer" }}
-                />
-                🔄 Gửi cả hai kênh
-              </label>
-            </div>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px 14px",
+            background: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            borderRadius: "var(--radius)",
+            color: "#1d4ed8",
+            fontSize: "0.85rem",
+            fontWeight: 500
+          }}>
+            <MessageSquare className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Kênh gửi: <strong>100% qua Zalo OA nội bộ</strong> (tự động nhận diện cán bộ qua danh bạ Zalo)</span>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Tiêu đề (Tiêu đề email / Tiêu đề tin nhắn Zalo)</label>
+            <label className="form-label">Tiêu đề tin nhắn Zalo</label>
             <input
               type="text"
               value={subject}
@@ -957,35 +932,9 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               fontSize: "0.8rem",
               lineHeight: "1.5"
             }}>
-              {channel === "email" && (
-                <>
-                  <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                    Sẽ gửi {selectedCount} email thông báo nội bộ thông qua {accounts.length} tài khoản Gmail.
-                  </p>
-                  {accounts.length > 0 && (
-                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                      Trung bình mỗi tài khoản gửi {Math.ceil(selectedCount / accounts.length)} email (Round-Robin).
-                    </p>
-                  )}
-                </>
-              )}
-              {channel === "zalo" && (
-                <p style={{ margin: 0, fontWeight: 700 }}>
-                  Sẽ gửi {selectedCount} tin nhắn thông báo nội bộ qua Zalo OA cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
-                </p>
-              )}
-              {channel === "both" && (
-                <>
-                  <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                    Sẽ gửi đồng thời {selectedCount} email (qua Gmail Pool) & tin nhắn Zalo OA cho cán bộ.
-                  </p>
-                  {accounts.length > 0 && (
-                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                      Gmail: mỗi tài khoản gửi khoảng {Math.ceil(selectedCount / accounts.length)} email.
-                    </p>
-                  )}
-                </>
-              )}
+              <p style={{ margin: 0, fontWeight: 700 }}>
+                💬 Sẽ gửi {selectedCount} tin nhắn thông báo nội bộ qua Zalo OA cho cán bộ (tự động khớp danh bạ Zalo OA hoặc StaffZaloLink).
+              </p>
             </div>
           )}
 
@@ -1001,7 +950,7 @@ function SalaryTab({ accounts, batchSize, delayMs, followers }) {
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" /> Bắt đầu gửi thông báo nội bộ ({channel === "email" ? "Gmail" : channel === "zalo" ? "Zalo" : "Gmail & Zalo"})
+                <Send className="w-4 h-4" /> Bắt đầu gửi qua Zalo OA
               </>
             )}
           </button>
@@ -1227,7 +1176,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   
-  const [channel, setChannel] = useState("email");
+  const channel = "zalo";
   const [subject, setSubject] = useState("Thông báo chi trả thu nhập - CDC Đà Nẵng");
   const [customMessage, setCustomMessage] = useState("");
   const [footerNote, setFooterNote] = useState("");
@@ -1335,16 +1284,8 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
       setParseError("Vui lòng chọn cột Họ tên nhân viên.");
       return;
     }
-    if (channel !== "zalo" && !columnMapping.emailCol) {
-      setParseError("Vui lòng chọn cột Email nhân viên (bắt buộc khi gửi qua kênh Email).");
-      return;
-    }
-    if (channel === "zalo" && !columnMapping.phoneCol && !columnMapping.zaloIdCol) {
-      setParseError("Vui lòng chọn ít nhất cột Số điện thoại hoặc Zalo ID để làm tiêu chí đối chiếu Zalo.");
-      return;
-    }
-    if (channel === "both" && !columnMapping.emailCol && !columnMapping.phoneCol && !columnMapping.zaloIdCol) {
-      setParseError("Vui lòng chọn cột Email và ít nhất một cột liên hệ Zalo (SĐT hoặc Zalo ID) khi gửi cả hai kênh.");
+    if (!columnMapping.phoneCol && !columnMapping.zaloIdCol) {
+      setParseError("Vui lòng chọn cột Số điện thoại hoặc Zalo ID để hệ thống đối chiếu gửi tin Zalo OA.");
       return;
     }
     setParsing(true);
@@ -1424,7 +1365,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
 
   const startSend = async () => {
     const selected = records.filter((r) => r.selected && r.status !== "success");
-    if (!selected.length || (channel !== "zalo" && !accounts.length) || isSending) return;
+    if (!selected.length || isSending) return;
     setIsSending(true);
     setIsDone(false);
     setProg({ sent: 0, total: selected.length, success: 0, failed: 0, results: [] });
@@ -1536,7 +1477,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
   const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
   const pageRows = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const selectedCount = records.filter((r) => r.selected && r.status !== "success").length;
-  const canSend = selectedCount > 0 && (channel === "zalo" || accounts.length > 0) && !isSending;
+  const canSend = selectedCount > 0 && !isSending;
 
   return (
     <div className="space-y-6">
@@ -1667,43 +1608,9 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                     <h3 style={{ margin: "0 0 10px 0", fontWeight: 700, color: "var(--text)", borderBottom: "1px solid var(--border)", paddingBottom: "6px" }}>1. Thiết lập cột cơ bản</h3>
                     
                     {/* Chọn kênh gửi ngay tại Bước 2 */}
-                    <div className="form-group" style={{ marginBottom: "16px", padding: "10px", background: "var(--primary-light)", borderRadius: "6px", border: "1px solid var(--border-focus)" }}>
-                      <label className="form-label" style={{ fontWeight: 700, color: "var(--primary)", fontSize: "0.78rem" }}>🎯 LỰA CHỌN KÊNH GỬI TRƯỚC:</label>
-                      <div style={{ display: "flex", gap: "14px", marginTop: "6px", flexWrap: "wrap" }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
-                          <input 
-                            type="radio" 
-                            name="channel-custom-step2" 
-                            value="email" 
-                            checked={channel === "email"} 
-                            onChange={() => setChannel("email")} 
-                            style={{ cursor: "pointer" }}
-                          />
-                          📧 Chỉ gửi Gmail
-                        </label>
-                        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
-                          <input 
-                            type="radio" 
-                            name="channel-custom-step2" 
-                            value="zalo" 
-                            checked={channel === "zalo"} 
-                            onChange={() => setChannel("zalo")} 
-                            style={{ cursor: "pointer" }}
-                          />
-                          💬 Chỉ gửi Zalo OA
-                        </label>
-                        <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}>
-                          <input 
-                            type="radio" 
-                            name="channel-custom-step2" 
-                            value="both" 
-                            checked={channel === "both"} 
-                            onChange={() => setChannel("both")} 
-                            style={{ cursor: "pointer" }}
-                          />
-                          🔄 Gửi cả hai kênh
-                        </label>
-                      </div>
+                    <div className="form-group" style={{ marginBottom: "16px", padding: "10px", background: "#f0fdf4", borderRadius: "6px", border: "1px solid #bbf7d0", color: "#166534", fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+                      <CheckCircle className="w-4 h-4 text-success shrink-0" />
+                      <span>Kênh gửi: <strong>100% qua Zalo OA nội bộ</strong> (tự động nhận diện theo SĐT / Tên cán bộ)</span>
                     </div>
 
                     <div className="form-group">
@@ -1724,19 +1631,14 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
 
                     <div className="form-group">
                       <label className="form-label">
-                        Cột Email nhân viên 
-                        {channel === "zalo" ? (
-                          <span style={{ color: "var(--text-light)", fontWeight: 400, marginLeft: "4px" }}>(Không bắt buộc vì chỉ gửi Zalo)</span>
-                        ) : (
-                          <span style={{ color: "var(--danger)", marginLeft: "4px" }}>* (Bắt buộc gửi Email)</span>
-                        )}
+                        Cột Email nhân viên <span style={{ color: "var(--text-light)", fontWeight: 400, marginLeft: "4px" }}>(Tùy chọn - không bắt buộc)</span>
                       </label>
                       <select
                         value={columnMapping.emailCol}
                         onChange={(e) => setColumnMapping((p) => ({ ...p, emailCol: e.target.value }))}
                         className="form-select"
                       >
-                        <option value="">-- Chọn cột chứa Email --</option>
+                        <option value="">-- Chọn cột chứa Email (nếu có) --</option>
                         {headers.map((h) => (
                           <option key={h} value={h}>
                             {h}
@@ -2055,47 +1957,13 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
             <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
               <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>3</span>
-                <span>Cấu hình gửi thông báo tùy biến (Email & Zalo OA)</span>
+                <span>Cấu hình gửi thông báo nội bộ qua Zalo OA</span>
               </div>
             </div>
             <div className="space-y-4">
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 600 }}>Kênh gửi thông báo</label>
-                <div style={{ display: "flex", gap: "16px", marginTop: "6px", flexWrap: "wrap" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                    <input 
-                      type="radio" 
-                      name="channel-custom" 
-                      value="email" 
-                      checked={channel === "email"} 
-                      onChange={() => setChannel("email")} 
-                      style={{ cursor: "pointer" }}
-                    />
-                    📧 Chỉ gửi Gmail
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                    <input 
-                      type="radio" 
-                      name="channel-custom" 
-                      value="zalo" 
-                      checked={channel === "zalo"} 
-                      onChange={() => setChannel("zalo")} 
-                      style={{ cursor: "pointer" }}
-                    />
-                    💬 Chỉ gửi Zalo OA
-                  </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                    <input 
-                      type="radio" 
-                      name="channel-custom" 
-                      value="both" 
-                      checked={channel === "both"} 
-                      onChange={() => setChannel("both")} 
-                      style={{ cursor: "pointer" }}
-                    />
-                    🔄 Gửi cả hai kênh
-                  </label>
-                </div>
+              <div className="form-group" style={{ padding: "10px", background: "#f0fdf4", borderRadius: "6px", border: "1px solid #bbf7d0", color: "#166534", fontSize: "0.82rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }}>
+                <CheckCircle className="w-4 h-4 text-success shrink-0" />
+                <span>Kênh gửi: <strong>Zalo Official Account</strong> (100% tin nhắn gửi tới Zalo cán bộ)</span>
               </div>
 
               <div className="form-group">
@@ -2129,43 +1997,17 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
 
               {records.length > 0 && (
                 <div style={{
-                  background: "var(--primary-light)",
-                  border: "1px solid var(--border-focus)",
-                  color: "var(--primary)",
+                  background: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                  color: "#166534",
                   borderRadius: "var(--radius)",
                   padding: "12px",
                   fontSize: "0.8rem",
                   lineHeight: "1.5"
                 }}>
-                  {channel === "email" && (
-                    <>
-                      <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                        Sẽ gửi {selectedCount} email tùy biến thông qua {accounts.length} tài khoản Gmail.
-                      </p>
-                      {accounts.length > 0 && (
-                        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                          Trung bình mỗi tài khoản gửi {Math.ceil(selectedCount / accounts.length)} email (Round-Robin).
-                        </p>
-                      )}
-                    </>
-                  )}
-                  {channel === "zalo" && (
-                    <p style={{ margin: 0, fontWeight: 700 }}>
-                      Sẽ gửi {selectedCount} tin nhắn Zalo OA tùy biến cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
-                    </p>
-                  )}
-                  {channel === "both" && (
-                    <>
-                      <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                        Sẽ gửi đồng thời {selectedCount} email tùy biến (qua Gmail Pool) & tin nhắn Zalo OA cho cán bộ.
-                      </p>
-                      {accounts.length > 0 && (
-                        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                          Gmail: mỗi tài khoản gửi khoảng {Math.ceil(selectedCount / accounts.length)} email.
-                        </p>
-                      )}
-                    </>
-                  )}
+                  <p style={{ margin: 0, fontWeight: 700 }}>
+                    Sẽ gửi {selectedCount} tin nhắn thông báo nội bộ qua Zalo OA cho cán bộ cơ quan (tự động khớp Zalo theo SĐT hoặc Họ tên).
+                  </p>
                 </div>
               )}
 
@@ -2181,7 +2023,7 @@ function CustomSalaryTab({ accounts, batchSize, delayMs, followers }) {
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4" /> Bắt đầu gửi ({channel === "email" ? "Gmail" : channel === "zalo" ? "Zalo" : "Gmail & Zalo"})
+                    <Send className="w-4 h-4" /> Bắt đầu gửi qua Zalo OA
                   </>
                 )}
               </button>
@@ -2375,7 +2217,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const [channel, setChannel] = useState("email");
+  const channel = "zalo";
   const [subject, setSubject] = useState("");
   const [customMessage, setCustomMessage] = useState("");
   const [showKhoanDetail, setShowKhoanDetail] = useState(true);
@@ -2494,7 +2336,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
 
   const startSend = async () => {
     const selected = records.filter((r) => r.selected && r.status !== "success");
-    if (!selected.length || (channel !== "zalo" && !accounts.length) || isSending) return;
+    if (!selected.length || isSending) return;
     setIsSending(true);
     setIsDone(false);
     setProg({ sent: 0, total: selected.length, success: 0, failed: 0, results: [] });
@@ -2599,7 +2441,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
   const totalPages = Math.ceil(filteredRecords.length / PAGE_SIZE);
   const pageRows = filteredRecords.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const selectedCount = records.filter((r) => r.selected && r.status !== "success").length;
-  const canSend = selectedCount > 0 && (channel === "zalo" || accounts.length > 0) && !isSending;
+  const canSend = selectedCount > 0 && !isSending;
 
   return (
     <div className="space-y-6">
@@ -2876,51 +2718,28 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
         <div className="card-header" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "12px", marginBottom: "16px" }}>
           <div className="card-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", justifyCenter: "center", width: "24px", height: "24px", borderRadius: "50%", background: "var(--primary)", color: "white", fontSize: "0.75rem", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>2</span>
-            <span>Cấu hình &amp; Tiến hành gửi cập nhật khác (Email & Zalo OA)</span>
+            <span>Cấu hình &amp; Tiến hành gửi cập nhật khác (Zalo OA)</span>
           </div>
         </div>
         <div className="space-y-4">
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600 }}>Kênh gửi thông báo</label>
-            <div style={{ display: "flex", gap: "16px", marginTop: "6px", flexWrap: "wrap" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                <input 
-                  type="radio" 
-                  name="channel-tax" 
-                  value="email" 
-                  checked={channel === "email"} 
-                  onChange={() => setChannel("email")} 
-                  style={{ cursor: "pointer" }}
-                />
-                📧 Chỉ gửi Gmail
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                <input 
-                  type="radio" 
-                  name="channel-tax" 
-                  value="zalo" 
-                  checked={channel === "zalo"} 
-                  onChange={() => setChannel("zalo")} 
-                  style={{ cursor: "pointer" }}
-                />
-                💬 Chỉ gửi Zalo OA
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", fontSize: "0.85rem" }}>
-                <input 
-                  type="radio" 
-                  name="channel-tax" 
-                  value="both" 
-                  checked={channel === "both"} 
-                  onChange={() => setChannel("both")} 
-                  style={{ cursor: "pointer" }}
-                />
-                🔄 Gửi cả hai kênh
-              </label>
-            </div>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px 14px",
+            background: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            borderRadius: "var(--radius)",
+            color: "#1d4ed8",
+            fontSize: "0.85rem",
+            fontWeight: 500
+          }}>
+            <MessageSquare className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Kênh gửi: <strong>100% qua Zalo OA nội bộ</strong> (tự động nhận diện cán bộ qua danh bạ Zalo)</span>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Tiêu đề thông báo (Subject / Tiêu đề Zalo)</label>
+            <label className="form-label">Tiêu đề thông báo (Tiêu đề Zalo)</label>
             <input
               type="text"
               value={subject}
@@ -2962,35 +2781,9 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               fontSize: "0.8rem",
               lineHeight: "1.5"
             }}>
-              {channel === "email" && (
-                <>
-                  <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                    Sẽ gửi {selectedCount} email thông tin nội bộ khác thông qua {accounts.length} tài khoản Gmail.
-                  </p>
-                  {accounts.length > 0 && (
-                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                      Trung bình mỗi tài khoản gửi {Math.ceil(selectedCount / accounts.length)} email (Round-Robin).
-                    </p>
-                  )}
-                </>
-              )}
-              {channel === "zalo" && (
-                <p style={{ margin: 0, fontWeight: 700 }}>
-                  Sẽ gửi {selectedCount} tin nhắn Zalo OA thông tin nội bộ khác cho cán bộ (yêu cầu cán bộ đã quan tâm Zalo OA).
-                </p>
-              )}
-              {channel === "both" && (
-                <>
-                  <p style={{ margin: "0 0 4px 0", fontWeight: 700 }}>
-                    Sẽ gửi đồng thời {selectedCount} email thông tin nội bộ khác (qua Gmail Pool) & tin nhắn Zalo OA cho cán bộ.
-                  </p>
-                  {accounts.length > 0 && (
-                    <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                      Gmail: mỗi tài khoản gửi khoảng {Math.ceil(selectedCount / accounts.length)} email.
-                    </p>
-                  )}
-                </>
-              )}
+              <p style={{ margin: 0, fontWeight: 700 }}>
+                💬 Sẽ gửi {selectedCount} tin nhắn Zalo OA thông tin nội bộ khác cho cán bộ (tự động khớp danh bạ Zalo OA hoặc StaffZaloLink).
+              </p>
             </div>
           )}
 
@@ -3006,7 +2799,7 @@ function TaxTab({ accounts, batchSize, delayMs, followers }) {
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" /> Bắt đầu gửi ({channel === "email" ? "Gmail" : channel === "zalo" ? "Zalo" : "Gmail & Zalo"})
+                <Send className="w-4 h-4" /> Bắt đầu gửi qua Zalo OA
               </>
             )}
           </button>

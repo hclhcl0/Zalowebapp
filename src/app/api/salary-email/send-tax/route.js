@@ -88,15 +88,11 @@ export async function POST(req) {
       batchDelayMs = 2000,
       customMessage,
       showKhoanDetail = true,
-      channel = "email"
+      channel = "zalo"
     } = body;
 
     if (!records?.length) {
       return new Response("Không có dữ liệu nhân viên.", { status: 400 });
-    }
-    
-    if (channel !== "zalo" && !accounts?.length) {
-      return new Response("Cần ít nhất 1 tài khoản Gmail để gửi email.", { status: 400 });
     }
 
     // Lấy clientId và clientSecret từ DB để dùng cho OAuth2
