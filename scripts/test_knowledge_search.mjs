@@ -23,9 +23,11 @@ async function testSearch() {
       "Vắc xin Hexaxim 6 trong 1 của Pháp phòng những bệnh gì?",
       "Sốt xuất huyết có vắc xin Qdenga chưa và tiêm mấy liều?",
       "Dấu hiệu sốt xuất huyết trở nặng cần đến bệnh viện ngay lập tức?",
-      "Trẻ bị tay chân miệng chăm sóc tại nhà thế nào và thực hiện 3 sạch là gì?",
-      "Quy trình rửa tay 6 bước với xà phòng như thế nào?",
-      "Chăm sóc trẻ bị sởi và thủy đậu tại nhà cần lưu ý gì?"
+      "Trẻ uống vắc xin Rota bị nôn trớ thì có phải uống lại không?",
+      "Đang tới ngày kinh nguyệt có đi tiêm vắc xin được không?",
+      "Sau khi tiêm vắc xin chưa được 1 tháng mà lỡ có thai thì có sao không?",
+      "Trẻ bị dị ứng thức ăn trứng sữa có tiêm phòng được không?",
+      "Trẻ sinh non có lịch tiêm chủng khác trẻ bình thường không?"
     ];
 
     for (const q of testQueries) {
