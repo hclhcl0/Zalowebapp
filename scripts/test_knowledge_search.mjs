@@ -22,7 +22,10 @@ async function testSearch() {
       "Quy trình tiêm chủng tại CDC Đà Nẵng gồm các bước nào?",
       "Vắc xin Hexaxim 6 trong 1 của Pháp phòng những bệnh gì?",
       "Sốt xuất huyết có vắc xin Qdenga chưa và tiêm mấy liều?",
-      "Người già có bệnh nền tim mạch đái tháo đường cần tiêm những vắc xin gì?"
+      "Dấu hiệu sốt xuất huyết trở nặng cần đến bệnh viện ngay lập tức?",
+      "Trẻ bị tay chân miệng chăm sóc tại nhà thế nào và thực hiện 3 sạch là gì?",
+      "Quy trình rửa tay 6 bước với xà phòng như thế nào?",
+      "Chăm sóc trẻ bị sởi và thủy đậu tại nhà cần lưu ý gì?"
     ];
 
     for (const q of testQueries) {
