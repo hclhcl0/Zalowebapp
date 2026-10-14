@@ -7,6 +7,7 @@ import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
 import { prisma } from "@/lib/prisma";
 import { canReadKnowledge, retrieveRelevantKnowledge } from "./aiKnowledge.mjs";
+import { formatMediaReferenceSection } from "./mediaKnowledge.mjs";
 
 // ============================================================
 // CACHE KIẾN THỨC (30 phút)
@@ -295,6 +296,7 @@ async function prepareAIContext(userId, question) {
   }));
 
   const knowledgeText = retrieveRelevantKnowledge(question, filteredChunks, userProfile.displayName);
+  const mediaSection = formatMediaReferenceSection(question);
   
   // Ghi đè categoryList dựa theo quyền hạn
   let categoryList = "";
@@ -401,6 +403,8 @@ ${customPrompt}
 
 TÀI LIỆU CHUYÊN MÔN:
 ${knowledgeText || `(Chưa có tài liệu. Vui lòng gọi ${hotline}.)`}
+
+${mediaSection ? `\n${mediaSection}\n` : ""}
 
 ${driveSection}`;
 
