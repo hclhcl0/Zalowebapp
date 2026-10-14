@@ -6,7 +6,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const CDC_MEDIA_URL = (process.env.CDC_MEDIA_URL || "http://media.ksbtdanang.vn").replace(/\/+$/, "");
+const CDC_MEDIA_URL = (process.env.CDC_MEDIA_URL || "https://media.ksbtdanang.vn").replace(/\/+$/, "");
 
 async function syncMediaVideos() {
   console.log("==================================================================");

@@ -17,7 +17,7 @@ export async function GET(request) {
   }
 
   try {
-    const cdcMediaUrl = (process.env.CDC_MEDIA_URL || "http://media.ksbtdanang.vn").replace(/\/+$/, "");
+    const cdcMediaUrl = (process.env.CDC_MEDIA_URL || "https://media.ksbtdanang.vn").replace(/\/+$/, "");
     let mediaList = [];
     const apiUrl = `${cdcMediaUrl}/api/public/media?limit=1500`;
 

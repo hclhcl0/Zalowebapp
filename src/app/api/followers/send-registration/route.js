@@ -18,10 +18,13 @@ export async function POST(request) {
     const body = await request.json();
     const { scope = "unregistered", userIds = [] } = body;
 
-    // Lấy base URL từ request headers
-    const host = request.headers.get("host") || "localhost:3000";
-    const protocol = request.headers.get("x-forwarded-proto") || "http";
-    const baseUrl = `${protocol}://${host}`;
+    // Lấy base URL từ request headers hoặc mặc định là domain chính thức https://zcdc.ksbtdanang.vn
+    const host = request.headers.get("host") || "";
+    let baseUrl = "https://zcdc.ksbtdanang.vn";
+    if (host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
+      const protocol = request.headers.get("x-forwarded-proto") || "https";
+      baseUrl = `${protocol}://${host}`;
+    }
 
     // ── Xác định danh sách targets ──────────────────────────────────────
     let targets = [];

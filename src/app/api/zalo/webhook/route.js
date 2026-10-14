@@ -440,7 +440,16 @@ async function handleTextMessage(userId, text, appUserId) {
 
     console.log(`[AI] Xử lý câu hỏi từ ${userId}: "${trimmedText.substring(0, 100)}"`);
     const { askAI } = await import("@/lib/gemini");
-    const aiReply = await askAI(userId, trimmedText, appUserId);
+    let aiReply = await askAI(userId, trimmedText, appUserId);
+
+    // BỘ LỌC BẢO VỆ ĐƯỜNG LINK: Loại bỏ triệt để localhost, tự động nâng cấp sang HTTPS để đảm bảo link bấm được trên Zalo
+    if (typeof aiReply === "string") {
+      aiReply = aiReply
+        .replace(/https?:\/\/localhost(:\d+)?/gi, "https://media.ksbtdanang.vn")
+        .replace(/https?:\/\/127\.0\.0\.1(:\d+)?/gi, "https://media.ksbtdanang.vn")
+        .replace(/http:\/\/media\.ksbtdanang\.vn/gi, "https://media.ksbtdanang.vn");
+    }
+
     await sendTextMessage(userId, aiReply);
     console.log(`[Gemini] Đã trả lời ${userId} (${aiReply.length} ký tự)`);
     

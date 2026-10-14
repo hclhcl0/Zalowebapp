@@ -76,7 +76,7 @@ export default function AiKnowledgePage() {
   };
 
   const handleSyncCdcMedia = async () => {
-    if (!confirm("Bắt đầu đồng bộ toàn bộ tài liệu truyền thông (Video, Infographic, Tờ rơi, Cẩm nang, Audio) từ CDC Media (http://media.ksbtdanang.vn) vào khối óc AI?")) return;
+    if (!confirm("Bắt đầu đồng bộ toàn bộ tài liệu truyền thông (Video, Infographic, Tờ rơi, Cẩm nang, Audio) từ CDC Media (https://media.ksbtdanang.vn) vào khối óc AI?")) return;
     setSyncingCdcMedia(true);
     try {
       const res = await fetch("/api/cron/sync-media", { method: "POST" });

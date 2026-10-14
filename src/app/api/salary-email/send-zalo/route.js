@@ -69,9 +69,12 @@ export async function POST(request) {
     }
 
     // Tải tên miền hiện tại để chuyển đường dẫn ảnh tương đối thành tuyệt đối (yêu cầu của Zalo)
-    const host = request.headers.get("host") || "localhost:3000";
-    const protocol = request.headers.get("x-forwarded-proto") || "http";
-    const baseUrl = `${protocol}://${host}`;
+    const host = request.headers.get("host") || "";
+    let baseUrl = "https://zcdc.ksbtdanang.vn";
+    if (host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
+      const protocol = request.headers.get("x-forwarded-proto") || "https";
+      baseUrl = `${protocol}://${host}`;
+    }
 
     const processedElements = elements.map(el => {
       let imageUrl = el.imageUrl || "";
