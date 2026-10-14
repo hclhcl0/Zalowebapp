@@ -1009,6 +1009,20 @@ export default function InquiriesPage() {
               <RefreshCw size={24} className="animate-spin" style={{ margin: "0 auto 10px" }} />
               Đang tải danh mục phân công...
             </div>
+          ) : topics.length === 0 ? (
+            <div className="card" style={{ padding: "40px", textAlign: "center" }}>
+              <p style={{ color: "var(--text-muted)", marginBottom: "14px", fontSize: "0.95rem" }}>
+                Hệ thống chưa tải được danh mục phân công hoặc chưa được khởi tạo.
+              </p>
+              <button
+                onClick={fetchTopics}
+                className="btn btn-primary"
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px", margin: "0 auto" }}
+              >
+                <RefreshCw size={16} />
+                Tải lại / Khởi tạo 8 nhóm chủ đề
+              </button>
+            </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "16px" }}>
               {topics.map((topic) => {

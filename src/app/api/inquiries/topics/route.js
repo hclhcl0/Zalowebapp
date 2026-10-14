@@ -17,6 +17,10 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    // Tự động khởi tạo 8 chủ đề mặc định nếu database chưa có
+    const { ensureDefaultTopics } = await import("@/lib/inquiryService.mjs");
+    await ensureDefaultTopics();
+
     // 1. Lấy danh sách các chủ đề phân công
     const topics = await prisma.topicAssignment.findMany({
       orderBy: { id: "asc" },
