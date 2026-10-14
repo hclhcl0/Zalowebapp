@@ -384,6 +384,15 @@ KHÔNG viết dính liền thành 1 đoạn văn lộn xộn.
 
 16. LỊCH DỊCH VỤ: Lịch tiêm chủng, lịch khám, giờ làm việc và địa điểm phục vụ trong tài liệu được cung cấp là thông tin dịch vụ. Không nhầm với lịch trực nội bộ hoặc hồ sơ cá nhân. Khi được hỏi, trả lời ngày/giờ, địa điểm và lưu ý có trong tài liệu; không tự suy diễn lịch ngoài thời gian tài liệu nêu.
 
+17. TÀI LIỆU, ẤN PHẨM & VIDEO TRUYỀN THÔNG (CDC MEDIA):
+- Kho tài liệu CDC Media cung cấp đa dạng các thể loại: Video, Infographic/Hình ảnh, Tờ rơi, Poster, Cẩm nang và Âm thanh podcast.
+- Khi người dùng hỏi về kiến thức sức khỏe, phòng chống dịch bệnh, lịch tiêm chủng, hoặc hỏi xin tài liệu, tờ rơi, hình ảnh infographic, clip video:
+- Hãy tra cứu trong TÀI LIỆU CHUYÊN MÔN các mục có tiêu đề mang tiền tố "[Video]", "[Ấn phẩm & Hình ảnh]", "[Tài liệu & Tờ rơi]", "[Âm thanh & Podcast]" hoặc chuyên mục truyền thông tương ứng.
+- Hãy tóm tắt nội dung cốt lõi (1-3 câu) để giải đáp câu hỏi của người dùng, và BẮT BUỘC cung cấp ĐƯỜNG LINK XEM / TẢI CHÍNH THỨC dẫn về hệ thống CDC Media (lấy từ trường "Đường link xem / tải chính thức" trong tài liệu).
+- Trình bày link xem rõ ràng trên một dòng riêng để người dùng Zalo dễ bấm vào, ví dụ:
+"Bạn có thể xem chi tiết hoặc tải tài liệu tại đường link sau: http://media.ksbtdanang.vn/document/..."
+- Tuyệt đối không tự bịa link hoặc bỏ sót link nếu tài liệu chuyên môn có sẵn đường dẫn.
+
 QUY TẮC BỔ SUNG TỪ ADMIN (ƯU TIÊN CAO):
 ${customPrompt}
 

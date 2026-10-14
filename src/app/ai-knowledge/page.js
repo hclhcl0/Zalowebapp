@@ -11,6 +11,7 @@ export default function AiKnowledgePage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [syncingId, setSyncingId] = useState(null);
+  const [syncingCdcMedia, setSyncingCdcMedia] = useState(false);
   
   const [uploadType, setUploadType] = useState("file"); // "file" or "link"
   const [driveUrl, setDriveUrl] = useState("");
@@ -72,6 +73,25 @@ export default function AiKnowledgePage() {
     e.preventDefault();
     setSearchKeyword(searchInput);
     setPage(1); // Reset về trang 1 khi tìm kiếm mới
+  };
+
+  const handleSyncCdcMedia = async () => {
+    if (!confirm("Bắt đầu đồng bộ toàn bộ tài liệu truyền thông (Video, Infographic, Tờ rơi, Cẩm nang, Audio) từ CDC Media (http://media.ksbtdanang.vn) vào khối óc AI?")) return;
+    setSyncingCdcMedia(true);
+    try {
+      const res = await fetch("/api/cron/sync-media", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        alert(json.message || "Đồng bộ tài liệu truyền thông thành công!");
+        fetchDocuments(page, searchKeyword, audienceFilter);
+      } else {
+        alert("Lỗi đồng bộ: " + (json.error || "Không thể kết nối CDC Media"));
+      }
+    } catch (e) {
+      alert("Lỗi kết nối khi gọi đồng bộ video");
+    } finally {
+      setSyncingCdcMedia(false);
+    }
   };
 
   const handleUpload = async (e) => {
@@ -416,6 +436,20 @@ export default function AiKnowledgePage() {
               >
                 📥 Sao lưu (JSON)
               </a>
+              <button
+                type="button"
+                onClick={handleSyncCdcMedia}
+                disabled={syncingCdcMedia}
+                className="btn btn-outline btn-sm"
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#fdf4ff", borderColor: "#f0abfc", color: "#a21caf", fontWeight: "600" }}
+                title="Đồng bộ toàn bộ tài liệu truyền thông (Video, Infographic, Tờ rơi, Cẩm nang, Audio) từ CDC Media vào Khối óc AI"
+              >
+                {syncingCdcMedia ? (
+                  <><span className="spinner" style={{ width: 12, height: 12, borderColor: "rgba(162,28,175,0.3)", borderTopColor: "#a21caf" }} /> Đang đồng bộ...</>
+                ) : (
+                  <>📚 Đồng bộ Tài liệu CDC Media</>
+                )}
+              </button>
             </div>
           </div>
 

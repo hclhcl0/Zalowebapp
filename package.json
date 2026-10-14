@@ -6,6 +6,7 @@
     "dev": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev",
     "build": "prisma generate && node scripts/db-sync.mjs && next build",
     "sync:camnang": "python scripts/sync_camnang.py && node scripts/import_camnang_to_knowledge.mjs",
+    "sync:media": "node scripts/sync_cdc_media.mjs",
     "start": "next start",
     "lint": "eslint"
   },
