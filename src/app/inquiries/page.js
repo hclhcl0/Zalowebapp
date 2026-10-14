@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import {
   MessageSquare,
@@ -23,6 +23,13 @@ import {
   Check,
   X,
   BookOpen,
+  User,
+  Calendar,
+  CreditCard,
+  Tag,
+  History,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 
 export default function InquiriesPage() {
@@ -41,13 +48,16 @@ export default function InquiriesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState({ total: 0, pendingStaff: 0, staffReplied: 0, aiResolved: 0 });
 
-  // Reply Modal State
+  // Reply Modal & Context State
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [inquiryContext, setInquiryContext] = useState(null);
+  const [loadingContext, setLoadingContext] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [saveToKnowledge, setSaveToKnowledge] = useState(true);
   const [sendingReply, setSendingReply] = useState(false);
   const [replySuccess, setReplySuccess] = useState("");
   const [replyError, setReplyError] = useState("");
+  const chatBottomRef = useRef(null);
 
   // Topics Management State
   const [topics, setTopics] = useState([]);
@@ -143,6 +153,35 @@ export default function InquiriesPage() {
   }, [fetchAnalytics, activeTab]);
 
   // ============================================================
+  // OPEN REPLY MODAL & FETCH FULL CONTEXT (IDENTITY & CHAT HISTORY)
+  // ============================================================
+  const handleOpenReplyModal = async (inquiry) => {
+    setSelectedInquiry(inquiry);
+    setReplyText(inquiry.staffReply || inquiry.aiDraftReply || "");
+    setReplyError("");
+    setReplySuccess("");
+    setInquiryContext(null);
+    setLoadingContext(true);
+
+    try {
+      const res = await fetch(`/api/inquiries/${inquiry.id}/context`);
+      const json = await res.json();
+      if (json.success) {
+        setInquiryContext(json.data);
+        setTimeout(() => {
+          if (chatBottomRef.current) {
+            chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 200);
+      }
+    } catch (err) {
+      console.error("Lỗi tải ngữ cảnh câu hỏi:", err);
+    } finally {
+      setLoadingContext(false);
+    }
+  };
+
+  // ============================================================
   // SEND REPLY TO CITIZEN VIA ZALO
   // ============================================================
   const handleSendReply = async () => {
@@ -227,6 +266,10 @@ export default function InquiriesPage() {
         return { bg: "#ecfdf5", color: "#047857", border: "#a7f3d0" };
       case "DINH_DUONG":
         return { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" };
+      case "BENH_KHONG_LAY":
+        return { bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" };
+      case "THU_TUC":
+        return { bg: "#f1f5f9", color: "#334155", border: "#cbd5e1" };
       default:
         return { bg: "#f8fafc", color: "#475569", border: "#e2e8f0" };
     }
@@ -258,7 +301,7 @@ export default function InquiriesPage() {
                   Tiếp Nhận & Điều Phối Câu Hỏi Người Dân
                 </h1>
                 <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", margin: "2px 0 0" }}>
-                  Tự động phân loại chủ đề y tế, điều phối đến Bác sĩ phụ trách và giải đáp trực tiếp qua Zalo
+                  Xác định danh tính người hỏi, xem lịch sử hội thoại Zalo và trả lời trực tiếp cho người dân
                 </p>
               </div>
             </div>
@@ -612,7 +655,7 @@ export default function InquiriesPage() {
               <div style={{ position: "relative", minWidth: 220 }}>
                 <input
                   type="text"
-                  placeholder="🔍 Tìm câu hỏi, người dân..."
+                  placeholder="🔍 Tìm câu hỏi, người dân, SĐT..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -646,6 +689,10 @@ export default function InquiriesPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {inquiries.map((inquiry) => {
                 const badge = getTopicBadgeStyle(inquiry.topic);
+                const follower = inquiry.follower;
+                const displayName = follower?.fullName || follower?.displayName || inquiry.citizenName || "Người dân Zalo";
+                const phone = follower?.phone;
+
                 return (
                   <div
                     key={inquiry.id}
@@ -662,12 +709,72 @@ export default function InquiriesPage() {
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 14 }}>
                       <div style={{ flex: 1 }}>
-                        {/* Header: Citizen info & Topic Badge */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "8px" }}>
-                          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text)" }}>
-                            👤 {inquiry.citizenName || "Người dân Zalo"}
-                          </span>
+                        {/* Header: Citizen info & Avatar & Topic Badge */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
+                          {/* Citizen Avatar / Initials */}
+                          {follower?.avatarUrl ? (
+                            <img
+                              src={follower.avatarUrl}
+                              alt={displayName}
+                              style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--border)" }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: 34,
+                                height: 34,
+                                borderRadius: "50%",
+                                background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                                color: "#fff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "0.85rem",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {displayName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
 
+                          {/* Identity Info */}
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span style={{ fontWeight: 800, fontSize: "0.96rem", color: "var(--text)" }}>
+                                {displayName}
+                              </span>
+                              {follower?.fullName && follower?.displayName && follower.fullName !== follower.displayName && (
+                                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                                  (Zalo: {follower.displayName})
+                                </span>
+                              )}
+                              {phone && (
+                                <a
+                                  href={`tel:${phone}`}
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    fontSize: "0.78rem",
+                                    color: "var(--primary)",
+                                    background: "var(--primary-light)",
+                                    padding: "2px 8px",
+                                    borderRadius: "12px",
+                                    fontWeight: 600,
+                                  }}
+                                  title="Bấm để gọi điện"
+                                >
+                                  <Phone size={12} />
+                                  {phone}
+                                </a>
+                              )}
+                            </div>
+                            <div style={{ fontSize: "0.72rem", color: "var(--text-light)" }}>
+                              Zalo ID: {inquiry.zaloUserId}
+                            </div>
+                          </div>
+
+                          {/* Topic Badge */}
                           <span
                             style={{
                               background: badge.bg,
@@ -677,6 +784,7 @@ export default function InquiriesPage() {
                               padding: "2px 8px",
                               fontSize: "0.75rem",
                               fontWeight: 700,
+                              marginLeft: "auto",
                             }}
                           >
                             {inquiry.topicLabel || inquiry.topic}
@@ -750,7 +858,7 @@ export default function InquiriesPage() {
                           ❓ "{inquiry.question}"
                         </div>
 
-                        {/* Staff Reply or AI draft */}
+                        {/* Staff Reply if already replied */}
                         {inquiry.staffReply && (
                           <div
                             style={{
@@ -787,6 +895,11 @@ export default function InquiriesPage() {
                               )}
                             </span>
                           )}
+                          {follower?.interestGroup && (
+                            <span>
+                              🎯 Nhóm: <strong>{follower.interestGroup}</strong>
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -794,12 +907,7 @@ export default function InquiriesPage() {
                       <div>
                         {inquiry.status === "pending_staff" ? (
                           <button
-                            onClick={() => {
-                              setSelectedInquiry(inquiry);
-                              setReplyText(inquiry.aiDraftReply || "");
-                              setReplyError("");
-                              setReplySuccess("");
-                            }}
+                            onClick={() => handleOpenReplyModal(inquiry)}
                             className="btn btn-primary"
                             style={{
                               padding: "8px 16px",
@@ -811,16 +919,11 @@ export default function InquiriesPage() {
                             }}
                           >
                             <Send size={15} />
-                            Trả lời ngay
+                            Xem & Trả lời
                           </button>
                         ) : (
                           <button
-                            onClick={() => {
-                              setSelectedInquiry(inquiry);
-                              setReplyText(inquiry.staffReply || inquiry.aiDraftReply || "");
-                              setReplyError("");
-                              setReplySuccess("");
-                            }}
+                            onClick={() => handleOpenReplyModal(inquiry)}
                             className="btn btn-outline"
                             style={{
                               padding: "6px 12px",
@@ -831,7 +934,7 @@ export default function InquiriesPage() {
                               whiteSpace: "nowrap",
                             }}
                           >
-                            Xem chi tiết / Sửa
+                            Xem lịch sử / Sửa
                           </button>
                         )}
                       </div>
@@ -1164,7 +1267,7 @@ export default function InquiriesPage() {
       )}
 
       {/* ============================================================ */}
-      {/* MODAL: CÁN BỘ TRẢ LỜI CÂU HỎI NGƯỜI DÂN QUA ZALO */}
+      {/* MODAL / DRAWER: XÁC ĐỊNH NGƯỜI HỎI & XEM LỊCH SỬ TRÒ CHUYỆN ĐỂ TRẢ LỜI */}
       {/* ============================================================ */}
       {selectedInquiry && (
         <div
@@ -1174,13 +1277,13 @@ export default function InquiriesPage() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: "rgba(0,0,0,0.5)",
+            background: "rgba(15, 23, 42, 0.65)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "20px",
-            backdropFilter: "blur(2px)",
+            padding: "16px",
+            backdropFilter: "blur(4px)",
           }}
           onClick={() => setSelectedInquiry(null)}
         >
@@ -1188,202 +1291,448 @@ export default function InquiriesPage() {
             className="card"
             style={{
               width: "100%",
-              maxWidth: "680px",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              padding: "24px 28px",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+              maxWidth: "1080px",
+              height: "92vh",
+              maxHeight: "820px",
+              display: "flex",
+              flexDirection: "column",
+              padding: 0,
+              overflow: "hidden",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               animation: "slideUp 0.25s ease-out",
+              borderRadius: "16px",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-              <div>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: "0 0 4px", color: "var(--text)" }}>
-                  🩺 Phản Hồi Chuyên Môn Cho Người Dân
-                </h3>
-                <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
-                  Người nhận: <strong>{selectedInquiry.citizenName || "Người dân Zalo"}</strong> (Zalo ID: {selectedInquiry.zaloUserId})
+            {/* Modal Top Bar */}
+            <div
+              style={{
+                padding: "16px 24px",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "var(--card-bg)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "8px",
+                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                  }}
+                >
+                  <MessageSquare size={18} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, color: "var(--text)" }}>
+                    🩺 Trả Lời Người Dân & Tra Cứu Lịch Sử Hội Thoại
+                  </h3>
+                  <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                    Phiếu #{selectedInquiry.id} • Chủ đề: <strong>{selectedInquiry.topicLabel}</strong> • Đơn vị: {selectedInquiry.assignedDept}
+                  </div>
                 </div>
               </div>
+
               <button
                 onClick={() => setSelectedInquiry(null)}
                 style={{
-                  background: "none",
-                  border: "none",
+                  background: "var(--bg)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  padding: "6px",
                   cursor: "pointer",
                   color: "var(--text-muted)",
-                  padding: 4,
+                  display: "flex",
                 }}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* Notification messages */}
-            {replySuccess && (
+            {/* Modal Body: 2 Columns */}
+            <div style={{ flex: 1, display: "flex", overflow: "hidden", flexWrap: "wrap" }}>
+              {/* LEFT COLUMN: IDENTIFICATION & CHAT HISTORY (45%) */}
               <div
                 style={{
-                  padding: "10px 14px",
-                  background: "#f0fdf4",
-                  border: "1px solid #bbf7d0",
-                  borderRadius: "8px",
-                  color: "#166534",
-                  fontSize: "0.88rem",
-                  marginBottom: "14px",
+                  flex: "1 1 420px",
+                  borderRight: "1px solid var(--border)",
+                  display: "flex",
+                  flexDirection: "column",
+                  background: "#f8fafc",
+                  overflowY: "auto",
                 }}
               >
-                ✅ {replySuccess}
+                {/* 1. CITIZEN IDENTITY CARD (Hồ sơ người hỏi) */}
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", background: "#ffffff" }}>
+                  <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <User size={14} />
+                    Định Danh Người Hỏi (Zalo Follower)
+                  </div>
+
+                  {loadingContext ? (
+                    <div style={{ fontSize: "0.82rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+                      <RefreshCw size={14} className="animate-spin" /> Đang lấy thông tin định danh...
+                    </div>
+                  ) : inquiryContext?.follower ? (
+                    <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                      {inquiryContext.follower.avatarUrl ? (
+                        <img
+                          src={inquiryContext.follower.avatarUrl}
+                          alt="Avatar"
+                          style={{ width: 50, height: 50, borderRadius: "50%", objectFit: "cover", border: "2px solid #bfdbfe", flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 50,
+                            height: 50,
+                            borderRadius: "50%",
+                            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                            color: "#fff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "1.2rem",
+                            fontWeight: 800,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {(inquiryContext.follower.fullName || inquiryContext.follower.displayName || "N").charAt(0).toUpperCase()}
+                        </div>
+                      )}
+
+                      <div style={{ flex: 1, fontSize: "0.82rem" }}>
+                        <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--text)" }}>
+                          {inquiryContext.follower.fullName || inquiryContext.follower.displayName || "Người dân Zalo"}
+                        </div>
+
+                        {inquiryContext.follower.fullName && inquiryContext.follower.displayName && inquiryContext.follower.fullName !== inquiryContext.follower.displayName && (
+                          <div style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
+                            Tên Zalo: <strong>{inquiryContext.follower.displayName}</strong>
+                          </div>
+                        )}
+
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "6px" }}>
+                          {inquiryContext.follower.phone ? (
+                            <a
+                              href={`tel:${inquiryContext.follower.phone}`}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                background: "#eff6ff",
+                                color: "#1d4ed8",
+                                padding: "2px 8px",
+                                borderRadius: "10px",
+                                fontWeight: 700,
+                                textDecoration: "none",
+                              }}
+                            >
+                              <Phone size={12} />
+                              {inquiryContext.follower.phone}
+                            </a>
+                          ) : (
+                            <span style={{ color: "var(--text-light)", fontSize: "0.75rem" }}>Chưa đăng ký SĐT</span>
+                          )}
+
+                          {inquiryContext.follower.dob && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--text-muted)" }}>
+                              <Calendar size={12} /> {inquiryContext.follower.dob}
+                            </span>
+                          )}
+
+                          {inquiryContext.follower.cccd && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--text-muted)" }}>
+                              <CreditCard size={12} /> CCCD: {inquiryContext.follower.cccd}
+                            </span>
+                          )}
+                        </div>
+
+                        {inquiryContext.follower.interestGroup && (
+                          <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#047857" }}>
+                            🎯 Nhóm quan tâm: <strong>{inquiryContext.follower.interestGroup}</strong>
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: "2px", fontSize: "0.72rem", color: "var(--text-light)" }}>
+                          Zalo User ID: <code style={{ background: "#f1f5f9", padding: "1px 4px", borderRadius: 4 }}>{selectedInquiry.zaloUserId}</code>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* 2. CHAT HISTORY (Lịch sử trò chuyện thực tế trên Zalo) */}
+                <div style={{ padding: "12px 20px 8px", background: "#f1f5f9", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text)", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <History size={14} />
+                    Lịch Sử Hỏi Đáp Gần Nhất (Hội thoại Zalo)
+                  </div>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    {inquiryContext?.chatHistory?.length || 0} tin nhắn
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    flex: 1,
+                    overflowY: "auto",
+                    padding: "16px 20px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  {loadingContext ? (
+                    <div style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                      <RefreshCw size={20} className="animate-spin" style={{ margin: "0 auto 8px" }} />
+                      Đang đồng bộ đoạn chat của người dân...
+                    </div>
+                  ) : inquiryContext?.chatHistory?.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                      Chưa ghi nhận tin nhắn trò chuyện nào trước đó.
+                    </div>
+                  ) : (
+                    inquiryContext?.chatHistory?.map((msg) => {
+                      const isInbound = msg.direction === "inbound";
+                      return (
+                        <div
+                          key={msg.id}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: isInbound ? "flex-start" : "flex-end",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "0.7rem",
+                              color: "var(--text-light)",
+                              marginBottom: "2px",
+                              display: "flex",
+                              gap: "4px",
+                            }}
+                          >
+                            <span>{isInbound ? "👤 Người dân" : "🏥 CDC / AI"}</span>
+                            <span>•</span>
+                            <span>{new Date(msg.receivedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
+                          </div>
+
+                          <div
+                            style={{
+                              maxWidth: "85%",
+                              padding: "9px 13px",
+                              borderRadius: isInbound ? "12px 12px 12px 2px" : "12px 12px 2px 12px",
+                              background: isInbound ? "#ffffff" : "#2563eb",
+                              color: isInbound ? "var(--text)" : "#ffffff",
+                              fontSize: "0.85rem",
+                              lineHeight: 1.45,
+                              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                              border: isInbound ? "1px solid #e2e8f0" : "none",
+                              whiteSpace: "pre-line",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {msg.content}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={chatBottomRef} />
+                </div>
               </div>
-            )}
-            {replyError && (
+
+              {/* RIGHT COLUMN: ACTION & REPLY FORM (55%) */}
               <div
                 style={{
-                  padding: "10px 14px",
-                  background: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  borderRadius: "8px",
-                  color: "#991b1b",
-                  fontSize: "0.88rem",
-                  marginBottom: "14px",
+                  flex: "1 1 480px",
+                  display: "flex",
+                  flexDirection: "column",
+                  padding: "20px 24px",
+                  overflowY: "auto",
+                  background: "#ffffff",
                 }}
               >
-                ⚠️ {replyError}
-              </div>
-            )}
-
-            {/* Question detail box */}
-            <div
-              style={{
-                background: "var(--bg)",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                marginBottom: "16px",
-              }}
-            >
-              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>
-                Nội dung câu hỏi của người dân:
-              </div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text)", marginTop: "4px" }}>
-                "{selectedInquiry.question}"
-              </div>
-              <div style={{ display: "flex", gap: "10px", marginTop: "8px", fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                <span>Chủ đề: <strong>{selectedInquiry.topicLabel}</strong></span>
-                <span>Đơn vị: <strong>{selectedInquiry.assignedDept}</strong></span>
-              </div>
-            </div>
-
-            {/* Quick response templates */}
-            <div style={{ marginBottom: "12px" }}>
-              <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)", marginBottom: "6px" }}>
-                Mẫu phản hồi nhanh (Bấm để chèn):
-              </div>
-              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                {[
-                  {
-                    label: "Mời đến CDC khám",
-                    text: "Chào bạn, với tình trạng bạn vừa mô tả, Bác sĩ CDC Đà Nẵng đề nghị bạn đến trực tiếp cơ sở tại 118 Lê Đình Lý để được thăm khám và xử trí kịp thời.",
-                  },
-                  {
-                    label: "Xử trí vết chó cắn",
-                    text: "Chào bạn, đối với vết thương do chó/mèo cắn, bạn hãy rửa kỹ vết thương dưới vòi nước chảy bằng xà phòng ít nhất 15 phút, sát trùng bằng cồn 70 độ hoặc cồn i-ốt, sau đó đến ngay phòng tiêm CDC Đà Nẵng để tiêm vắc xin dại và huyết thanh kháng dại càng sớm càng tốt.",
-                  },
-                  {
-                    label: "Lịch tiêm phòng",
-                    text: "Chào bạn, phòng tiêm chủng dịch vụ của CDC Đà Nẵng mở cửa từ Thứ 2 đến Chủ nhật (Buổi sáng: 7h30 - 11h00, Buổi chiều: 13h30 - 16h30). Bạn có thể đến trực tiếp để được Bác sĩ khám sàng lọc trước tiêm.",
-                  },
-                ].map((tpl, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setReplyText((prev) => (prev ? prev + "\n\n" + tpl.text : tpl.text))}
+                {/* Notifications */}
+                {replySuccess && (
+                  <div
                     style={{
-                      background: "var(--bg)",
-                      border: "1px solid var(--border)",
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.75rem",
-                      cursor: "pointer",
-                      color: "var(--text)",
+                      padding: "10px 14px",
+                      background: "#f0fdf4",
+                      border: "1px solid #bbf7d0",
+                      borderRadius: "8px",
+                      color: "#166534",
+                      fontSize: "0.88rem",
+                      marginBottom: "14px",
                     }}
                   >
-                    + {tpl.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+                    ✅ {replySuccess}
+                  </div>
+                )}
+                {replyError && (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      background: "#fef2f2",
+                      border: "1px solid #fecaca",
+                      borderRadius: "8px",
+                      color: "#991b1b",
+                      fontSize: "0.88rem",
+                      marginBottom: "14px",
+                    }}
+                  >
+                    ⚠️ {replyError}
+                  </div>
+                )}
 
-            {/* Reply Textarea */}
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontSize: "0.88rem", fontWeight: 700, color: "var(--text)", marginBottom: "6px" }}>
-                Nội dung Bác sĩ / Cán bộ phản hồi cho người dân:
-              </label>
-              <textarea
-                rows={6}
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Nhập nội dung tư vấn, chỉ dẫn chuyên môn y tế cụ thể cho người dân..."
-                className="form-input"
-                style={{ width: "100%", fontSize: "0.9rem", padding: "10px 12px", lineHeight: 1.5 }}
-              />
-            </div>
-
-            {/* Checkbox: Save to AI Knowledge */}
-            <div
-              style={{
-                background: "var(--primary-light)",
-                border: "1px solid var(--border-focus)",
-                padding: "12px 14px",
-                borderRadius: "8px",
-                marginBottom: "20px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "10px",
-              }}
-            >
-              <input
-                type="checkbox"
-                id="saveToKb"
-                checked={saveToKnowledge}
-                onChange={(e) => setSaveToKnowledge(e.target.checked)}
-                style={{ width: 18, height: 18, marginTop: 2, cursor: "pointer" }}
-              />
-              <label htmlFor="saveToKb" style={{ fontSize: "0.85rem", cursor: "pointer", color: "var(--text)" }}>
-                <strong style={{ color: "var(--primary)" }}>🌟 Nạp câu trả lời này vào Khối óc AI (Luyện AI cho lần sau)</strong>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                  Khi người dân khác hỏi câu hỏi tương tự, Trợ lý AI sẽ tự động học câu trả lời của Bác sĩ để giải đáp ngay lập tức mà không cần chuyển tiếp.
+                {/* Focus Question Box */}
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e2e8f0",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: 800, textTransform: "uppercase" }}>
+                    ❓ Câu hỏi trọng tâm đang cần xử lý:
+                  </div>
+                  <div style={{ fontSize: "0.98rem", fontWeight: 700, color: "var(--text)", marginTop: "4px", lineHeight: 1.5 }}>
+                    "{selectedInquiry.question}"
+                  </div>
+                  <div style={{ display: "flex", gap: "12px", marginTop: "8px", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                    <span>Chủ đề: <strong>{selectedInquiry.topicLabel}</strong></span>
+                    <span>Khoa: <strong>{selectedInquiry.assignedDept}</strong></span>
+                  </div>
                 </div>
-              </label>
-            </div>
 
-            {/* Action buttons */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-              <button
-                type="button"
-                onClick={() => setSelectedInquiry(null)}
-                className="btn btn-outline"
-                style={{ padding: "8px 16px", fontSize: "0.88rem" }}
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={handleSendReply}
-                disabled={sendingReply || !replyText.trim()}
-                className="btn btn-primary"
-                style={{
-                  padding: "8px 20px",
-                  fontSize: "0.88rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <Send size={16} />
-                {sendingReply ? "Đang gửi qua Zalo..." : "Gửi Trả Lời Zalo"}
-              </button>
+                {/* Quick Snippets */}
+                <div style={{ marginBottom: "12px" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px" }}>
+                    Gợi ý phản hồi nhanh (Bấm để chèn):
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {[
+                      {
+                        label: "Mời đến CDC khám",
+                        text: "Chào bạn, với tình trạng bạn vừa mô tả, Bác sĩ CDC Đà Nẵng đề nghị bạn đến trực tiếp cơ sở tại 118 Lê Đình Lý để được thăm khám và xử trí kịp thời.",
+                      },
+                      {
+                        label: "Xử trí vết chó cắn",
+                        text: "Chào bạn, đối với vết thương do chó/mèo cắn, bạn hãy rửa kỹ vết thương dưới vòi nước chảy bằng xà phòng ít nhất 15 phút, sát trùng bằng cồn 70 độ hoặc cồn i-ốt, sau đó đến ngay phòng tiêm CDC Đà Nẵng để tiêm vắc xin dại và huyết thanh kháng dại càng sớm càng tốt.",
+                      },
+                      {
+                        label: "Lịch tiêm phòng",
+                        text: "Chào bạn, phòng tiêm chủng dịch vụ của CDC Đà Nẵng mở cửa từ Thứ 2 đến Chủ nhật (Buổi sáng: 7h30 - 11h00, Buổi chiều: 13h30 - 16h30). Bạn có thể đến trực tiếp để được Bác sĩ khám sàng lọc trước tiêm.",
+                      },
+                    ].map((tpl, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setReplyText((prev) => (prev ? prev + "\n\n" + tpl.text : tpl.text))}
+                        style={{
+                          background: "#f1f5f9",
+                          border: "1px solid #cbd5e1",
+                          padding: "4px 10px",
+                          borderRadius: "6px",
+                          fontSize: "0.75rem",
+                          cursor: "pointer",
+                          color: "var(--text)",
+                        }}
+                      >
+                        + {tpl.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reply Editor */}
+                <div style={{ marginBottom: "14px", flex: 1, display: "flex", flexDirection: "column" }}>
+                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--text)", marginBottom: "6px" }}>
+                    Nội dung Bác sĩ / Cán bộ chuyên trách trả lời cho người dân:
+                  </label>
+                  <textarea
+                    rows={6}
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Nhập nội dung tư vấn, chỉ dẫn y tế chuyên môn gửi đến Zalo người dân..."
+                    className="form-input"
+                    style={{
+                      width: "100%",
+                      fontSize: "0.88rem",
+                      padding: "10px 12px",
+                      lineHeight: 1.5,
+                      flex: 1,
+                      minHeight: "130px",
+                    }}
+                  />
+                </div>
+
+                {/* AI Learning Checkbox */}
+                <div
+                  style={{
+                    background: "var(--primary-light)",
+                    border: "1px solid var(--border-focus)",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    marginBottom: "16px",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "10px",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    id="saveToKb"
+                    checked={saveToKnowledge}
+                    onChange={(e) => setSaveToKnowledge(e.target.checked)}
+                    style={{ width: 17, height: 17, marginTop: 2, cursor: "pointer" }}
+                  />
+                  <label htmlFor="saveToKb" style={{ fontSize: "0.82rem", cursor: "pointer", color: "var(--text)" }}>
+                    <strong style={{ color: "var(--primary)" }}>🌟 Nạp câu trả lời này vào Khối óc AI (Luyện AI cho lần sau)</strong>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                      Khi người dân khác hỏi câu tương tự, Trợ lý AI sẽ tự động học câu trả lời của Bác sĩ để giải đáp ngay lập tức.
+                    </div>
+                  </label>
+                </div>
+
+                {/* Bottom Actions */}
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInquiry(null)}
+                    className="btn btn-outline"
+                    style={{ padding: "8px 16px", fontSize: "0.88rem" }}
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSendReply}
+                    disabled={sendingReply || !replyText.trim()}
+                    className="btn btn-primary"
+                    style={{
+                      padding: "8px 22px",
+                      fontSize: "0.88rem",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <Send size={16} />
+                    {sendingReply ? "Đang gửi qua Zalo..." : "Gửi Trả Lời Zalo"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

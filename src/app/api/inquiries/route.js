@@ -60,9 +60,34 @@ export async function GET(request) {
 
     const filteredTotal = await prisma.citizenInquiry.count({ where });
 
+    // Lấy thông tin định danh người hỏi (Avatar, SĐT, Tên thật) từ bảng Follower
+    const userIds = [...new Set(inquiries.map((i) => i.zaloUserId))];
+    const followers = await prisma.follower.findMany({
+      where: { zaloUserId: { in: userIds } },
+      select: {
+        zaloUserId: true,
+        displayName: true,
+        fullName: true,
+        avatarUrl: true,
+        phone: true,
+        userType: true,
+        interestGroup: true,
+      },
+    });
+
+    const followerMap = {};
+    followers.forEach((f) => {
+      followerMap[f.zaloUserId] = f;
+    });
+
+    const inquiriesWithFollower = inquiries.map((i) => ({
+      ...i,
+      follower: followerMap[i.zaloUserId] || null,
+    }));
+
     return NextResponse.json({
       success: true,
-      data: inquiries,
+      data: inquiriesWithFollower,
       pagination: {
         page,
         limit,
