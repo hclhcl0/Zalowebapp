@@ -41,7 +41,7 @@ export default function InquiriesPage() {
   // Inbox filters & data
   const [inquiries, setInquiries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("pending_staff");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [topicFilter, setTopicFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -602,10 +602,10 @@ export default function InquiriesPage() {
             {/* Status Pills */}
             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
               {[
-                { key: "pending_staff", label: "🔴 Chờ xử lý", count: stats.pendingStaff },
+                { key: "all", label: "📋 Tất cả", count: stats.total },
+                { key: "pending_staff", label: "🔴 Chờ cán bộ xử lý", count: stats.pendingStaff },
+                { key: "ai_resolved", label: "🤖 AI đã giải đáp", count: stats.aiResolved },
                 { key: "staff_replied", label: "🟢 Cán bộ đã giải đáp", count: stats.staffReplied },
-                { key: "ai_resolved", label: "🤖 AI giải đáp", count: stats.aiResolved },
-                { key: "all", label: "Tất cả", count: stats.total },
               ].map((pill) => (
                 <button
                   key={pill.key}
@@ -677,13 +677,49 @@ export default function InquiriesPage() {
             </div>
           ) : inquiries.length === 0 ? (
             <div className="card" style={{ padding: "48px 24px", textAlign: "center" }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>🎉</div>
+              <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>
+                {statusFilter === "pending_staff" ? "🎉" : "📭"}
+              </div>
               <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: "0 0 6px" }}>
-                Không có câu hỏi nào trong danh mục này!
+                {statusFilter === "pending_staff"
+                  ? "Không có câu hỏi tồn đọng chờ cán bộ!"
+                  : statusFilter === "ai_resolved"
+                  ? "Chưa có câu hỏi nào trong mục AI giải đáp"
+                  : "Không tìm thấy câu hỏi nào phù hợp với bộ lọc"}
               </h3>
-              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>
-                Tất cả các câu hỏi của người dân đã được giải đáp thỏa đáng.
+              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: "0 0 16px" }}>
+                {statusFilter === "pending_staff"
+                  ? "Các câu hỏi của người dân đều đã được AI giải đáp hoặc cán bộ phản hồi xong."
+                  : "Vui lòng chọn bộ lọc khác hoặc bấm làm mới."}
               </p>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+                {statusFilter !== "all" && (
+                  <button
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setTopicFilter("all");
+                      setSearchQuery("");
+                      setPage(1);
+                    }}
+                    className="btn btn-primary"
+                    style={{ fontSize: "0.85rem", padding: "8px 16px" }}
+                  >
+                    📋 Xem tất cả ({stats.total} câu hỏi)
+                  </button>
+                )}
+                {statusFilter !== "ai_resolved" && stats.aiResolved > 0 && (
+                  <button
+                    onClick={() => {
+                      setStatusFilter("ai_resolved");
+                      setPage(1);
+                    }}
+                    className="btn btn-outline"
+                    style={{ fontSize: "0.85rem", padding: "8px 16px" }}
+                  >
+                    🤖 Xem câu hỏi AI giải đáp ({stats.aiResolved})
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>

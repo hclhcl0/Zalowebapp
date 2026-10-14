@@ -457,8 +457,9 @@ async function handleTextMessage(userId, text, appUserId) {
     // ============================================================
     const { detectUnresolvedQuery, createInquiryAndNotifyStaff, classifyInquiryTopic } = await import("@/lib/inquiryService.mjs");
     const unresolvedCheck = detectUnresolvedQuery(trimmedText, aiReply);
-    const isCitizen = follower?.userType !== "staff";
-    const citizenName = follower?.fullName || follower?.displayName || "Người dân";
+    const isStaffUser = follower?.userType === "staff";
+    const rawCitizenName = follower?.fullName || follower?.displayName || "Người dân";
+    const citizenName = isStaffUser ? `${rawCitizenName} (Cán bộ test)` : rawCitizenName;
 
     if (unresolvedCheck.isUnresolved) {
       console.log(`[InquiryEscalation] Phát hiện câu hỏi chưa giải quyết (${unresolvedCheck.reason}): "${trimmedText.substring(0, 80)}"`);
@@ -501,25 +502,23 @@ async function handleTextMessage(userId, text, appUserId) {
     await sendTextMessage(userId, aiReply);
     console.log(`[Gemini] Đã trả lời ${userId} (${aiReply.length} ký tự)`);
 
-    // Lưu thống kê câu hỏi người dân đã được AI giải đáp để tính tỷ lệ tự động
-    if (isCitizen) {
-      try {
-        const topic = await classifyInquiryTopic(trimmedText);
-        await prisma.citizenInquiry.create({
-          data: {
-            zaloUserId: userId,
-            citizenName,
-            question: trimmedText,
-            topic: topic.topicCode,
-            topicLabel: topic.topicLabel,
-            status: "ai_resolved",
-            aiDraftReply: aiReply,
-            assignedDept: topic.department,
-          },
-        });
-      } catch (e) {
-        console.error("[Inquiry Log Error]", e.message);
-      }
+    // Lưu thống kê câu hỏi đã được AI giải đáp để tính tỷ lệ tự động & theo dõi trên Dashboard
+    try {
+      const topic = await classifyInquiryTopic(trimmedText);
+      await prisma.citizenInquiry.create({
+        data: {
+          zaloUserId: userId,
+          citizenName,
+          question: trimmedText,
+          topic: topic.topicCode,
+          topicLabel: topic.topicLabel,
+          status: "ai_resolved",
+          aiDraftReply: aiReply,
+          assignedDept: topic.department,
+        },
+      });
+    } catch (e) {
+      console.error("[Inquiry Log Error]", e.message);
     }
     
     // Ghi log câu trả lời của AI vào DB để giữ ngữ cảnh (history) cho các câu hỏi sau
