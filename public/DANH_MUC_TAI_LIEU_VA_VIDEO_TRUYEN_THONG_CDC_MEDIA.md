@@ -1,0 +1,286 @@
+# TỔNG HỢP TOÀN BỘ DANH MỤC TÀI LIỆU & VIDEO TRUYỀN THÔNG CDC ĐÀ NẴNG
+Cập nhật tự động từ hệ thống CDC Media (https://media.ksbtdanang.vn)
+Tổng số: 274 tài liệu truyền thông các loại.
+---
+
+## 🎬 01 - Danh mục Video Truyền thông CDC Đà Nẵng (125 tài liệu)
+- [[Video] [Apphic] Tuần lễ DD & PT (16-23)-10-2026](https://media.ksbtdanang.vn/document/986ffdfa-f98e-4447-8918-cf411fbfaccd) - *Chuyên mục: Thư viện Video*
+- [[Video] Clip ngắn PC Tác Hại Thuốc Lá](https://media.ksbtdanang.vn/document/d2485ca4-26f9-4c20-8d56-ac0dbc09dd66) - *Chuyên mục: Thư viện Video*
+- [ [Video] Yêu thương là nói không thuốc lá](https://media.ksbtdanang.vn/document/587c1945-b18c-4fde-8bec-45ce6dbeed5d) - *Chuyên mục: Thư viện Video*
+- [Những lưu ý trong phòng bệnh cúm mùa](https://media.ksbtdanang.vn/document/d7cd9045-325f-4abe-b378-2733dc28230d) - *Chuyên mục: Thư viện Video*
+- [An toàn vệ sinh thực phẩm mùa nắng nóng](https://media.ksbtdanang.vn/document/93fc19dc-1101-4945-8f52-1bfb30cb5239) - *Chuyên mục: Thiết kế truyền thông*
+- [[Video] Bệnh Whitmore](https://media.ksbtdanang.vn/document/3651ff12-3573-4a55-94a4-f071e25e4c40) - *Chuyên mục: Thư viện Video*
+- [[Video] Bệnh cúm mùa](https://media.ksbtdanang.vn/document/7b6bcdd2-c6a7-4653-9c3d-5cf177f4bacb) - *Chuyên mục: Thư viện Video*
+- [[Video] Chương trình mục tiêu quốc gia về chăm sóc sức khoẻ, dân số và phát triển giai đoạn 2026 2035](https://media.ksbtdanang.vn/document/ff5090ac-d6ae-4806-b151-a63b2606283b) - *Chuyên mục: Thư viện Video*
+- [[video] 500 ngày đêm đẩy mạnh tìm kiếm, quy tập và xác định danh tính hài cốt liệt sĩ](https://media.ksbtdanang.vn/document/8faac044-2e02-43c2-8f2d-35e73bc74b2b) - *Chuyên mục: Thư viện Video*
+- [[Video] KHÁM SỨC KHỎE ĐỊNH KỲ MIỄN PHÍ CHO TOÀN DÂN](https://media.ksbtdanang.vn/document/95ca4455-18a6-4b7c-a4f3-1f0d24ebde4b) - *Chuyên mục: Thư viện Video*
+- [[Video] Bệnh Dại - Đừng chủ quan chỉ vì con vật quen mặt](https://media.ksbtdanang.vn/document/9763e332-98a1-4036-ae8b-2ecbc6b73db4) - *Chuyên mục: Thư viện Video*
+- [[Podcast] Phòng bệnh Não Mô Cầu](https://media.ksbtdanang.vn/document/8e601f11-a653-4c6a-8db5-2e05ea1f3a2b) - *Chuyên mục: Âm thanh & Podcast*
+- [[Podcast] Phòng bệnh Tay Chân Miệng](https://media.ksbtdanang.vn/document/6d72b1f8-6058-4d96-98c9-035d2693bc96) - *Chuyên mục: Âm thanh & Podcast*
+- [[Podcast] Tìm hiểu bệnh Quai bị](https://media.ksbtdanang.vn/document/4de71430-0393-4937-8dc6-e3df9388c895) - *Chuyên mục: Âm thanh & Podcast*
+- [[Video] 6 Điều cần làm để phòng bệnh SXH](https://media.ksbtdanang.vn/document/3404c80e-7c05-46cc-a716-8c3dba3163aa) - *Chuyên mục: Thư viện Video*
+- [[Video] Phòng chống bệnh Sốt Xuất Huyết](https://media.ksbtdanang.vn/document/ea4051f3-237c-4f26-bdff-7f1a915c9dea) - *Chuyên mục: Thư viện Video*
+- [[Video] Dấu hiệu cảnh báo SXH trở nặng](https://media.ksbtdanang.vn/document/64873917-1bd5-49d0-b5c5-d4dedb37a80b) - *Chuyên mục: Thư viện Video*
+- [[Video] Triệu chứng SXH ở trẻ em cần phát hiện sớm](https://media.ksbtdanang.vn/document/5ee869cf-34fb-48b6-9cde-9fbcb109a6cd) - *Chuyên mục: Thư viện Video*
+- [[Video] Con muỗi nhỏ - Căn bệnh to](https://media.ksbtdanang.vn/document/76e0a015-a292-4273-807e-24f7bd19f873) - *Chuyên mục: Thư viện Video*
+- [[Video] PC bệnh Dại](https://media.ksbtdanang.vn/document/32d8781d-0e19-427f-bf87-2aabf67ec048) - *Chuyên mục: Thư viện Video*
+- [[Video] PC bệnh Dại 2](https://media.ksbtdanang.vn/document/431e2258-831e-4ef4-bde4-128cc393af75) - *Chuyên mục: Thư viện Video*
+- [[Video] Phòng ngừa bệnh Dại 2025](https://media.ksbtdanang.vn/document/b5f620d1-e18e-45d3-b81c-6e5d747e98ea) - *Chuyên mục: Thư viện Video*
+- [[Inforgraphic] 100% TỬ VONG](https://media.ksbtdanang.vn/document/b8ad3a4a-1393-4a56-a43d-b762d5baf40a) - *Chuyên mục: Thư viện Video*
+- [[Apphic] Bệnh Dại 1](https://media.ksbtdanang.vn/document/f0e320ac-fd1c-4915-8dbc-4477922b1422) - *Chuyên mục: Thư viện Video*
+- [[Apphic] Bệnh Dại 2](https://media.ksbtdanang.vn/document/ab05e7ef-ca75-4711-8f8f-09de79428915) - *Chuyên mục: Thư viện Video*
+- [[Apphic] Bệnh Dại 3](https://media.ksbtdanang.vn/document/00112f36-8407-4617-ae42-a6276c9ec2e4) - *Chuyên mục: Thư viện Video*
+- [[Apphic] Bệnh Dại 4](https://media.ksbtdanang.vn/document/d2642ba7-1bc7-451f-898e-5ea21c6bea87) - *Chuyên mục: Thư viện Video*
+- [[Apphic] Bệnh Dại 5](https://media.ksbtdanang.vn/document/c913324b-ce76-4ef5-a854-3c6238840ed7) - *Chuyên mục: Thư viện Video*
+- [[Apphic] Bệnh Dại 6](https://media.ksbtdanang.vn/document/e22ebc3c-0aa4-4bb4-b569-6d417a84fefa) - *Chuyên mục: Thư viện Video*
+- [[Video] Lợi ích nuôi con bằng sữa mẹ 2026](https://media.ksbtdanang.vn/document/ea623406-6b1d-4449-a7b7-9e9aa8e5ba73) - *Chuyên mục: Thư viện Video*
+- [[Video] Tìm hiểu bệnh Quai bị](https://media.ksbtdanang.vn/document/9c7fc48c-12ed-420b-9706-52923c8a6486) - *Chuyên mục: Thư viện Video*
+- [[Video] NCBSM: Bú trong 1 giờ đầu sau sinh](https://media.ksbtdanang.vn/document/524efdd5-efe5-48ad-8817-da091287ab46) - *Chuyên mục: Thư viện Video*
+- [[Video] NCBSM: Không cần nước, chỉ cần sữa mẹ là đủ](https://media.ksbtdanang.vn/document/a2f6d7b4-7e8a-4108-8265-cc280cccf610) - *Chuyên mục: Thư viện Video*
+- [[Video] NCBSM: Sữa mẹ - Món quà vô giá cho cuộc sống](https://media.ksbtdanang.vn/document/3ca5bcce-9091-4274-b5f7-8dd37cfe1677) - *Chuyên mục: Thư viện Video*
+- [[Video] NCBSM: Ngân hàng sữa mẹ](https://media.ksbtdanang.vn/document/d0bb407a-ea39-4573-bc17-5c20bc6f42a9) - *Chuyên mục: Thư viện Video*
+- [Dạ dày tâm sự](https://media.ksbtdanang.vn/document/ed8612d9-59d4-47a9-b0a9-09acbdb38015) - *Chuyên mục: Thư viện Video*
+- [Nam giới có cần tiêm vắc xin HPV không](https://media.ksbtdanang.vn/document/ec2bf315-0700-4c1a-b55c-09cd9328bf02) - *Chuyên mục: Thư viện Video*
+- [Vì sao nên tiêm phế cầu khuẩn](https://media.ksbtdanang.vn/document/7cc6434a-dedd-4553-9786-cb73914116d5) - *Chuyên mục: Thư viện Video*
+- [PODCAST - Tiêm chủng vắc xin uốn ván - bạch hầu miễn phí cho trẻ đủ 7 tuổi](https://media.ksbtdanang.vn/document/af6d005d-bc7c-4979-a19f-0615a41c9851) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST - Phòng chống bệnh xoắn khuẩn vàng da](https://media.ksbtdanang.vn/document/efec3496-fd51-4160-b43e-45bdde2eec94) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST - Viêm gan B trong 24 giờ đầu lá chắn quan trọng cho trẻ sơ sinh](https://media.ksbtdanang.vn/document/070179c8-a98c-48d7-83ba-c814635db2c2) - *Chuyên mục: Âm thanh & Podcast*
+- [LỜI TÂM SỰ CỦA GAN](https://media.ksbtdanang.vn/document/fe3fbf0d-5025-400d-9e4e-a407337f0056) - *Chuyên mục: Thư viện Video*
+- [PODCAST - Phát thanh Thủy đậu](https://media.ksbtdanang.vn/document/16f48869-d65f-47c0-8577-777e50e078cd) - *Chuyên mục: Âm thanh & Podcast*
+- [Lời thú nhận của virut thuỷ đậu](https://media.ksbtdanang.vn/document/1b765f62-6445-4182-845d-5e9d9aa430b4) - *Chuyên mục: Thư viện Video*
+- [Rửa tay bằng xà phòng](https://media.ksbtdanang.vn/document/b76e500f-b98a-4e0f-8d8e-ce90f2e2cd64) - *Chuyên mục: Thư viện Video*
+- [PODCAST - Tuyên truyền bệnh dại](https://media.ksbtdanang.vn/document/14dfc534-8870-4fca-baed-c21514c896fc) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST-TIÊM CHỦNG VẮC XIN UỐN VÁN - BẠCH HẦU MIỄN PHÍ CHO TRẺ ĐỦ 7 TUỔI](https://media.ksbtdanang.vn/document/47847088-a5fe-4d86-adb2-bd50eb92e9c8) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST PHÒNG CHỐNG BỆNH XOẮN KHUẨN VÀNG DA  2](https://media.ksbtdanang.vn/document/d621e56b-88ad-452d-a300-6607182dd0ba) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST - TIÊM VẮC-XIN VIÊM GAN B TRONG 24 GIỜ ĐẦU  LÁ CHẮN QUAN TRỌNG CHO TRẺ SƠ SINH](https://media.ksbtdanang.vn/document/e9da3af6-aafd-4976-b67d-cf499db8e0bc) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST - Phat thanh Bệnh Thủy đậu](https://media.ksbtdanang.vn/document/730e69bb-5d00-4d40-a6d6-82602abdeda2) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST  - Chủ động phòng, chống bệnh dại ](https://media.ksbtdanang.vn/document/238e0cc8-b5bc-4f38-a930-135ff720d037) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST - PHÒNG BỆNH TIÊU CHẢY DO VI RÚT ROTA Ở TRẺ NHỎ](https://media.ksbtdanang.vn/document/b33d9c64-1e74-4154-bced-7e7b2e650dc1) - *Chuyên mục: Âm thanh & Podcast*
+- [Giá như.mp4](https://media.ksbtdanang.vn/document/83cbc3e3-dddc-4204-b123-b8b111ca1580) - *Chuyên mục: Thư viện Video*
+- [Phòng bệnh đường hô hấp](https://media.ksbtdanang.vn/document/eefef678-5302-491d-9e99-f7d1c22c179b) - *Chuyên mục: Thư viện Video*
+- [PHÒNG CÁC BỆNH THƯỜNG GẶP Ở TRẺ NHỎ TRONG THỜI ĐIỂM GIAO MÙA THU – ĐÔNG](https://media.ksbtdanang.vn/document/7504e6fc-1b19-4e24-8d76-95ebf17798e7) - *Chuyên mục: Thư viện Video*
+- [NHỮNG ĐIỀU CẦN BIẾT VỀ CÚM A](https://media.ksbtdanang.vn/document/fa47f309-eb76-4632-ae79-245f435dbfe1) - *Chuyên mục: Thư viện Video*
+- [Chủ động phòng cúm mùa](https://media.ksbtdanang.vn/document/238e2733-eb4e-41e3-8936-969f7b788bcc) - *Chuyên mục: Thư viện Video*
+- [CẢNH BÁO NGUY CƠ BÙNG PHÁT DỊCH CÚM TRƯỚC MÙA ĐÔNG](https://media.ksbtdanang.vn/document/c7ae2de7-f596-485c-9c17-4f47aa435a62) - *Chuyên mục: Thư viện Video*
+- [Sử dụng điều hòa thế nào để hạn chế bệnh hô hấp](https://media.ksbtdanang.vn/document/5cf9a004-7a14-4395-9c1e-6988b081435b) - *Chuyên mục: Thư viện Video*
+- [HÃY GIÚP CON EM MÌNH KHÔNG BỊ MẮC BỆNH TAY CHÂN MIỆNG](https://media.ksbtdanang.vn/document/178394d3-c47f-42cf-b389-0d407b659f0c) - *Chuyên mục: Thư viện Video*
+- [Phòng Benh tay chan mieng](https://media.ksbtdanang.vn/document/7d3dc620-7ea3-4c77-b71c-d41642788ae0) - *Chuyên mục: Thư viện Video*
+- [3 sạch trong Tay chân miệng](https://media.ksbtdanang.vn/document/d211beac-0adc-4213-a5c6-7703a079830e) - *Chuyên mục: Thư viện Video*
+- [Sự thật nguy hiểm… về bệnh tay chân miệng!](https://media.ksbtdanang.vn/document/38fa9a47-e98c-4147-b17a-c84a50776dae) - *Chuyên mục: Thư viện Video*
+- [Vì sao trẻ mắc Bệnh tay chân miệng do virus EV71 lại trở nặng nhanh](https://media.ksbtdanang.vn/document/27baa70a-cde5-4f40-9a9f-ca2e60a86df6) - *Chuyên mục: Thư viện Video*
+- [QUY TRÌNH XỬ LÝ Ổ DỊCH TAY CHÂN MIỆNG](https://media.ksbtdanang.vn/document/cef7a2c5-da17-4931-a757-9ba784df4cac) - *Chuyên mục: Thư viện Video*
+- [QUY TRÌNH XỬ LÝ 01 CA TAY CHÂN MIỆNG ĐƠN LẺ](https://media.ksbtdanang.vn/document/cd1ada6f-9de3-4e28-8c78-66185815a39f) - *Chuyên mục: Thư viện Video*
+- [QUẢN LÝ TRẺ TCM](https://media.ksbtdanang.vn/document/9c7278ee-e012-45d6-882b-8d4673e3bdb5) - *Chuyên mục: Thư viện Video*
+- [Vệ sinh khi trẻ ở trường - PC tay chân miệng](https://media.ksbtdanang.vn/document/8c9337a1-53d4-4c5b-844f-aaaad3ef4f75) - *Chuyên mục: Thư viện Video*
+- [CÁC BƯỚC KHỬ TRÙNG ĐỒ CHƠI CHO TRẺ PHÒNG TCM](https://media.ksbtdanang.vn/document/f6808417-add7-4cdd-a4e6-57adb6a4be06) - *Chuyên mục: Thư viện Video*
+- [6 HIỂU LẦM VỀ TAY CHÂN MIỆNG](https://media.ksbtdanang.vn/document/172ccc43-f0cd-4ee7-b588-924f4e0f99b0) - *Chuyên mục: Thư viện Video*
+- [Bé Mít và “lá chắn” vắc-xin Rota](https://media.ksbtdanang.vn/document/8d80ae66-1e8c-48e2-9c5b-abd2118a0e71) - *Chuyên mục: Thư viện Video*
+- [PODCAST - PHÒNG BỆNH TIÊU CHẢY DO VI RÚT ROTA Ở TRẺ NHỎ](https://media.ksbtdanang.vn/document/3eaa4830-2e9e-4ca6-9d10-d401c8cfe5eb) - *Chuyên mục: Âm thanh & Podcast*
+- [5 lưu ý vaccin Rota](https://media.ksbtdanang.vn/document/f9c07276-1bc8-4b34-b71e-0478579ff561) - *Chuyên mục: Thư viện Video*
+- [Câu chuyện về Virus Rota](https://media.ksbtdanang.vn/document/4d6a3695-ed2b-484d-86de-31e249bed6ae) - *Chuyên mục: Thư viện Video*
+- [PODCAST - Virus Nipah và các biện pháp phòng ngừa](https://media.ksbtdanang.vn/document/87d7a69c-462d-4d3c-b58e-14904221b698) - *Chuyên mục: Thư viện Video*
+- [NIPAH](https://media.ksbtdanang.vn/document/2b6ca35b-e606-4894-9b53-42d8d1f50d46) - *Chuyên mục: Thư viện Video*
+- [“Cách ly sớm – Giảm lây lan”](https://media.ksbtdanang.vn/document/d8cdb487-a617-48ca-9486-0b1c6214053d) - *Chuyên mục: Thư viện Video*
+- [CẢNH BÁO EBOLA CHỦ ĐỘNG PHÒNG BỆNH, BẢO VỆ CỘNG ĐỒNG](https://media.ksbtdanang.vn/document/7fceb812-d024-40dc-b969-244602a3e6b1) - *Chuyên mục: Thư viện Video*
+- [Thông điệp những điều cần biết về chiến dịch tiêm phòng Sởi](https://media.ksbtdanang.vn/document/aa2ab712-edb8-4109-9bbe-633243ca7a3a) - *Chuyên mục: Thư viện Video*
+- [Chăm sóc và theo dõi trẻ mắc Sởi](https://media.ksbtdanang.vn/document/81e56166-1151-4442-a50d-fdcfae41c0bb) - *Chuyên mục: Thư viện Video*
+- [Tiêm vắc xin Sởi](https://media.ksbtdanang.vn/document/8f153759-6a6b-4fb7-9a6b-91f77182ae1c) - *Chuyên mục: Thư viện Video*
+- [PODCAST - CÁC BIỆN PHÁP PHÒNG, CHỐNG DỊCH BỆNH TRƯỚC, TRONG VÀ SAU MƯA LŨ, NGẬP LỤT](https://media.ksbtdanang.vn/document/681247b8-acd4-4ff9-9718-1ff462e541bd) - *Chuyên mục: Thư viện Video*
+- [“Não mô cầu – vài giờ đổi mạng!”](https://media.ksbtdanang.vn/document/5f09d1fb-014c-4db4-ac83-97db41ab1fc0) - *Chuyên mục: Thư viện Video*
+- [Bệnh do não mô cầu](https://media.ksbtdanang.vn/document/e9a1d687-da11-485a-89d3-1c2956050541) - *Chuyên mục: Thư viện Video*
+- [PHONG NAO MO CAU.mp4](https://media.ksbtdanang.vn/document/894c86e0-8474-4e4c-b90b-016a3a1c67f6) - *Chuyên mục: Thư viện Video*
+- [5 dấu hiệu tử thần của viêm não mô cầu](https://media.ksbtdanang.vn/document/5358722c-5b62-4c2d-945e-9379a49d27c1) - *Chuyên mục: Thư viện Video*
+- [Não mô cầu](https://media.ksbtdanang.vn/document/8110ab4f-e788-45a7-9f08-4e2c7d904a03) - *Chuyên mục: Thư viện Video*
+- [Nên tiêm vaccin Não mô cầu](https://media.ksbtdanang.vn/document/881397c6-bb96-41ac-b1c4-a8a2e8adeeab) - *Chuyên mục: Thư viện Video*
+- [ĐẬU MÙA KHỈ](https://media.ksbtdanang.vn/document/d86e9523-9d89-496e-bebe-738a919a6b96) - *Chuyên mục: Thư viện Video*
+- [BẠI LIỆT](https://media.ksbtdanang.vn/document/053a6fda-be56-4b37-b82f-e4038250acc6) - *Chuyên mục: Thư viện Video*
+- [Bài hát TIÊM VẮC-XIN – ĐẨY LÙI BẠI LIỆT](https://media.ksbtdanang.vn/document/7fd4a8c4-7146-4cb3-bf49-1bb807a1b9af) - *Chuyên mục: Thư viện Video*
+- [XỬ LÝ NƯỚC DỪNG TẠM THỜI MÙA MƯA LŨ](https://media.ksbtdanang.vn/document/30c978b5-83a1-4200-880f-d8352b3ea070) - *Chuyên mục: Thư viện Video*
+- [Một mũi tiêm – Cả bản bình yên](https://media.ksbtdanang.vn/document/21c6c575-93c6-4fbf-a17b-5561d8ba84d8) - *Chuyên mục: Thư viện Video*
+- [Khai báo tình trạng sức khoẻ của trẻ khi đi tiêm](https://media.ksbtdanang.vn/document/aaddd380-a412-4fba-85aa-849d10671cb5) - *Chuyên mục: Thư viện Video*
+- [Chuẩn bị tại nhà trước khi tiêm](https://media.ksbtdanang.vn/document/d88afdf9-7e3f-4fb2-9e3e-97acb60fb8bb) - *Chuyên mục: Thư viện Video*
+- [Theo dõi tại nhà sau tiêm](https://media.ksbtdanang.vn/document/edd838cb-49c2-4cce-88dd-d4aad9009e3b) - *Chuyên mục: Thư viện Video*
+- [MC nói.mp4](https://media.ksbtdanang.vn/document/d214652c-5b6f-4059-ae38-ead298c7b25f) - *Chuyên mục: Thư viện Video*
+- [Vì sao ko nên trì hoãn tiêm chủng cho trẻ](https://media.ksbtdanang.vn/document/32693288-1369-4261-918e-17e223626671) - *Chuyên mục: Thư viện Video*
+- [Mũi Vắc xin quan trọng nhất](https://media.ksbtdanang.vn/document/d9c9d85c-f78c-4956-a20d-00cfa1d60897) - *Chuyên mục: Thư viện Video*
+- [Mũi quan trọng trong 24h đầu](https://media.ksbtdanang.vn/document/aa21b02b-9cb8-41b5-9871-53bb1b652770) - *Chuyên mục: Thư viện Video*
+- [Ho, sổ mũi có tiêm vắc xin được không](https://media.ksbtdanang.vn/document/143a61c4-58f9-413d-8be6-11a52476d38e) - *Chuyên mục: Thư viện Video*
+- [THEO DÕI VÀ CHĂM SÓC NGƯỜI BỆNH SỐT XUẤT HUYẾT TẠI NHÀ](https://media.ksbtdanang.vn/document/b00227f5-1acd-4e30-aa83-b24723ed215d) - *Chuyên mục: Thư viện Video*
+- [HÃY THAY NƯỚC BÌNH HOA SAU TẾT ĐỂ PHÒNG MUỖI SXH](https://media.ksbtdanang.vn/document/a7171e82-4976-40dc-a105-9a0f3d69298a) - *Chuyên mục: Thư viện Video*
+- [Diệt muỗi của bé Na](https://media.ksbtdanang.vn/document/a4da12e3-893f-4921-8cd0-2b78d6ec17dc) - *Chuyên mục: Thư viện Video*
+- [PHÒNG CHỐNG SỐT XUẤT HUYẾT](https://media.ksbtdanang.vn/document/e60e5eca-6532-4ada-a2b8-3c83390317d1) - *Chuyên mục: Thư viện Video*
+- [Phòng SXH có Den](https://media.ksbtdanang.vn/document/fb26b87f-8d77-406e-b413-120dbfca28c5) - *Chuyên mục: Thư viện Video*
+- [SỐT XUẤT HUYẾT NẶNG  ĐỪNG ĐỂ QUÁ MUỘN!](https://media.ksbtdanang.vn/document/6ed222fb-ac1d-41cc-aabc-1d95e6fdef02) - *Chuyên mục: Thư viện Video*
+- [SỐT XUẤT HUYẾT ĐỪNG CHỈ NHÌN NHIỆT ĐỘ, HÃY NHÌN TIỂU CẦU](https://media.ksbtdanang.vn/document/9315ac6f-2285-43e1-893d-bd4014e86b00) - *Chuyên mục: Thư viện Video*
+- [🎵 ĐỪNG ĐỂ MUỖI ĐỐT](https://media.ksbtdanang.vn/document/6b948dfa-527d-45a7-bf3d-7297c3c3a1e5) - *Chuyên mục: Thư viện Video*
+- [Sốt xuất huyết không con theo quy luật](https://media.ksbtdanang.vn/document/19aa6eac-ae7d-470d-84f4-635c6505931b) - *Chuyên mục: Thư viện Video*
+- [10 phút mỗi tuần đánh bay SXH](https://media.ksbtdanang.vn/document/4948f276-6fcb-4842-a1d9-d65e28cfcf6c) - *Chuyên mục: Thư viện Video*
+- [HD kỹ năng an toàn trước bão](https://media.ksbtdanang.vn/document/c3ca1bb8-bd3d-44a1-b701-cd012b7654c3) - *Chuyên mục: Thư viện Video*
+- [Phòng bệnh dại](https://media.ksbtdanang.vn/document/e31feb02-cb12-4cea-b6a4-3824a2d68667) - *Chuyên mục: Thư viện Video*
+- [PODCAST - Tuyen truyen Benh dai phat thanh](https://media.ksbtdanang.vn/document/2745239e-e06a-4942-a244-2165de5e4db9) - *Chuyên mục: Âm thanh & Podcast*
+- [CỨ 10 PHÚT  LẠI CÓ 1 NGƯỜI CHẾT VÌ BỆNH DẠI! ](https://media.ksbtdanang.vn/document/64c993d2-db1c-479d-bd29-8cbc01e2b41a) - *Chuyên mục: Thư viện Video*
+- [Những điều cần biết bệnh dại](https://media.ksbtdanang.vn/document/24d87341-0f8f-4912-af26-4180a6a22bae) - *Chuyên mục: Thư viện Video*
+- [PODCAST  - Chủ động phòng, chống bệnh dại ](https://media.ksbtdanang.vn/document/0365404a-53eb-4ca1-81fd-1769330c2b9c) - *Chuyên mục: Âm thanh & Podcast*
+- [CẢNH GIÁC VỚI BỆNH DẠI](https://media.ksbtdanang.vn/document/350880ef-a9c7-4958-8191-3de0fe35d2e5) - *Chuyên mục: Thư viện Video*
+- [VÌ SAO BỆNH DẠI ĐÃ PHÁT THÌ KHÔNG THỂ CỨU CHỮA](https://media.ksbtdanang.vn/document/1c9d856c-4ee0-4cae-b14e-05bb39126649) - *Chuyên mục: Thư viện Video*
+- [“Tin Lời Đồn… Mất Con Mãi Mãi”](https://media.ksbtdanang.vn/document/55e1679b-c4e4-4743-a63e-f3fefe04f9fa) - *Chuyên mục: Thư viện Video*
+- [Trách nhiem phap ly nuoi cho căn ngươi](https://media.ksbtdanang.vn/document/72d5bd91-a875-4bb4-9373-fe330be4a1be) - *Chuyên mục: Thư viện Video*
+- [Câu chuyện Tiem vaccin Dại](https://media.ksbtdanang.vn/document/7c4e16ed-0096-41be-b4a1-0391a8743cd1) - *Chuyên mục: Thư viện Video*
+- [5 phút đầu tiên khi bị chó, mèo cắn có thể quyết định sự an toàn của bạn!](https://media.ksbtdanang.vn/document/c3d5f3f4-4713-43e2-a994-dd77d40cd9f6) - *Chuyên mục: Thư viện Video*
+- [bài hát tiêm vắc xin](https://media.ksbtdanang.vn/document/8f6a6cfa-988d-4f4b-9fa0-a2a067684fcb) - *Chuyên mục: Thư viện Video*
+- [An toàn trong Bầu cử](https://media.ksbtdanang.vn/document/a01fa7ed-990a-4a95-8e5a-5acdd0a43736) - *Chuyên mục: Thư viện Video*
+
+## 🖼️ 02 - Danh mục Ấn phẩm & Infographic Y tế CDC Đà Nẵng (104 tài liệu)
+- [[Apphic]  PC tác hại thuốc lá](https://media.ksbtdanang.vn/document/5666e86e-f91a-4cbf-afec-ecd4c3876761) - *Chuyên mục: Thiết kế truyền thông*
+- [[Apphic] Phân biệt Sốt Xuất Huyết và Cúm](https://media.ksbtdanang.vn/document/43482268-b3d4-4db8-9e12-55402f7b3deb) - *Chuyên mục: Thiết kế truyền thông*
+- [[Apphic] 6 Dấu hiệu cảnh báo bệnh Sốt Xuất Huyết trở nặng](https://media.ksbtdanang.vn/document/be29bc74-df93-4bcd-a66d-fc711ba2bf1f) - *Chuyên mục: Thiết kế truyền thông*
+- [[Inforgraphic] CHIẾN DỊCH “LÀM CHO THẾ GIỚI SẠCH HƠN” NĂM 2026](https://media.ksbtdanang.vn/document/5b03bf0e-8b55-4be2-a69a-add0bc8297d1) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] Dịch vụ tiêm chủng tại CDC Đà Nẵng](https://media.ksbtdanang.vn/document/af34e4e9-1074-4257-acd2-973690551f49) - *Chuyên mục: Thiết kế truyền thông*
+- [[Inforgraphic] Quy chế Dân chủ & Làm việc](https://media.ksbtdanang.vn/document/ccc9ab95-a746-4f7a-8c29-0387069883f2) - *Chuyên mục: Thiết kế truyền thông*
+- [[Apphic] Hướng dẫn vệ sinh môi trường sau lũ lụt](https://media.ksbtdanang.vn/document/86d7210e-8e16-4637-9df2-5e24d0d500db) - *Chuyên mục: Thiết kế truyền thông*
+- [[Inforgraphic] Hướng dẫn tạo lập, cập nhật Sổ sức khỏe điện tử trên ứng dụng VNeID](https://media.ksbtdanang.vn/document/56fd0949-1949-4dfb-8605-a82af3d3a1fb) - *Chuyên mục: Thiết kế truyền thông*
+- [ [Inforgraphic] Sổ Sức khỏe điện tử VNeiD](https://media.ksbtdanang.vn/document/e786efce-a37c-4b5b-8fcc-2e345c616301) - *Chuyên mục: Thiết kế truyền thông*
+- [Bệnh Dại](https://media.ksbtdanang.vn/document/ac7bf9e0-d2ee-4118-9fd5-fcde7887ea83) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] Phòng bệnh điếc nghề nghiệp](https://media.ksbtdanang.vn/document/2c0b8bbd-1748-4d0f-992b-36bcc36baaea) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] NHỮNG ĐIỀU CẦN BIẾT VỀ BỆNH SỞI](https://media.ksbtdanang.vn/document/3383003a-e4e9-479b-93da-bbd779c51a9d) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] Dự phòng và phát hiện sớm Ung thư](https://media.ksbtdanang.vn/document/bcdbc32e-8f17-4790-92e7-56705bdb892e) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] LUẬT BHYT](https://media.ksbtdanang.vn/document/7aa23d61-7108-4734-b110-caed181ea00b) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] TIÊM CHỦNG MỞ RỘNG](https://media.ksbtdanang.vn/document/2be41fb5-3c29-4a5c-8666-5db80ff1943d) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] TẬT KHÚC XẠ HỌC ĐƯỜNG 2026](https://media.ksbtdanang.vn/document/02f1ffb3-fbe9-4a3a-9c03-6083329ea87c) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] Phòng ngừa Cong vẹo cột sống cho học sinh](https://media.ksbtdanang.vn/document/3601a46c-e64c-41c6-88dd-6ae7637227e4) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] HIẾN MÁU NHÂN ĐẠO](https://media.ksbtdanang.vn/document/7f460625-3ef8-4eb3-86da-48ec8c05140c) - *Chuyên mục: Thiết kế truyền thông*
+- [[Tờ rơi] BỆNH DẠI](https://media.ksbtdanang.vn/document/4322d0b9-5094-471c-8817-795fd41b316d) - *Chuyên mục: Thiết kế truyền thông*
+- [[Appic] BẠI LIỆT ](https://media.ksbtdanang.vn/document/28ac6434-dc73-45a8-8ed9-0a6e2ebf48ff) - *Chuyên mục: Thiết kế truyền thông*
+- [[Apphic] Các biện pháp phòng bệnh Thủy đậu (60 x 80 cm)](https://media.ksbtdanang.vn/document/fb118026-8cfe-4aa6-b1bc-3e3cc5446013) - *Chuyên mục: Thiết kế truyền thông*
+- [Tuần lễ Tăng Huyết Áp 11/5 - 17/5/2026](https://media.ksbtdanang.vn/document/613b4216-f36b-43dd-bd58-27ac3eed64da) - *Chuyên mục: Thiết kế truyền thông*
+- [[Poster] Đối tượng khám Sức khỏe định kỳ](https://media.ksbtdanang.vn/document/14ddd85f-be53-40a7-94e4-f69d79157eb0) - *Chuyên mục: Thiết kế truyền thông*
+- [ [Poster] Chính sách Người khuyết tật](https://media.ksbtdanang.vn/document/913ea350-cfeb-4c7b-9de1-6820e61d3024) - *Chuyên mục: Tài liệu chuyên môn*
+- [[Inforgraphic] Bệnh dại](https://media.ksbtdanang.vn/document/3ef09cc0-258e-43fd-b4f5-b6a4cdfcf092) - *Chuyên mục: Thiết kế truyền thông*
+- [[Inforgraphic] Y tế học đường: Bảo vệ mắt trẻ em](https://media.ksbtdanang.vn/document/b68f525d-bd16-4d44-8c5e-97bb935b4330) - *Chuyên mục: Thiết kế truyền thông*
+- [[Inforgraphic] Y tế học đường: Phòng chống bạo hành trẻ em](https://media.ksbtdanang.vn/document/79be2560-f52a-4048-9fb7-d31cd645ebc2) - *Chuyên mục: Thiết kế truyền thông*
+- [[Inforgraphic] Y tế học đường: Tai nạn thương tích trẻ em](https://media.ksbtdanang.vn/document/543606a9-c79c-4ed9-b070-32c0d3720d26) - *Chuyên mục: Thiết kế truyền thông*
+- [[Infographic] Dịch vụ: Tiêm thuốc tránh thai](https://media.ksbtdanang.vn/document/4de909d3-d334-44d5-a921-c07696bc6c9f) - *Chuyên mục: Thiết kế truyền thông*
+- [[Infographic] Dịch vụ: Đặt vòng tránh thai](https://media.ksbtdanang.vn/document/6728bd72-b598-4270-8250-07340851c97f) - *Chuyên mục: Thiết kế truyền thông*
+- [[Infographic] Dịch vụ: Cấy que tránh thai](https://media.ksbtdanang.vn/document/35b4c494-4634-408b-94d1-795a19970964) - *Chuyên mục: Thiết kế truyền thông*
+- [[Poster] Chứng nhận phòng xét nghiệm đạt chuẩn](https://media.ksbtdanang.vn/document/e2610327-f19a-4d01-b5ae-2be55fe39282) - *Chuyên mục: Thiết kế truyền thông*
+- [[Infographic] Dịch vụ: Xét nghiệm Nước và Thực phẩm](https://media.ksbtdanang.vn/document/9756247c-e939-4302-8cba-fcfc7e20dc32) - *Chuyên mục: Thiết kế truyền thông*
+- [[Infographic] Dịch vụ: Xét nghiệm Nước và Thực phẩm](https://media.ksbtdanang.vn/document/4c084f6b-0b72-4f25-a5e8-b0d2e1cb0b87) - *Chuyên mục: Thiết kế truyền thông*
+- [[Infographic] Dịch vụ: Khám và điều trị Ký sinh trùng](https://media.ksbtdanang.vn/document/f45e803c-0486-4cdf-b8c7-a5ebfb109b0b) - *Chuyên mục: Thiết kế truyền thông*
+- [[Infographic] Dịch vụ: Diệt muỗi](https://media.ksbtdanang.vn/document/e4a4b8dd-ee63-4a64-8b00-52ad0c3e6f22) - *Chuyên mục: Thiết kế truyền thông*
+- [Phòng chống dịch bệnh NIPAD](https://media.ksbtdanang.vn/document/c40f23ee-bc9f-430a-b175-dd9ae16e5316) - *Chuyên mục: Thiết kế truyền thông*
+- [Hantavirus](https://media.ksbtdanang.vn/document/bc2bc44c-81bc-499b-8b32-eefce5a7c75e) - *Chuyên mục: Thiết kế truyền thông*
+- [Tập trung mọi nguồn lực để loại trừ sốt rét](https://media.ksbtdanang.vn/document/f99c0e21-2c80-4b92-af2c-c337f3750fa1) - *Chuyên mục: Thiết kế truyền thông*
+- [Những điều cần biết về tiêm Td](https://media.ksbtdanang.vn/document/bfe020ed-71a0-436c-b177-4245bc2f9e56) - *Chuyên mục: Thiết kế truyền thông*
+- [Viêm gan B](https://media.ksbtdanang.vn/document/85851a23-4b46-4a83-bc4a-29e489ddafd5) - *Chuyên mục: Thiết kế truyền thông*
+- [Phòng bệnh thuỷ đậu](https://media.ksbtdanang.vn/document/e9fe07f2-59e7-4c4c-bd6f-0ca09f24f8f7) - *Chuyên mục: Thiết kế truyền thông*
+- [4 thời điểm rửa tay bằng xà phòng](https://media.ksbtdanang.vn/document/3610abab-38b1-4a2b-afa6-d1ca7494a1d9) - *Chuyên mục: Thiết kế truyền thông*
+- [Ngày vệ sinh tay thế giới](https://media.ksbtdanang.vn/document/54bbfccf-d183-4315-a4fb-a2c9e186659c) - *Chuyên mục: Thiết kế truyền thông*
+- [Ho gà 1.png](https://media.ksbtdanang.vn/document/87e29b5f-5c17-441a-aa7d-3159a016948b) - *Chuyên mục: Thiết kế truyền thông*
+- [SỐT VIRUS Ở TRẺ VÀ CÁCH PHÒNG BỆNH HIỆU QUẢ](https://media.ksbtdanang.vn/document/e22b9e08-42d4-46aa-8835-fab990b2d919) - *Chuyên mục: Thiết kế truyền thông*
+- [CÁCH CHĂM SÓC TRẺ SỐT TẠI NHÀ](https://media.ksbtdanang.vn/document/1729ea10-2c43-4b3d-a2c1-c8205224b2c5) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Cúm Mùa.jpg](https://media.ksbtdanang.vn/document/1ee879d6-b11e-47ce-b6b3-77255b6fd21b) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Vệ sinh môi trường sau mùa mưa lũ](https://media.ksbtdanang.vn/document/714680d4-1f5b-446d-87be-b32a379a6416) - *Chuyên mục: Thiết kế truyền thông*
+- [HD phòng TCM tại trường học](https://media.ksbtdanang.vn/document/76d078c4-a7cb-4fd7-9d88-af8bff47e513) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Tay chân miệng](https://media.ksbtdanang.vn/document/4c9cd2d9-3ace-40fc-9a3f-e8512832bb1c) - *Chuyên mục: Thiết kế truyền thông*
+- [3 SẠCH TRONG PHÒNG BỆNH TAY CHÂN MIỆNG](https://media.ksbtdanang.vn/document/20aa6e10-371d-4448-b699-4964aef19f7f) - *Chuyên mục: Thiết kế truyền thông*
+- [689819872_1279790530971664_6364207230290504361_n.jpg](https://media.ksbtdanang.vn/document/2a18a3cc-41fe-4a44-add4-ee4a8dae6faf) - *Chuyên mục: Thiết kế truyền thông*
+- [663376581_122178869468770254_8305886037915718624_n.jpg](https://media.ksbtdanang.vn/document/9b184a06-9e51-4871-93a3-0819605b2222) - *Chuyên mục: Thiết kế truyền thông*
+- [658418732_122178126368770254_5718473160947988679_n.jpg](https://media.ksbtdanang.vn/document/f16147ed-579b-49dd-8da2-84e9304075b2) - *Chuyên mục: Thiết kế truyền thông*
+- [658068805_122178126344770254_5862968693626024336_n.jpg](https://media.ksbtdanang.vn/document/77362bf2-c1c6-4ab5-b521-bd8b9be50983) - *Chuyên mục: Thiết kế truyền thông*
+- [659096343_122177893340770254_2017368336190317241_n.jpg](https://media.ksbtdanang.vn/document/675c0bf0-7568-416f-b3f2-451b7a8a9561) - *Chuyên mục: Thiết kế truyền thông*
+- [658151725_122178126404770254_8271561929638521655_n.jpg](https://media.ksbtdanang.vn/document/4a173c8b-e5e1-4f9d-812c-5adb05d77e67) - *Chuyên mục: Thiết kế truyền thông*
+- [658438472_122178126434770254_1824215886487765912_n.jpg](https://media.ksbtdanang.vn/document/31f341b9-e5c5-4944-9a9e-96245933490d) - *Chuyên mục: Thiết kế truyền thông*
+- [653875017_122176675040770254_3985395263352310348_n.jpg](https://media.ksbtdanang.vn/document/26f61c89-a4cb-4995-9b4f-b3dbf65bb6a5) - *Chuyên mục: Thiết kế truyền thông*
+- [Vắc xin ROTA](https://media.ksbtdanang.vn/document/391e1cb9-f161-4092-9128-9720131922c5) - *Chuyên mục: Thiết kế truyền thông*
+- [Virus Nipah](https://media.ksbtdanang.vn/document/2acb5954-3b4e-41e2-b887-dab02370ed48) - *Chuyên mục: Thiết kế truyền thông*
+- [Chùm ca bệnh trên tàu du lịch quốc tế ](https://media.ksbtdanang.vn/document/75571ff9-40ab-4176-9634-ccc664af78b7) - *Chuyên mục: Thiết kế truyền thông*
+- [Bệnh tả](https://media.ksbtdanang.vn/document/fdc56b67-255e-49be-8c37-71ff88345cc1) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Vệ sinh môi trường sau mùa mưa lũ](https://media.ksbtdanang.vn/document/37ea79e8-2036-45b3-8fe1-956d5d9c0005) - *Chuyên mục: Thiết kế truyền thông*
+- [Quy trình quản lý SK trẻ tại trường học](https://media.ksbtdanang.vn/document/222fe6d6-57b5-4220-b198-c8157e154ee0) - *Chuyên mục: Thiết kế truyền thông*
+- [Ngày Quốc tế phòng chống Dịch bệnh](https://media.ksbtdanang.vn/document/f5d55ba0-c008-4108-ae0f-7b20e0114e07) - *Chuyên mục: Thiết kế truyền thông*
+- [Phòng EBOLA](https://media.ksbtdanang.vn/document/86eb3973-5b3f-4efd-850b-defff6f52cef) - *Chuyên mục: Thiết kế truyền thông*
+- [Cảnh báo dịch bệnh Thu đông](https://media.ksbtdanang.vn/document/2e66b417-6f82-4fc1-8134-46d1da39165e) - *Chuyên mục: Thiết kế truyền thông*
+- [LỊCH TIÊM PHÒNG UỐN VÁN CHO PNMT](https://media.ksbtdanang.vn/document/cbe7530b-9245-4e19-97bb-d2c09005906e) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Uốn ván](https://media.ksbtdanang.vn/document/c7bf5192-06aa-48a3-9e5f-40727e023410) - *Chuyên mục: Thiết kế truyền thông*
+- [690110671_122183141684770254_6842068255215210655_n.jpg](https://media.ksbtdanang.vn/document/c0b30342-5c7d-4d93-88ef-8c0611e9e619) - *Chuyên mục: Thiết kế truyền thông*
+- [685638624_122182194974770254_8517104074104174365_n.jpg](https://media.ksbtdanang.vn/document/581def7a-2957-4624-9a45-a437df978887) - *Chuyên mục: Thiết kế truyền thông*
+- [657086806_122177336498770254_891433501718745764_n.jpg](https://media.ksbtdanang.vn/document/80224e41-abeb-4595-9c92-5151741e4aa8) - *Chuyên mục: Thiết kế truyền thông*
+- [655993309_122177049428770254_6489918348078212501_n.jpg](https://media.ksbtdanang.vn/document/d4cb94d5-8e43-49da-b176-890489215972) - *Chuyên mục: Thiết kế truyền thông*
+- [Não mô cầu](https://media.ksbtdanang.vn/document/018fd1ee-5b9a-4e46-8451-749f53e91bba) - *Chuyên mục: Thiết kế truyền thông*
+- [Lịch tiêm não mô cầu](https://media.ksbtdanang.vn/document/f74d5087-eab2-45a9-938a-af10d87235f8) - *Chuyên mục: Thiết kế truyền thông*
+- [ĐƯA TRẺ ĐI TIEM VACCIN PHÒNG BẠI LIỆT TRƯỚC KHI QUÁ MUỘN!](https://media.ksbtdanang.vn/document/20d2f73e-24c5-42dd-963b-e440f9059b9d) - *Chuyên mục: Thiết kế truyền thông*
+- [Phòng Ngừa Bệnh Bại Liệt 2](https://media.ksbtdanang.vn/document/992ea757-2138-4315-90f0-c5b8a0d4ec70) - *Chuyên mục: Thiết kế truyền thông*
+- [Tiêm chủng mở rộng](https://media.ksbtdanang.vn/document/e6262d7c-2aa0-485e-9731-16c7fe9d6248) - *Chuyên mục: Thiết kế truyền thông*
+- [685138044_122181979802770254_5427659477793272990_n.jpg](https://media.ksbtdanang.vn/document/e5586a30-3a93-4e00-bf2a-6b7673f2809e) - *Chuyên mục: Thiết kế truyền thông*
+- [682304277_122181919106770254_6354318957699373042_n.jpg](https://media.ksbtdanang.vn/document/182689ac-db7c-4f87-a188-efbe7a9f8fda) - *Chuyên mục: Thiết kế truyền thông*
+- [681247456_122181793256770254_5018789551660064189_n.jpg](https://media.ksbtdanang.vn/document/8f397e43-91ca-44d5-9b59-bfdf40241ec0) - *Chuyên mục: Thiết kế truyền thông*
+- [680026845_122181494504770254_7930845437013795468_n.jpg](https://media.ksbtdanang.vn/document/c184e476-e0ad-4090-87e8-69425cdb80e2) - *Chuyên mục: Thiết kế truyền thông*
+- [641473293_122173522328770254_3063194815511371015_n.jpg](https://media.ksbtdanang.vn/document/e718f2aa-2bfc-435d-aac9-47337ba2330f) - *Chuyên mục: Thiết kế truyền thông*
+- [Đừng để trẻ bỏ lỡ cơ hội được bảo vệ](https://media.ksbtdanang.vn/document/d7724b32-5189-4195-beb1-adc3e93d3432) - *Chuyên mục: Thiết kế truyền thông*
+- [1780375906431_1918921171890005309_5577347796842051066_643a2570fbdfc5749b3e772759cc0a5f.jpg](https://media.ksbtdanang.vn/document/fb2f78ee-7939-4cf4-b295-815d5e908c39) - *Chuyên mục: Thiết kế truyền thông*
+- [1780995888917_6491416761898537610_g101138623469566203_b849827c27c1a02d1f7b8daf629ccf95 (1).jpg](https://media.ksbtdanang.vn/document/544e191e-bb52-4e0f-9c4b-5b9800252f69) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Bộ câu hỏi SXH](https://media.ksbtdanang.vn/document/8a0d94c2-b9b9-420d-9ecd-a71b51d507b3) - *Chuyên mục: Thiết kế truyền thông*
+- [POSTER Vòng đời của chú muỗi tinh nghịch](https://media.ksbtdanang.vn/document/bb5cb397-1038-43a6-b74e-d20cabbeb046) - *Chuyên mục: Thiết kế truyền thông*
+- [ỨNG PHÓ VỚI MUỖI VÀ CÔN TRÙNG SINH SÔI SAU MƯA LŨ ](https://media.ksbtdanang.vn/document/dde4f908-b3bc-4a42-b1f7-ee5bbe4e749a) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Sốt xuất huyết.jpg](https://media.ksbtdanang.vn/document/e1df7543-906b-4e47-be8d-37b2de238a39) - *Chuyên mục: Thiết kế truyền thông*
+- [1781332524508_1918921171890005309_5577347796842051066_b5a3cb8c13e1709fca0591c925aa396c.jpg](https://media.ksbtdanang.vn/document/43be2ac6-0f8c-4c9e-8619-f371b41e4b39) - *Chuyên mục: Thiết kế truyền thông*
+- [1781952096785_1918921171890005309_624157416225046325_d258480c4ade33f1ff6dac6e8ccc6cbe.jpg](https://media.ksbtdanang.vn/document/88e1e749-b907-4c78-b32d-1abe7874200e) - *Chuyên mục: Thiết kế truyền thông*
+- [719f5a8a-9d20-413d-a60e-ea86b70d4c4f.png](https://media.ksbtdanang.vn/document/9c293380-8a57-4bb7-a5f9-0187accb0203) - *Chuyên mục: Thiết kế truyền thông*
+- [1780997074419_6491416761898537610_g101138623469566203_78ddfa6c64105da75a6aa0cfe99cac72 (1).jpg](https://media.ksbtdanang.vn/document/a2c80a33-5a46-4715-be07-32d244c292cd) - *Chuyên mục: Thiết kế truyền thông*
+- [1780997074273_6491416761898537610_g101138623469566203_1619e5f913a4ddf0801214e9d907a21c (1).jpg](https://media.ksbtdanang.vn/document/041b5f8f-a994-4ee7-8f61-0d435a1315b8) - *Chuyên mục: Thiết kế truyền thông*
+- [PHÒNG BỆNH TỐT- ĐÓN LỄ VUI](https://media.ksbtdanang.vn/document/35430c15-44a5-4c8b-b002-15c2a1f28b6a) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Câu hỏi Bệnh dại](https://media.ksbtdanang.vn/document/e5d750b2-cf2e-44fe-bd66-c60821a7c565) - *Chuyên mục: Thiết kế truyền thông*
+- [Hỏi đáp những lo lắng về vắc xin dại](https://media.ksbtdanang.vn/document/2b49523d-5c93-4e50-b814-3af777c137c5) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Bệnh dại](https://media.ksbtdanang.vn/document/88833f8e-0ca0-4b08-918b-951e6141de7e) - *Chuyên mục: Thiết kế truyền thông*
+- [Poster Bệnh Dại 1.jpg](https://media.ksbtdanang.vn/document/2cea1971-43f6-465f-8f33-8495804eb8a7) - *Chuyên mục: Thiết kế truyền thông*
+- [Vắc xin dại thế hệ mới](https://media.ksbtdanang.vn/document/82f626b3-a86e-4098-b300-53e75f4126a9) - *Chuyên mục: Thiết kế truyền thông*
+- [Quyết liệt triển khai phòng chống dại](https://media.ksbtdanang.vn/document/ab38ea34-5339-48e8-a98b-42200b485b25) - *Chuyên mục: Thiết kế truyền thông*
+
+## 📄 03 - Danh mục Cẩm nang, Tài liệu & Tờ rơi Y tế CDC Đà Nẵng (16 tài liệu)
+- [[Tài liệu] Bài nói chuyện Sức Khỏe Cộng Đồng](https://media.ksbtdanang.vn/document/9f7074dc-fad8-436f-986f-225a72d22b27) - *Chuyên mục: Tài liệu chuyên môn*
+- [[Sổ tay] Cơ chế Giám sát và Báo cáo dịch bệnh](https://media.ksbtdanang.vn/document/e0963f85-19bf-4a99-bf35-0cbafc087b15) - *Chuyên mục: Tài liệu chuyên môn*
+- [Hướng dẫn TTGDSK xã, phường (Ban hanh)](https://media.ksbtdanang.vn/document/d7222a1d-2f68-4c56-95af-296ac481c6e7) - *Chuyên mục: Tài liệu chuyên môn*
+- [Tổng quan về nhiễm vi rút viêm gan B](https://media.ksbtdanang.vn/document/40790e54-a92e-462e-a500-ebe65d74be5c) - *Chuyên mục: Tài liệu chuyên môn*
+- [Giám sát & phòng chống vi rút Hanta tại cửa khẩu](https://media.ksbtdanang.vn/document/ec1d339a-b19c-404c-b55b-c275da0e2d14) - *Chuyên mục: Tài liệu chuyên môn*
+- [Chuyên đề bệnh do Virút Hanta ở người](https://media.ksbtdanang.vn/document/6eabc61c-887c-4cd9-bf36-ffc257894d5e) - *Chuyên mục: Tài liệu chuyên môn*
+- [Báo cáo tình hình thực hiện công tác 6 tháng và nhiệm vụ 6 tháng cuối năm 2026. Ngành y tế TP Đà Nẵng](https://media.ksbtdanang.vn/document/0b67e9e7-9dfe-44d7-a838-0225ea044b1f) - *Chuyên mục: Biểu mẫu hành chính*
+- [Kỹ thuật can thiệp dự phòng lây truyền HIV từ mẹ sang con](https://media.ksbtdanang.vn/document/6fb030ca-1241-4b8c-b013-8d691cbc94fc) - *Chuyên mục: Tài liệu chuyên môn*
+- [26.6 Cập nhật Chính sách Tài chính Kế toán 2026](https://media.ksbtdanang.vn/document/d3c051a5-fce3-4ba9-9fc8-6cd02c831f57) - *Chuyên mục: Tài liệu chuyên môn*
+- [Tập huấn CSSK bà mẹ và các bệnh](https://media.ksbtdanang.vn/document/480df1d8-9978-4533-8a59-eafcfc4fb572) - *Chuyên mục: Tài liệu chuyên môn*
+- [Nghị định 102 Chỉnh phủ](https://media.ksbtdanang.vn/document/3a626733-8146-4684-a063-858412405e9f) - *Chuyên mục: Tài liệu chuyên môn*
+- [Truyền thông HIV/AIDS](https://media.ksbtdanang.vn/document/b37c392a-5ccb-4a52-9404-36f025df3c63) - *Chuyên mục: Tài liệu chuyên môn*
+- [Quyết định về đánh giá xếp loại ](https://media.ksbtdanang.vn/document/ee616d00-641b-43f2-9964-70331532b23c) - *Chuyên mục: Tài liệu chuyên môn*
+- [Hoi dap Nao mo cau.zip](https://media.ksbtdanang.vn/document/c6d054c1-41ac-4072-b94f-5f924e3a6a97) - *Chuyên mục: Tài liệu chuyên môn*
+- [Bai liet.rar](https://media.ksbtdanang.vn/document/2b62149a-c66d-4719-bb33-c3eff280b9b6) - *Chuyên mục: Tài liệu chuyên môn*
+- [TCMR.rar](https://media.ksbtdanang.vn/document/7cac6aa1-e35b-406b-8963-4ece3a7402fa) - *Chuyên mục: Tài liệu chuyên môn*
+
+## 🎙️ 04 - Danh mục Bản tin Âm thanh & Podcast Sức khỏe CDC Đà Nẵng (29 tài liệu)
+- [[Audio] Bệnh dại 2026](https://media.ksbtdanang.vn/document/a1869542-73cc-4ea8-9215-78885db63f15) - *Chuyên mục: Âm thanh & Podcast*
+- [[Audio] Phát thanh SXH 2026](https://media.ksbtdanang.vn/document/3bcea8e3-648c-4969-a44f-2006010a3afd) - *Chuyên mục: Âm thanh & Podcast*
+- [[Audio] Nuôi con bằng sữa mẹ 2026](https://media.ksbtdanang.vn/document/5c12846a-5c0d-42d3-a5ba-15e1aa9b58df) - *Chuyên mục: Âm thanh & Podcast*
+- [Tuyên truyền lao](https://media.ksbtdanang.vn/document/19594950-a5e1-4868-9a3f-beddda38cc58) - *Chuyên mục: Âm thanh & Podcast*
+- [KHUYẾN CÁO CÁC BIỆN PHÁP PHÒNG, CHỐNG DỊCH BỆNH TRƯỚC, TRONG VÀ SAU MƯA LŨ, NGẬP LỤT … Xem thêm (1) (online-audio-converter.com).mp3](https://media.ksbtdanang.vn/document/812970ee-1acf-42c3-9244-c702f7876501) - *Chuyên mục: Âm thanh & Podcast*
+- [Phat thanh Bệnh Thủy đậu](https://media.ksbtdanang.vn/document/4aa42f56-ef81-46aa-8d4b-868faafad35d) - *Chuyên mục: Âm thanh & Podcast*
+- [PHÒNG CHỐNG BỆNH XOẮN KHUẨN VÀNG DA 2](https://media.ksbtdanang.vn/document/fa783f80-ef1a-4320-abbb-c6d68b27d77d) - *Chuyên mục: Âm thanh & Podcast*
+- [Phát thanh đuôi .mp3](https://media.ksbtdanang.vn/document/0dab9d8f-9eab-4ad5-9548-38c97e9f0603) - *Chuyên mục: Âm thanh & Podcast*
+- [TIÊM VẮC-XIN VIÊM GAN B TRONG 24 GIỜ ĐẦU LÁ CHẮN QUAN TRỌNG CHO TRẺ SƠ SINH](https://media.ksbtdanang.vn/document/9c30a624-bf48-4e68-9f58-6114d306c6b1) - *Chuyên mục: Âm thanh & Podcast*
+- [TIÊM CHỦNG VẮC XIN UỐN VÁN - BẠCH HẦU MIỄN PHÍ CHO TRẺ ĐỦ 7 TUỔI](https://media.ksbtdanang.vn/document/1b6bd159-9eb9-4d0b-acc4-84c4b1519ee3) - *Chuyên mục: Âm thanh & Podcast*
+- [PODCAST - Chủ động phòng, chống bệnh dại](https://media.ksbtdanang.vn/document/3dcd9241-4251-4896-8b81-b4dd522fcb71) - *Chuyên mục: Âm thanh & Podcast*
+- [Tuyên truyền bệnh dại phát thanh](https://media.ksbtdanang.vn/document/fe5484e3-dfd3-4170-969c-ad31db91818a) - *Chuyên mục: Âm thanh & Podcast*
+- [Phòng bệnh đường hô hấp](https://media.ksbtdanang.vn/document/d59c1664-421f-4efa-87d2-e208ab88a0c7) - *Chuyên mục: Âm thanh & Podcast*
+- [HÃY GIÚP CON EM MÌNH KHÔNG BỊ MẮC BỆNH TAY CHÂN MIỆNG..mp3](https://media.ksbtdanang.vn/document/04948eea-236e-45f8-b051-7446295ba939) - *Chuyên mục: Âm thanh & Podcast*
+- [Phòng não mô cầu](https://media.ksbtdanang.vn/document/463405d2-069d-4e5e-815c-98b6e5399fe0) - *Chuyên mục: Âm thanh & Podcast*
+- [CỨ 10 PHÚT LẠI CÓ 1 NGƯỜI CHẾT VÌ BỆNH DẠI!](https://media.ksbtdanang.vn/document/56abca7d-59f3-48aa-bfc1-ce781ca78faf) - *Chuyên mục: Âm thanh & Podcast*
+- [PHÒNG CÁC BỆNH THƯỜNG GẶP Ở TRẺ NHỎ TRONG THỜI ĐIỂM GIAO MÙA THU – ĐÔNG xong.mp3](https://media.ksbtdanang.vn/document/6e1a744d-4c4d-4222-a55a-7fbf4c65e215) - *Chuyên mục: Âm thanh & Podcast*
+- [SỐT XUẤT HUYẾT NẶNG ĐỪNG ĐỂ QUÁ MUỘN!](https://media.ksbtdanang.vn/document/165af7e3-5f81-40a1-93ea-fd6506faef1c) - *Chuyên mục: Âm thanh & Podcast*
+- [Phòng bệnh Dại](https://media.ksbtdanang.vn/document/2c377dd8-ae81-42cd-a863-56834233d866) - *Chuyên mục: Âm thanh & Podcast*
+- [CHAM SOC VÀ THEO DOI TRE MAC SOI](https://media.ksbtdanang.vn/document/93c5e637-8a7a-4c8f-b115-6528adeed814) - *Chuyên mục: Âm thanh & Podcast*
+- [PHÒNG CHỐNG SỐT XUẤT HUYẾT ](https://media.ksbtdanang.vn/document/9229fd74-451f-4454-a5b5-61bcdbf22312) - *Chuyên mục: Âm thanh & Podcast*
+- [Phòng SXH có Den-2](https://media.ksbtdanang.vn/document/88b9810e-7988-4818-b69d-3a22bc85d226) - *Chuyên mục: Âm thanh & Podcast*
+- [CẢNH BÁO NGUY CƠ BÙNG PHÁT DỊCH CÚM TRƯỚC MÙA ĐÔNG](https://media.ksbtdanang.vn/document/e0f9f4ef-f713-4bd3-a1ba-34d2a1d40ee4) - *Chuyên mục: Âm thanh & Podcast*
+- [ĐẬU MÙA KHỈ](https://media.ksbtdanang.vn/document/dc678fe0-7960-4a3b-8273-3187c350cb5b) - *Chuyên mục: Âm thanh & Podcast*
+- [THEO DÕI VÀ CHĂM SÓC NGƯỜI BỆNH SỐT XUẤT HUYẾT TẠI NHÀ](https://media.ksbtdanang.vn/document/3d1e5a70-fe9b-4caf-b573-2d583e143d1e) - *Chuyên mục: Âm thanh & Podcast*
+- [BẠI LIỆT](https://media.ksbtdanang.vn/document/776ee907-1227-4e35-942b-274267981680) - *Chuyên mục: Âm thanh & Podcast*
+- [PHÒNG BỆNH TIÊU CHẢY DO VI RÚT ROTA Ở TRẺ NHỎ](https://media.ksbtdanang.vn/document/ae5209fb-2729-4ff6-9646-4be064692b2e) - *Chuyên mục: Âm thanh & Podcast*
+- [Phát thanh Tay chân miệng](https://media.ksbtdanang.vn/document/8ad9102c-4d59-4062-b81a-7dddf96ee32c) - *Chuyên mục: Âm thanh & Podcast*
+- [3 SẠCH VÀ LƯU Ý CHĂM SÓC TRẺ TAY CHÂN MIỆNG](https://media.ksbtdanang.vn/document/9faca975-9540-4150-b7e8-e533b7b6bc12) - *Chuyên mục: Âm thanh & Podcast*
