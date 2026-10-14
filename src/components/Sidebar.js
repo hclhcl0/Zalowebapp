@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, Megaphone, Mail, 
   Newspaper, CalendarDays, AlertTriangle, 
   Settings, UserCog, LogOut, ChevronRight, Download, BrainCircuit, KeyRound, Tag, Smartphone, Phone, Activity,
-  MessageSquarePlus, MessageSquareText
+  MessageSquarePlus, MessageSquareText, MessageSquare
 } from "lucide-react";
 
 // Helper to map string/emoji to Lucide icon component
@@ -18,6 +18,7 @@ const IconMapper = ({ iconName, size = 18 }) => {
     case "Users": return <Users size={size} />;
     case "Megaphone": return <Megaphone size={size} />;
     case "Mail": return <Mail size={size} />;
+    case "MessageSquare": return <MessageSquare size={size} />;
     case "MessageSquareText": return <MessageSquareText size={size} />;
     case "📰":
     case "Newspaper": return <Newspaper size={size} />;
@@ -47,6 +48,7 @@ const menuGroups = [
   {
     title: "📣 Zalo OA",
     items: [
+      { icon: "MessageSquare", label: "Tiếp nhận & Điều phối", href: "/inquiries" },
       { icon: "Users", label: "Người quan tâm OA", href: "/followers" },
       { icon: "Activity", label: "Nhật ký Hoạt động", href: "/logs" },
       { icon: "MessageSquarePlus", label: "Gửi Zalo", href: "/send-zalo" },

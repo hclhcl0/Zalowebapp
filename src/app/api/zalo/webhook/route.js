@@ -450,8 +450,77 @@ async function handleTextMessage(userId, text, appUserId) {
         .replace(/http:\/\/media\.ksbtdanang\.vn/gi, "https://media.ksbtdanang.vn");
     }
 
+    // ============================================================
+    // ĐIỀU PHỐI CÂU HỎI & CẢNH BÁO CÁN BỘ (LỰA CHỌN A)
+    // Nếu AI không trả lời được / cần bác sĩ can thiệp / tình huống khẩn cấp:
+    // Chuyển câu hỏi cho Cán bộ phụ trách qua Zalo và gửi tin trấn an người dân.
+    // ============================================================
+    const { detectUnresolvedQuery, createInquiryAndNotifyStaff, classifyInquiryTopic } = await import("@/lib/inquiryService.mjs");
+    const unresolvedCheck = detectUnresolvedQuery(trimmedText, aiReply);
+    const isCitizen = follower?.userType !== "staff";
+    const citizenName = follower?.fullName || follower?.displayName || "Người dân";
+
+    if (unresolvedCheck.isUnresolved) {
+      console.log(`[InquiryEscalation] Phát hiện câu hỏi chưa giải quyết (${unresolvedCheck.reason}): "${trimmedText.substring(0, 80)}"`);
+      const result = await createInquiryAndNotifyStaff({
+        zaloUserId: userId,
+        citizenName,
+        question: trimmedText,
+        aiDraftReply: aiReply,
+        reason: unresolvedCheck.reason,
+      });
+
+      if (result?.holdingReply) {
+        await sendTextMessage(userId, result.holdingReply);
+        console.log(`[InquiryEscalation] Đã gửi thông báo tiếp nhận (Lựa chọn A) cho ${userId}`);
+
+        try {
+          await prisma.messageLog.create({
+            data: {
+              zaloUserId: userId,
+              direction: "outbound",
+              type: "text",
+              content: result.holdingReply,
+              rawPayload: JSON.stringify({
+                source: "inquiry_escalation",
+                ticketId: result.inquiry?.id,
+                reason: unresolvedCheck.reason,
+                topic: result.topicLabel,
+              }),
+              receivedAt: new Date(),
+            },
+          });
+        } catch (dbErr) {
+          console.error("[ZALO WEBHOOK DB ERROR - ESCALATION]", dbErr.message);
+        }
+        return; // Hoàn tất luồng chuyển tiếp
+      }
+    }
+
+    // Gửi câu trả lời bình thường nếu AI giải đáp thành công
     await sendTextMessage(userId, aiReply);
     console.log(`[Gemini] Đã trả lời ${userId} (${aiReply.length} ký tự)`);
+
+    // Lưu thống kê câu hỏi người dân đã được AI giải đáp để tính tỷ lệ tự động
+    if (isCitizen) {
+      try {
+        const topic = await classifyInquiryTopic(trimmedText);
+        await prisma.citizenInquiry.create({
+          data: {
+            zaloUserId: userId,
+            citizenName,
+            question: trimmedText,
+            topic: topic.topicCode,
+            topicLabel: topic.topicLabel,
+            status: "ai_resolved",
+            aiDraftReply: aiReply,
+            assignedDept: topic.department,
+          },
+        });
+      } catch (e) {
+        console.error("[Inquiry Log Error]", e.message);
+      }
+    }
     
     // Ghi log câu trả lời của AI vào DB để giữ ngữ cảnh (history) cho các câu hỏi sau
     try {
@@ -470,7 +539,26 @@ async function handleTextMessage(userId, text, appUserId) {
     }
   } catch (err) {
     console.error("[AI] Lỗi khi gọi nhà cung cấp AI:", err.message);
-    // Fallback thân thiện khi AI lỗi
+    // Khi AI gặp lỗi hệ thống, tự động kích hoạt Lựa chọn A để tiếp nhận câu hỏi và thông báo cán bộ
+    try {
+      const { createInquiryAndNotifyStaff } = await import("@/lib/inquiryService.mjs");
+      const citizenName = follower?.fullName || follower?.displayName || "Người dân";
+      const result = await createInquiryAndNotifyStaff({
+        zaloUserId: userId,
+        citizenName,
+        question: trimmedText,
+        aiDraftReply: null,
+        reason: "system_error",
+      });
+      if (result?.holdingReply) {
+        await sendTextMessage(userId, result.holdingReply);
+        return;
+      }
+    } catch (inqErr) {
+      console.error("[InquiryService Fallback Error]", inqErr.message);
+    }
+
+    // Fallback thân thiện cuối cùng
     let hotline = "1900988975";
     try {
       const dbConfig = await prisma.systemConfig.findUnique({ where: { key: "hotline_main" } });
@@ -478,7 +566,7 @@ async function handleTextMessage(userId, text, appUserId) {
     } catch(e) {}
     await sendTextMessage(
       userId,
-      `Xin lỗi, hệ thống AI đang tạm thời không khả dụng. Vui lòng thử lại sau hoặc liên hệ trực tiếp CDC Đà Nẵng qua hotline ${hotline} để được hỗ trợ nhanh nhất.`
+      `Xin lỗi, hệ thống AI đang tạm thời bận. Câu hỏi của bạn đã được ghi nhận. Bạn vui lòng liên hệ trực tiếp CDC Đà Nẵng qua hotline ${hotline} để được hỗ trợ nhanh nhất.`
     );
   }
 }

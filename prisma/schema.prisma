@@ -205,3 +205,43 @@ model BroadcastLog {
   @@index([sentAt])
   @@index([sentBy])
 }
+
+// ============================================================
+// QUẢN LÝ CÂU HỎI NGƯỜI DÂN & ĐIỀU PHỐI CÁN BỘ (INQUIRIES)
+// ============================================================
+model CitizenInquiry {
+  id                Int       @id @default(autoincrement())
+  zaloUserId        String    // ID người dùng Zalo
+  citizenName       String?   // Tên người dân
+  question          String    // Nội dung câu hỏi
+  topic             String    @default("KHAC") // "TIEM_CHUNG", "BENH_TRUYEN_NHIEM", "DAI", "XET_NGHIEM", "KHAM_BENH", "DINH_DUONG", "KHAC"
+  topicLabel        String?   @default("Khác")
+  status            String    @default("pending_staff") // "pending_staff" | "staff_replied" | "ai_resolved" | "closed"
+  aiDraftReply      String?   // Câu trả lời của AI nếu có
+  staffReply        String?   // Câu trả lời của cán bộ
+  assignedDept      String?   // Khoa/Phòng được phân công (VD: "Khoa Bệnh truyền nhiễm")
+  assignedStaffId   String?   // Zalo ID cán bộ được gán
+  assignedStaffName String?   // Tên cán bộ được gán
+  repliedAt         DateTime? // Thời gian cán bộ phản hồi
+  repliedBy         String?   // Tên hoặc username cán bộ đã giải đáp
+  notifiedAt        DateTime? // Thời gian bắn tin Zalo cho cán bộ
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([status])
+  @@index([topic])
+  @@index([zaloUserId])
+  @@index([createdAt])
+}
+
+model TopicAssignment {
+  id              Int      @id @default(autoincrement())
+  topicCode       String   @unique // Mã chủ đề: "TIEM_CHUNG", "BENH_TRUYEN_NHIEM", "DAI", "XET_NGHIEM", "KHAM_BENH", "DINH_DUONG", "THU_TUC", "KHAC"
+  topicLabel      String   // Tên hiển thị: "Tiêm chủng & Vắc xin"
+  department      String   // Đơn vị phụ trách
+  staffZaloUserId String?  // Zalo ID cán bộ phụ trách chính nhận thông báo
+  staffName       String?  // Tên cán bộ phụ trách
+  notifyZalo      Boolean  @default(true) // Có bắn tin Zalo cảnh báo không
+  keywords        String?  // Các từ khóa nhận diện: "tiêm, vắc xin, sởi, dại, chó cắn..."
+  updatedAt       DateTime @updatedAt
+}
