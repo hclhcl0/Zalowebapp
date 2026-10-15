@@ -95,6 +95,21 @@ const SETTING_GROUPS = [
     ],
   },
   {
+    id: "onecdc_webhook",
+    icon: "🚢",
+    title: "Webhook oneCDC (Thu phí kiểm dịch)",
+    desc: "Nhận thông báo tự động từ phần mềm oneCDC và gửi tin nhắn Zalo đến đúng cán bộ được chỉ định (Kế toán hoặc Kiểm dịch viên).",
+    fields: [
+      { key: "onecdc_webhook_api_key", label: "Khóa bảo mật (X-Api-Key)", type: "password", secret: true, placeholder: "VD: cdc_onecdc_kiemdich_2026_secret" },
+      { key: "onecdc_webhook_fallback_zalo_id", label: "Zalo User ID dự phòng (khi không tìm thấy cán bộ)", type: "text", placeholder: "VD: 6752278146197332970 (để trống nếu không dùng)" },
+    ],
+    readonly: [
+      { label: "Webhook 1 (Chuyển kế toán)", value: "{SITE_URL}/api/webhook/kiem-dich/chuyen-ke-toan", note: "KDV chuyển phiếu sang Kế toán để xuất hóa đơn." },
+      { label: "Webhook 2 (Kế toán từ chối)", value: "{SITE_URL}/api/webhook/kiem-dich/ke-toan-tu-choi", note: "Kế toán từ chối phiếu kèm lý do, gửi ngược lại cho KDV." },
+      { label: "Webhook chung (tự nhận event)", value: "{SITE_URL}/webhook", note: "Hoặc {SITE_URL}/api/webhook/kiem-dich — dùng chung cho cả 2 sự kiện." },
+    ],
+  },
+  {
     id: "ai_config",
     icon: "🤖",
     title: "Cấu hình AI (Gemini / Groq)",

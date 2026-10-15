@@ -25,12 +25,16 @@ const nextConfig = {
     ];
   },
 
-  // Rewrite /uploads sang API route vì Next.js không phục vụ file động thêm vào public ở production
+  // Rewrites cho file tĩnh và webhook oneCDC
   async rewrites() {
     return [
       {
         source: "/uploads/:filename*",
         destination: "/api/uploads/:filename*",
+      },
+      {
+        source: "/webhook",
+        destination: "/api/webhook/kiem-dich",
       },
     ];
   },

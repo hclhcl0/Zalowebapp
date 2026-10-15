@@ -4,7 +4,7 @@
  * giúp Admin có thể cập nhật token ngay trên giao diện mà không cần restart server.
  */
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./prisma.js";
 import fs from "fs";
 import path from "path";
 

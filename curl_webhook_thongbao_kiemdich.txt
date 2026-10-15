@@ -1,0 +1,91 @@
+WEBHOOK THONG BAO THU PHI KIEM DICH - CDC DA NANG -> DOI TAC NHAN TIN
+=====================================================================
+Thay <URL> va <KHOA> bang dia chi va khoa that.
+Neu dung Windows CMD: luu phan JSON ra file mau.json roi goi:  -d @mau.json
+Phan hoi HTTP 2xx = thanh cong. Timeout 10 giay. Khong tu gui lai khi loi.
+SDT, ten nguoi, so tien ben duoi la du lieu gia de minh hoa.
+
+
+--------------------------------------------------------------
+1. CHUYEN PHIEU CHO KE TOAN  (event = chuyen_ke_toan)
+--------------------------------------------------------------
+curl -X POST "https://<URL>/webhook" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -H "X-Api-Key: <KHOA>" \
+  -d '{
+  "event": "chuyen_ke_toan",
+  "sent_at": "2026-10-15T09:30:12",
+  "recipient": { "ten": "Hồ Thị Bích Trâm", "sdt": "0905123456" },
+  "kiem_dich_vien": { "ten": "Nguyễn Văn A", "sdt": "0911222333" },
+  "ke_toan": { "ten": "Hồ Thị Bích Trâm", "sdt": "0905123456" },
+  "phieu": {
+    "id": 1234,
+    "so_phieu": "KDHK-2026-0045",
+    "doi_tuong_thanh_toan": "Cebu Pacific",
+    "so_tien": 25.0,
+    "don_vi_tien": "USD",
+    "so_chuyen": 1,
+    "ngay_lap": "2026-10-15"
+  },
+  "tau": [
+    {
+      "so_hieu": "CEO31",
+      "ten_tau": "CEO31",
+      "hang_bay": "Cebu Pacific",
+      "hanh_trinh": "MNL-DAD",
+      "ngay": "2026-10-13",
+      "dac_tinh": "Đột xuất nhập"
+    }
+  ],
+  "ly_do_tu_choi": null,
+  "noi_dung": "[CDC Đà Nẵng] KDV Nguyễn Văn A vừa chuyển phiếu KDHK-2026-0045 (Cebu Pacific): CEO31 (2026-10-13). Số tiền 25.00 USD. Vui lòng vào xuất hóa đơn."
+}'
+
+
+--------------------------------------------------------------
+2. KE TOAN TU CHOI, BAO VE KIEM DICH VIEN  (event = ke_toan_tu_choi)
+--------------------------------------------------------------
+curl -X POST "https://<URL>/webhook" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -H "X-Api-Key: <KHOA>" \
+  -d '{
+  "event": "ke_toan_tu_choi",
+  "sent_at": "2026-10-15T10:05:40",
+  "recipient": { "ten": "Nguyễn Văn A", "sdt": "0911222333" },
+  "kiem_dich_vien": { "ten": "Nguyễn Văn A", "sdt": "0911222333" },
+  "ke_toan": { "ten": "Hồ Thị Bích Trâm", "sdt": "" },
+  "phieu": {
+    "id": 1234,
+    "so_phieu": "KDHK-2026-0045",
+    "doi_tuong_thanh_toan": "Cebu Pacific",
+    "so_tien": 25.0,
+    "don_vi_tien": "USD",
+    "so_chuyen": 1,
+    "ngay_lap": "2026-10-15"
+  },
+  "tau": [
+    {
+      "so_hieu": "CEO31",
+      "ten_tau": "CEO31",
+      "hang_bay": "Cebu Pacific",
+      "hanh_trinh": "MNL-DAD",
+      "ngay": "2026-10-13",
+      "dac_tinh": "Đột xuất nhập"
+    }
+  ],
+  "ly_do_tu_choi": "Sai đơn giá dịch vụ",
+  "noi_dung": "[CDC Đà Nẵng] Phiếu KDHK-2026-0045 (CEO31 (2026-10-13)) bị kế toán Hồ Thị Bích Trâm từ chối. Lý do: Sai đơn giá dịch vụ."
+}'
+
+
+--------------------------------------------------------------
+GIAI THICH TRUONG
+--------------------------------------------------------------
+event            chuyen_ke_toan | ke_toan_tu_choi
+recipient        NGUOI CAN NHAN TIN NHAN (lay sdt o day de gui)
+kiem_dich_vien   kiem dich vien lap phieu
+ke_toan          ke toan lien quan
+phieu            so phieu, so tien (USD), doi tuong nop phi, so chuyen, ngay lap
+tau[]            danh sach tau/chuyen bay (tau bien: so_hieu = so IMO, hang_bay/hanh_trinh = null)
+ly_do_tu_choi    chi co khi ke_toan_tu_choi
+noi_dung         cau nhan soan san, co the gui nguyen van
